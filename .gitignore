@@ -1,0 +1,45 @@
+# Folders to ignore
+backtest_results/
+config_examples/
+hyperopt_results/
+data/
+docs/
+logs/
+.vscode/
+aco_logs/
+aco_strategies/
+aco_checkpoints/
+aco_results/
+# Config files (may contain secrets)
+config.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyc
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Keep these folders (tracked)
+# strategies/
+# freqaimodels/
+# hyperopts/
+# notebooks/
+# plot/

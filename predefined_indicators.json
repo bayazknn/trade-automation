@@ -1,0 +1,1656 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Predefined technical indicators with specific values for crypto hourly trading",
+    "library": "TA-Lib",
+    "trading_mode": "spot",
+    "timeframe": "1h",
+    "created": "2026-01-05",
+    "note": "All parameters are fixed values optimized for cryptocurrency hourly data"
+  },
+  "operators": {
+    "lt": "<",
+    "gt": ">",
+    "lte": "<=",
+    "gte": ">=",
+    "crosses_above": "qtpylib.crossed_above()",
+    "crosses_below": "qtpylib.crossed_below()"
+  },
+  "indicators": {
+    "RSI_standard": {
+      "name": "RSI Standard (14)",
+      "base_indicator": "RSI",
+      "category": "momentum",
+      "talib_function": "ta.RSI",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["rsi"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "lt", "right": "constant"},
+        "constant": 30
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "gt", "right": "constant"},
+        "constant": 70
+      }
+    },
+    "RSI_aggressive": {
+      "name": "RSI Aggressive (7)",
+      "base_indicator": "RSI",
+      "category": "momentum",
+      "talib_function": "ta.RSI",
+      "params": {
+        "timeperiod": 7
+      },
+      "outputs": ["rsi"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "lt", "right": "constant"},
+        "constant": 25
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "gt", "right": "constant"},
+        "constant": 75
+      }
+    },
+    "RSI_conservative": {
+      "name": "RSI Conservative (21)",
+      "base_indicator": "RSI",
+      "category": "momentum",
+      "talib_function": "ta.RSI",
+      "params": {
+        "timeperiod": 21
+      },
+      "outputs": ["rsi"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "lt", "right": "constant"},
+        "constant": 35
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "rsi", "operator": "gt", "right": "constant"},
+        "constant": 65
+      }
+    },
+    "MACD_standard": {
+      "name": "MACD Standard (12/26/9)",
+      "base_indicator": "MACD",
+      "category": "momentum",
+      "talib_function": "ta.MACD",
+      "params": {
+        "fastperiod": 12,
+        "slowperiod": 26,
+        "signalperiod": 9
+      },
+      "outputs": ["macd", "macdsignal", "macdhist"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_above", "right": "macdsignal"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_below", "right": "macdsignal"}
+      }
+    },
+    "MACD_fast": {
+      "name": "MACD Fast (8/17/9)",
+      "base_indicator": "MACD",
+      "category": "momentum",
+      "talib_function": "ta.MACD",
+      "params": {
+        "fastperiod": 8,
+        "slowperiod": 17,
+        "signalperiod": 9
+      },
+      "outputs": ["macd", "macdsignal", "macdhist"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_above", "right": "macdsignal"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_below", "right": "macdsignal"}
+      }
+    },
+    "MACD_slow": {
+      "name": "MACD Slow (19/39/9)",
+      "base_indicator": "MACD",
+      "category": "momentum",
+      "talib_function": "ta.MACD",
+      "params": {
+        "fastperiod": 19,
+        "slowperiod": 39,
+        "signalperiod": 9
+      },
+      "outputs": ["macd", "macdsignal", "macdhist"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_above", "right": "macdsignal"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "macd", "operator": "crosses_below", "right": "macdsignal"}
+      }
+    },
+    "STOCH_standard": {
+      "name": "Stochastic Standard (14/3/3)",
+      "base_indicator": "STOCH",
+      "category": "momentum",
+      "talib_function": "ta.STOCH",
+      "params": {
+        "fastk_period": 14,
+        "slowk_period": 3,
+        "slowd_period": 3
+      },
+      "outputs": ["slowk", "slowd"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "lt", "right": "constant"},
+        "constant": 20
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "gt", "right": "constant"},
+        "constant": 80
+      }
+    },
+    "STOCH_fast": {
+      "name": "Stochastic Fast (5/3/3)",
+      "base_indicator": "STOCH",
+      "category": "momentum",
+      "talib_function": "ta.STOCH",
+      "params": {
+        "fastk_period": 5,
+        "slowk_period": 3,
+        "slowd_period": 3
+      },
+      "outputs": ["slowk", "slowd"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "lt", "right": "constant"},
+        "constant": 15
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "gt", "right": "constant"},
+        "constant": 85
+      }
+    },
+    "STOCH_slow": {
+      "name": "Stochastic Slow (21/5/5)",
+      "base_indicator": "STOCH",
+      "category": "momentum",
+      "talib_function": "ta.STOCH",
+      "params": {
+        "fastk_period": 21,
+        "slowk_period": 5,
+        "slowd_period": 5
+      },
+      "outputs": ["slowk", "slowd"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "lt", "right": "constant"},
+        "constant": 25
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "slowk", "operator": "gt", "right": "constant"},
+        "constant": 75
+      }
+    },
+    "STOCHRSI_standard": {
+      "name": "StochRSI Standard (14/5/3)",
+      "base_indicator": "STOCHRSI",
+      "category": "momentum",
+      "talib_function": "ta.STOCHRSI",
+      "params": {
+        "timeperiod": 14,
+        "fastk_period": 5,
+        "fastd_period": 3
+      },
+      "outputs": ["fastk", "fastd"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "fastk", "operator": "lt", "right": "constant"},
+        "constant": 20
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "fastk", "operator": "gt", "right": "constant"},
+        "constant": 80
+      }
+    },
+    "STOCHRSI_fast": {
+      "name": "StochRSI Fast (7/3/3)",
+      "base_indicator": "STOCHRSI",
+      "category": "momentum",
+      "talib_function": "ta.STOCHRSI",
+      "params": {
+        "timeperiod": 7,
+        "fastk_period": 3,
+        "fastd_period": 3
+      },
+      "outputs": ["fastk", "fastd"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "fastk", "operator": "lt", "right": "constant"},
+        "constant": 15
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "fastk", "operator": "gt", "right": "constant"},
+        "constant": 85
+      }
+    },
+    "CCI_standard": {
+      "name": "CCI Standard (14)",
+      "base_indicator": "CCI",
+      "category": "momentum",
+      "talib_function": "ta.CCI",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["cci"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "lt", "right": "constant"},
+        "constant": -100
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "gt", "right": "constant"},
+        "constant": 100
+      }
+    },
+    "CCI_fast": {
+      "name": "CCI Fast (7)",
+      "base_indicator": "CCI",
+      "category": "momentum",
+      "talib_function": "ta.CCI",
+      "params": {
+        "timeperiod": 7
+      },
+      "outputs": ["cci"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "lt", "right": "constant"},
+        "constant": -80
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "gt", "right": "constant"},
+        "constant": 80
+      }
+    },
+    "CCI_wide": {
+      "name": "CCI Wide (20)",
+      "base_indicator": "CCI",
+      "category": "momentum",
+      "talib_function": "ta.CCI",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["cci"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "lt", "right": "constant"},
+        "constant": -150
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "cci", "operator": "gt", "right": "constant"},
+        "constant": 150
+      }
+    },
+    "MFI_standard": {
+      "name": "MFI Standard (14)",
+      "base_indicator": "MFI",
+      "category": "momentum",
+      "talib_function": "ta.MFI",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["mfi"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "mfi", "operator": "lt", "right": "constant"},
+        "constant": 20
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "mfi", "operator": "gt", "right": "constant"},
+        "constant": 80
+      }
+    },
+    "MFI_tight": {
+      "name": "MFI Tight (14)",
+      "base_indicator": "MFI",
+      "category": "momentum",
+      "talib_function": "ta.MFI",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["mfi"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "mfi", "operator": "lt", "right": "constant"},
+        "constant": 25
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "mfi", "operator": "gt", "right": "constant"},
+        "constant": 75
+      }
+    },
+    "WILLR_standard": {
+      "name": "Williams %R Standard (14)",
+      "base_indicator": "WILLR",
+      "category": "momentum",
+      "talib_function": "ta.WILLR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["willr"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "willr", "operator": "lt", "right": "constant"},
+        "constant": -80
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "willr", "operator": "gt", "right": "constant"},
+        "constant": -20
+      }
+    },
+    "WILLR_aggressive": {
+      "name": "Williams %R Aggressive (7)",
+      "base_indicator": "WILLR",
+      "category": "momentum",
+      "talib_function": "ta.WILLR",
+      "params": {
+        "timeperiod": 7
+      },
+      "outputs": ["willr"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "willr", "operator": "lt", "right": "constant"},
+        "constant": -75
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "willr", "operator": "gt", "right": "constant"},
+        "constant": -25
+      }
+    },
+    "CMO_standard": {
+      "name": "CMO Standard (14)",
+      "base_indicator": "CMO",
+      "category": "momentum",
+      "talib_function": "ta.CMO",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["cmo"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "cmo", "operator": "lt", "right": "constant"},
+        "constant": -50
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "cmo", "operator": "gt", "right": "constant"},
+        "constant": 50
+      }
+    },
+    "CMO_tight": {
+      "name": "CMO Tight (14)",
+      "base_indicator": "CMO",
+      "category": "momentum",
+      "talib_function": "ta.CMO",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["cmo"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "cmo", "operator": "lt", "right": "constant"},
+        "constant": -40
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "cmo", "operator": "gt", "right": "constant"},
+        "constant": 40
+      }
+    },
+    "ADX_trend_filter": {
+      "name": "ADX Trend Filter (14)",
+      "base_indicator": "ADX",
+      "category": "momentum",
+      "talib_function": "ta.ADX",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["adx"],
+      "usage": "trend_filter",
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "adx", "operator": "gt", "right": "constant"},
+        "constant": 25,
+        "description": "Only trade when trend is strong"
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "adx", "operator": "lt", "right": "constant"},
+        "constant": 20
+      }
+    },
+    "ADX_strong_trend": {
+      "name": "ADX Strong Trend (14)",
+      "base_indicator": "ADX",
+      "category": "momentum",
+      "talib_function": "ta.ADX",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["adx"],
+      "usage": "trend_filter",
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "adx", "operator": "gt", "right": "constant"},
+        "constant": 30,
+        "description": "Only trade in very strong trends"
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "adx", "operator": "lt", "right": "constant"},
+        "constant": 25
+      }
+    },
+    "DI_standard": {
+      "name": "Directional Indicator (14)",
+      "base_indicator": "PLUS_DI",
+      "category": "momentum",
+      "talib_functions": ["ta.PLUS_DI", "ta.MINUS_DI"],
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["plus_di", "minus_di"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "plus_di", "operator": "crosses_above", "right": "minus_di"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "plus_di", "operator": "crosses_below", "right": "minus_di"}
+      }
+    },
+    "MOM_standard": {
+      "name": "Momentum Standard (10)",
+      "base_indicator": "MOM",
+      "category": "momentum",
+      "talib_function": "ta.MOM",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["mom"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "MOM_fast": {
+      "name": "Momentum Fast (5)",
+      "base_indicator": "MOM",
+      "category": "momentum",
+      "talib_function": "ta.MOM",
+      "params": {
+        "timeperiod": 5
+      },
+      "outputs": ["mom"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "MOM_slow": {
+      "name": "Momentum Slow (20)",
+      "base_indicator": "MOM",
+      "category": "momentum",
+      "talib_function": "ta.MOM",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["mom"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "mom", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ROC_standard": {
+      "name": "Rate of Change Standard (10)",
+      "base_indicator": "ROC",
+      "category": "momentum",
+      "talib_function": "ta.ROC",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["roc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ROC_fast": {
+      "name": "Rate of Change Fast (5)",
+      "base_indicator": "ROC",
+      "category": "momentum",
+      "talib_function": "ta.ROC",
+      "params": {
+        "timeperiod": 5
+      },
+      "outputs": ["roc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ROC_slow": {
+      "name": "Rate of Change Slow (20)",
+      "base_indicator": "ROC",
+      "category": "momentum",
+      "talib_function": "ta.ROC",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["roc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "roc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "TRIX_standard": {
+      "name": "TRIX Standard (15)",
+      "base_indicator": "TRIX",
+      "category": "momentum",
+      "talib_function": "ta.TRIX",
+      "params": {
+        "timeperiod": 15
+      },
+      "outputs": ["trix"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "TRIX_fast": {
+      "name": "TRIX Fast (9)",
+      "base_indicator": "TRIX",
+      "category": "momentum",
+      "talib_function": "ta.TRIX",
+      "params": {
+        "timeperiod": 9
+      },
+      "outputs": ["trix"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "TRIX_slow": {
+      "name": "TRIX Slow (21)",
+      "base_indicator": "TRIX",
+      "category": "momentum",
+      "talib_function": "ta.TRIX",
+      "params": {
+        "timeperiod": 21
+      },
+      "outputs": ["trix"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "trix", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ULTOSC_standard": {
+      "name": "Ultimate Oscillator Standard (7/14/28)",
+      "base_indicator": "ULTOSC",
+      "category": "momentum",
+      "talib_function": "ta.ULTOSC",
+      "params": {
+        "timeperiod1": 7,
+        "timeperiod2": 14,
+        "timeperiod3": 28
+      },
+      "outputs": ["ultosc"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "ultosc", "operator": "lt", "right": "constant"},
+        "constant": 30
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "ultosc", "operator": "gt", "right": "constant"},
+        "constant": 70
+      }
+    },
+    "ULTOSC_tight": {
+      "name": "Ultimate Oscillator Tight (7/14/28)",
+      "base_indicator": "ULTOSC",
+      "category": "momentum",
+      "talib_function": "ta.ULTOSC",
+      "params": {
+        "timeperiod1": 7,
+        "timeperiod2": 14,
+        "timeperiod3": 28
+      },
+      "outputs": ["ultosc"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "ultosc", "operator": "lt", "right": "constant"},
+        "constant": 35
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "ultosc", "operator": "gt", "right": "constant"},
+        "constant": 65
+      }
+    },
+    "APO_standard": {
+      "name": "APO Standard (12/26)",
+      "base_indicator": "APO",
+      "category": "momentum",
+      "talib_function": "ta.APO",
+      "params": {
+        "fastperiod": 12,
+        "slowperiod": 26
+      },
+      "outputs": ["apo"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "apo", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "apo", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "APO_fast": {
+      "name": "APO Fast (5/20)",
+      "base_indicator": "APO",
+      "category": "momentum",
+      "talib_function": "ta.APO",
+      "params": {
+        "fastperiod": 5,
+        "slowperiod": 20
+      },
+      "outputs": ["apo"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "apo", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "apo", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "PPO_standard": {
+      "name": "PPO Standard (12/26)",
+      "base_indicator": "PPO",
+      "category": "momentum",
+      "talib_function": "ta.PPO",
+      "params": {
+        "fastperiod": 12,
+        "slowperiod": 26
+      },
+      "outputs": ["ppo"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ppo", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ppo", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "PPO_fast": {
+      "name": "PPO Fast (5/20)",
+      "base_indicator": "PPO",
+      "category": "momentum",
+      "talib_function": "ta.PPO",
+      "params": {
+        "fastperiod": 5,
+        "slowperiod": 20
+      },
+      "outputs": ["ppo"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ppo", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ppo", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "BOP_standard": {
+      "name": "Balance of Power",
+      "base_indicator": "BOP",
+      "category": "momentum",
+      "talib_function": "ta.BOP",
+      "params": {},
+      "outputs": ["bop"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "bop", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "bop", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "AROON_standard": {
+      "name": "Aroon Standard (14)",
+      "base_indicator": "AROON",
+      "category": "momentum",
+      "talib_function": "ta.AROON",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["aroondown", "aroonup"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_above", "right": "aroondown"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_below", "right": "aroondown"}
+      }
+    },
+    "AROON_fast": {
+      "name": "Aroon Fast (10)",
+      "base_indicator": "AROON",
+      "category": "momentum",
+      "talib_function": "ta.AROON",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["aroondown", "aroonup"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_above", "right": "aroondown"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_below", "right": "aroondown"}
+      }
+    },
+    "AROON_slow": {
+      "name": "Aroon Slow (25)",
+      "base_indicator": "AROON",
+      "category": "momentum",
+      "talib_function": "ta.AROON",
+      "params": {
+        "timeperiod": 25
+      },
+      "outputs": ["aroondown", "aroonup"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_above", "right": "aroondown"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonup", "operator": "crosses_below", "right": "aroondown"}
+      }
+    },
+    "AROONOSC_standard": {
+      "name": "Aroon Oscillator Standard (14)",
+      "base_indicator": "AROONOSC",
+      "category": "momentum",
+      "talib_function": "ta.AROONOSC",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["aroonosc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonosc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonosc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "AROONOSC_fast": {
+      "name": "Aroon Oscillator Fast (10)",
+      "base_indicator": "AROONOSC",
+      "category": "momentum",
+      "talib_function": "ta.AROONOSC",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["aroonosc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonosc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "aroonosc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "SMA_fast_cross": {
+      "name": "SMA Fast Crossover (9/21)",
+      "base_indicator": "SMA",
+      "category": "overlap",
+      "talib_function": "ta.SMA",
+      "params": {
+        "fast_period": 9,
+        "slow_period": 21
+      },
+      "outputs": ["sma_fast", "sma_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_above", "right": "sma_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_below", "right": "sma_slow"}
+      }
+    },
+    "SMA_standard_cross": {
+      "name": "SMA Standard Crossover (20/50)",
+      "base_indicator": "SMA",
+      "category": "overlap",
+      "talib_function": "ta.SMA",
+      "params": {
+        "fast_period": 20,
+        "slow_period": 50
+      },
+      "outputs": ["sma_fast", "sma_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_above", "right": "sma_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_below", "right": "sma_slow"}
+      }
+    },
+    "SMA_golden_cross": {
+      "name": "SMA Golden/Death Cross (50/200)",
+      "base_indicator": "SMA",
+      "category": "overlap",
+      "talib_function": "ta.SMA",
+      "params": {
+        "fast_period": 50,
+        "slow_period": 200
+      },
+      "outputs": ["sma_fast", "sma_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_above", "right": "sma_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "sma_fast", "operator": "crosses_below", "right": "sma_slow"}
+      }
+    },
+    "EMA_fast_cross": {
+      "name": "EMA Fast Crossover (9/21)",
+      "base_indicator": "EMA",
+      "category": "overlap",
+      "talib_function": "ta.EMA",
+      "params": {
+        "fast_period": 9,
+        "slow_period": 21
+      },
+      "outputs": ["ema_fast", "ema_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_above", "right": "ema_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_below", "right": "ema_slow"}
+      }
+    },
+    "EMA_standard_cross": {
+      "name": "EMA Standard Crossover (12/26)",
+      "base_indicator": "EMA",
+      "category": "overlap",
+      "talib_function": "ta.EMA",
+      "params": {
+        "fast_period": 12,
+        "slow_period": 26
+      },
+      "outputs": ["ema_fast", "ema_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_above", "right": "ema_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_below", "right": "ema_slow"}
+      }
+    },
+    "EMA_medium_cross": {
+      "name": "EMA Medium Crossover (20/50)",
+      "base_indicator": "EMA",
+      "category": "overlap",
+      "talib_function": "ta.EMA",
+      "params": {
+        "fast_period": 20,
+        "slow_period": 50
+      },
+      "outputs": ["ema_fast", "ema_slow"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_above", "right": "ema_slow"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ema_fast", "operator": "crosses_below", "right": "ema_slow"}
+      }
+    },
+    "DEMA_fast": {
+      "name": "DEMA Fast (10)",
+      "base_indicator": "DEMA",
+      "category": "overlap",
+      "talib_function": "ta.DEMA",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["dema"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "dema"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "dema"}
+      }
+    },
+    "DEMA_standard": {
+      "name": "DEMA Standard (20)",
+      "base_indicator": "DEMA",
+      "category": "overlap",
+      "talib_function": "ta.DEMA",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["dema"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "dema"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "dema"}
+      }
+    },
+    "TEMA_fast": {
+      "name": "TEMA Fast (10)",
+      "base_indicator": "TEMA",
+      "category": "overlap",
+      "talib_function": "ta.TEMA",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["tema"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "tema"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "tema"}
+      }
+    },
+    "TEMA_standard": {
+      "name": "TEMA Standard (20)",
+      "base_indicator": "TEMA",
+      "category": "overlap",
+      "talib_function": "ta.TEMA",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["tema"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "tema"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "tema"}
+      }
+    },
+    "KAMA_fast": {
+      "name": "KAMA Fast (10)",
+      "base_indicator": "KAMA",
+      "category": "overlap",
+      "talib_function": "ta.KAMA",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["kama"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "kama"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "kama"}
+      }
+    },
+    "KAMA_standard": {
+      "name": "KAMA Standard (20)",
+      "base_indicator": "KAMA",
+      "category": "overlap",
+      "talib_function": "ta.KAMA",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["kama"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "kama"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "kama"}
+      }
+    },
+    "KAMA_slow": {
+      "name": "KAMA Slow (30)",
+      "base_indicator": "KAMA",
+      "category": "overlap",
+      "talib_function": "ta.KAMA",
+      "params": {
+        "timeperiod": 30
+      },
+      "outputs": ["kama"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "kama"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "kama"}
+      }
+    },
+    "WMA_fast": {
+      "name": "WMA Fast (10)",
+      "base_indicator": "WMA",
+      "category": "overlap",
+      "talib_function": "ta.WMA",
+      "params": {
+        "timeperiod": 10
+      },
+      "outputs": ["wma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "wma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "wma"}
+      }
+    },
+    "WMA_standard": {
+      "name": "WMA Standard (20)",
+      "base_indicator": "WMA",
+      "category": "overlap",
+      "talib_function": "ta.WMA",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["wma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "wma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "wma"}
+      }
+    },
+    "TRIMA_standard": {
+      "name": "TRIMA Standard (20)",
+      "base_indicator": "TRIMA",
+      "category": "overlap",
+      "talib_function": "ta.TRIMA",
+      "params": {
+        "timeperiod": 20
+      },
+      "outputs": ["trima"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "trima"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "trima"}
+      }
+    },
+    "T3_standard": {
+      "name": "T3 Standard (5/0.7)",
+      "base_indicator": "T3",
+      "category": "overlap",
+      "talib_function": "ta.T3",
+      "params": {
+        "timeperiod": 5,
+        "vfactor": 0.7
+      },
+      "outputs": ["t3"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "t3"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "t3"}
+      }
+    },
+    "T3_smooth": {
+      "name": "T3 Smooth (10/0.9)",
+      "base_indicator": "T3",
+      "category": "overlap",
+      "talib_function": "ta.T3",
+      "params": {
+        "timeperiod": 10,
+        "vfactor": 0.9
+      },
+      "outputs": ["t3"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "t3"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "t3"}
+      }
+    },
+    "SAR_standard": {
+      "name": "Parabolic SAR Standard",
+      "base_indicator": "SAR",
+      "category": "overlap",
+      "talib_function": "ta.SAR",
+      "params": {
+        "acceleration": 0.02,
+        "maximum": 0.2
+      },
+      "outputs": ["sar"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "sar"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "sar"}
+      }
+    },
+    "SAR_tight": {
+      "name": "Parabolic SAR Tight",
+      "base_indicator": "SAR",
+      "category": "overlap",
+      "talib_function": "ta.SAR",
+      "params": {
+        "acceleration": 0.01,
+        "maximum": 0.1
+      },
+      "outputs": ["sar"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "sar"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "sar"}
+      }
+    },
+    "SAR_loose": {
+      "name": "Parabolic SAR Loose",
+      "base_indicator": "SAR",
+      "category": "overlap",
+      "talib_function": "ta.SAR",
+      "params": {
+        "acceleration": 0.03,
+        "maximum": 0.3
+      },
+      "outputs": ["sar"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_above", "right": "sar"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "close", "operator": "crosses_below", "right": "sar"}
+      }
+    },
+    "BBANDS_standard": {
+      "name": "Bollinger Bands Standard (20/2/2)",
+      "base_indicator": "BBANDS",
+      "category": "overlap",
+      "talib_function": "ta.BBANDS",
+      "params": {
+        "timeperiod": 20,
+        "nbdevup": 2.0,
+        "nbdevdn": 2.0
+      },
+      "outputs": ["upperband", "middleband", "lowerband"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "lt", "right": "lowerband * factor"},
+        "factor": 1.02
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "gt", "right": "upperband * factor"},
+        "factor": 0.98
+      }
+    },
+    "BBANDS_tight": {
+      "name": "Bollinger Bands Tight (20/1.5/1.5)",
+      "base_indicator": "BBANDS",
+      "category": "overlap",
+      "talib_function": "ta.BBANDS",
+      "params": {
+        "timeperiod": 20,
+        "nbdevup": 1.5,
+        "nbdevdn": 1.5
+      },
+      "outputs": ["upperband", "middleband", "lowerband"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "lt", "right": "lowerband * factor"},
+        "factor": 1.0
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "gt", "right": "upperband * factor"},
+        "factor": 1.0
+      }
+    },
+    "BBANDS_wide": {
+      "name": "Bollinger Bands Wide (20/2.5/2.5)",
+      "base_indicator": "BBANDS",
+      "category": "overlap",
+      "talib_function": "ta.BBANDS",
+      "params": {
+        "timeperiod": 20,
+        "nbdevup": 2.5,
+        "nbdevdn": 2.5
+      },
+      "outputs": ["upperband", "middleband", "lowerband"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "lt", "right": "lowerband * factor"},
+        "factor": 1.0
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "gt", "right": "upperband * factor"},
+        "factor": 1.0
+      }
+    },
+    "BBANDS_fast": {
+      "name": "Bollinger Bands Fast (14/2/2)",
+      "base_indicator": "BBANDS",
+      "category": "overlap",
+      "talib_function": "ta.BBANDS",
+      "params": {
+        "timeperiod": 14,
+        "nbdevup": 2.0,
+        "nbdevdn": 2.0
+      },
+      "outputs": ["upperband", "middleband", "lowerband"],
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "lt", "right": "lowerband * factor"},
+        "factor": 1.02
+      },
+      "exit": {
+        "signal_type": "threshold",
+        "condition": {"left": "close", "operator": "gt", "right": "upperband * factor"},
+        "factor": 0.98
+      }
+    },
+    "OBV_standard": {
+      "name": "OBV Standard (SMA 20)",
+      "base_indicator": "OBV",
+      "category": "volume",
+      "talib_function": "ta.OBV",
+      "params": {},
+      "sma_period": 20,
+      "outputs": ["obv", "obv_sma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "obv", "operator": "crosses_above", "right": "obv_sma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "obv", "operator": "crosses_below", "right": "obv_sma"}
+      }
+    },
+    "OBV_fast": {
+      "name": "OBV Fast (SMA 10)",
+      "base_indicator": "OBV",
+      "category": "volume",
+      "talib_function": "ta.OBV",
+      "params": {},
+      "sma_period": 10,
+      "outputs": ["obv", "obv_sma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "obv", "operator": "crosses_above", "right": "obv_sma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "obv", "operator": "crosses_below", "right": "obv_sma"}
+      }
+    },
+    "AD_standard": {
+      "name": "Chaikin A/D Standard (SMA 20)",
+      "base_indicator": "AD",
+      "category": "volume",
+      "talib_function": "ta.AD",
+      "params": {},
+      "sma_period": 20,
+      "outputs": ["ad", "ad_sma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ad", "operator": "crosses_above", "right": "ad_sma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ad", "operator": "crosses_below", "right": "ad_sma"}
+      }
+    },
+    "AD_fast": {
+      "name": "Chaikin A/D Fast (SMA 10)",
+      "base_indicator": "AD",
+      "category": "volume",
+      "talib_function": "ta.AD",
+      "params": {},
+      "sma_period": 10,
+      "outputs": ["ad", "ad_sma"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "ad", "operator": "crosses_above", "right": "ad_sma"}
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "ad", "operator": "crosses_below", "right": "ad_sma"}
+      }
+    },
+    "ADOSC_standard": {
+      "name": "A/D Oscillator Standard (3/10)",
+      "base_indicator": "ADOSC",
+      "category": "volume",
+      "talib_function": "ta.ADOSC",
+      "params": {
+        "fastperiod": 3,
+        "slowperiod": 10
+      },
+      "outputs": ["adosc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ADOSC_fast": {
+      "name": "A/D Oscillator Fast (2/5)",
+      "base_indicator": "ADOSC",
+      "category": "volume",
+      "talib_function": "ta.ADOSC",
+      "params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      },
+      "outputs": ["adosc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ADOSC_slow": {
+      "name": "A/D Oscillator Slow (5/20)",
+      "base_indicator": "ADOSC",
+      "category": "volume",
+      "talib_function": "ta.ADOSC",
+      "params": {
+        "fastperiod": 5,
+        "slowperiod": 20
+      },
+      "outputs": ["adosc"],
+      "entry": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_above", "right": "constant"},
+        "constant": 0
+      },
+      "exit": {
+        "signal_type": "crossover",
+        "condition": {"left": "adosc", "operator": "crosses_below", "right": "constant"},
+        "constant": 0
+      }
+    },
+    "ATR_standard": {
+      "name": "ATR Standard (14, mult 2.0)",
+      "base_indicator": "ATR",
+      "category": "volatility",
+      "talib_function": "ta.ATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["atr"],
+      "usage": "stop_loss",
+      "stop_loss_multiplier": 2.0
+    },
+    "ATR_tight": {
+      "name": "ATR Tight (14, mult 1.5)",
+      "base_indicator": "ATR",
+      "category": "volatility",
+      "talib_function": "ta.ATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["atr"],
+      "usage": "stop_loss",
+      "stop_loss_multiplier": 1.5
+    },
+    "ATR_wide": {
+      "name": "ATR Wide (14, mult 3.0)",
+      "base_indicator": "ATR",
+      "category": "volatility",
+      "talib_function": "ta.ATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["atr"],
+      "usage": "stop_loss",
+      "stop_loss_multiplier": 3.0
+    },
+    "ATR_fast": {
+      "name": "ATR Fast (7, mult 2.0)",
+      "base_indicator": "ATR",
+      "category": "volatility",
+      "talib_function": "ta.ATR",
+      "params": {
+        "timeperiod": 7
+      },
+      "outputs": ["atr"],
+      "usage": "stop_loss",
+      "stop_loss_multiplier": 2.0
+    },
+    "NATR_standard": {
+      "name": "NATR Standard (14, >2%)",
+      "base_indicator": "NATR",
+      "category": "volatility",
+      "talib_function": "ta.NATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["natr"],
+      "usage": "volatility_filter",
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "natr", "operator": "gt", "right": "constant"},
+        "constant": 2.0
+      }
+    },
+    "NATR_tight": {
+      "name": "NATR Tight (14, >1.5%)",
+      "base_indicator": "NATR",
+      "category": "volatility",
+      "talib_function": "ta.NATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["natr"],
+      "usage": "volatility_filter",
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "natr", "operator": "gt", "right": "constant"},
+        "constant": 1.5
+      }
+    },
+    "NATR_volatile": {
+      "name": "NATR Volatile (14, >3%)",
+      "base_indicator": "NATR",
+      "category": "volatility",
+      "talib_function": "ta.NATR",
+      "params": {
+        "timeperiod": 14
+      },
+      "outputs": ["natr"],
+      "usage": "volatility_filter",
+      "entry": {
+        "signal_type": "threshold",
+        "condition": {"left": "natr", "operator": "gt", "right": "constant"},
+        "constant": 3.0
+      }
+    }
+  },
+  "candlestick_patterns": {
+    "signal_interpretation": {
+      "positive": "bullish (entry signal)",
+      "negative": "bearish (exit signal)",
+      "zero": "no pattern"
+    },
+    "high_reliability": [
+      "CDLENGULFING",
+      "CDLHAMMER",
+      "CDLMORNINGSTAR",
+      "CDLEVENINGSTAR",
+      "CDL3WHITESOLDIERS",
+      "CDL3BLACKCROWS",
+      "CDLSHOOTINGSTAR",
+      "CDLDARKCLOUDCOVER",
+      "CDLPIERCING"
+    ],
+    "patterns": {
+      "CDLENGULFING": {"name": "Engulfing", "talib_function": "ta.CDLENGULFING", "entry_value": 100, "exit_value": -100},
+      "CDLHAMMER": {"name": "Hammer", "talib_function": "ta.CDLHAMMER", "entry_value": 100},
+      "CDLINVERTEDHAMMER": {"name": "Inverted Hammer", "talib_function": "ta.CDLINVERTEDHAMMER", "entry_value": 100},
+      "CDLMORNINGSTAR": {"name": "Morning Star", "talib_function": "ta.CDLMORNINGSTAR", "entry_value": 100},
+      "CDLMORNINGDOJISTAR": {"name": "Morning Doji Star", "talib_function": "ta.CDLMORNINGDOJISTAR", "entry_value": 100},
+      "CDLEVENINGSTAR": {"name": "Evening Star", "talib_function": "ta.CDLEVENINGSTAR", "exit_value": -100},
+      "CDLEVENINGDOJISTAR": {"name": "Evening Doji Star", "talib_function": "ta.CDLEVENINGDOJISTAR", "exit_value": -100},
+      "CDL3WHITESOLDIERS": {"name": "Three White Soldiers", "talib_function": "ta.CDL3WHITESOLDIERS", "entry_value": 100},
+      "CDL3BLACKCROWS": {"name": "Three Black Crows", "talib_function": "ta.CDL3BLACKCROWS", "exit_value": -100},
+      "CDLSHOOTINGSTAR": {"name": "Shooting Star", "talib_function": "ta.CDLSHOOTINGSTAR", "exit_value": -100},
+      "CDLHANGINGMAN": {"name": "Hanging Man", "talib_function": "ta.CDLHANGINGMAN", "exit_value": -100},
+      "CDLDARKCLOUDCOVER": {"name": "Dark Cloud Cover", "talib_function": "ta.CDLDARKCLOUDCOVER", "exit_value": -100},
+      "CDLPIERCING": {"name": "Piercing Pattern", "talib_function": "ta.CDLPIERCING", "entry_value": 100},
+      "CDLDOJI": {"name": "Doji", "talib_function": "ta.CDLDOJI", "type": "reversal_warning"},
+      "CDLDRAGONFLYDOJI": {"name": "Dragonfly Doji", "talib_function": "ta.CDLDRAGONFLYDOJI", "entry_value": 100},
+      "CDLGRAVESTONEDOJI": {"name": "Gravestone Doji", "talib_function": "ta.CDLGRAVESTONEDOJI", "exit_value": -100},
+      "CDLHARAMI": {"name": "Harami", "talib_function": "ta.CDLHARAMI", "type": "reversal"},
+      "CDL3INSIDE": {"name": "Three Inside", "talib_function": "ta.CDL3INSIDE", "type": "reversal"},
+      "CDL3OUTSIDE": {"name": "Three Outside", "talib_function": "ta.CDL3OUTSIDE", "type": "reversal"}
+    }
+  }
+}
