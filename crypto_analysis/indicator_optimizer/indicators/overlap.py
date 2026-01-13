@@ -283,3 +283,176 @@ class BBANDSIndicator(BaseIndicatorOptimizer):
     def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
         factor = params.get("exit_factor", 0.98)
         return df["close"] > (df["upperband"] * factor)
+
+
+class HT_TRENDLINEIndicator(BaseIndicatorOptimizer):
+    """Hilbert Transform - Instantaneous Trendline indicator."""
+
+    indicator_name = "HT_TRENDLINE"
+    talib_function = "ta.HT_TRENDLINE"
+    category = "overlap"
+    outputs = ["ht_trendline"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {}  # No optimizable parameters
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["ht_trendline"] = ta.HT_TRENDLINE(df)
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["close"], df["ht_trendline"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["close"], df["ht_trendline"])
+
+
+class MAIndicator(BaseIndicatorOptimizer):
+    """Generic Moving Average indicator with MA type selection."""
+
+    indicator_name = "MA"
+    talib_function = "ta.MA"
+    category = "overlap"
+    outputs = ["ma"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 20, "range": [5, 100], "type": "int"},
+            "matype": {"default": 0, "range": [0, 8], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["ma"] = ta.MA(
+            df,
+            timeperiod=params.get("timeperiod", 20),
+            matype=params.get("matype", 0)
+        )
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["close"], df["ma"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["close"], df["ma"])
+
+
+class MAMAIndicator(BaseIndicatorOptimizer):
+    """MESA Adaptive Moving Average indicator."""
+
+    indicator_name = "MAMA"
+    talib_function = "ta.MAMA"
+    category = "overlap"
+    outputs = ["mama", "fama"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "fastlimit": {"default": 0.5, "range": [0.1, 0.9], "type": "float"},
+            "slowlimit": {"default": 0.05, "range": [0.01, 0.2], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        mama = ta.MAMA(
+            df,
+            fastlimit=params.get("fastlimit", 0.5),
+            slowlimit=params.get("slowlimit", 0.05)
+        )
+        df["mama"] = mama["mama"]
+        df["fama"] = mama["fama"]
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Entry when MAMA crosses above FAMA
+        return self._crossed_above(df["mama"], df["fama"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Exit when MAMA crosses below FAMA
+        return self._crossed_below(df["mama"], df["fama"])
+
+
+class MIDPOINTIndicator(BaseIndicatorOptimizer):
+    """Midpoint over period indicator."""
+
+    indicator_name = "MIDPOINT"
+    talib_function = "ta.MIDPOINT"
+    category = "overlap"
+    outputs = ["midpoint"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 50], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["midpoint"] = ta.MIDPOINT(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["close"], df["midpoint"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["close"], df["midpoint"])
+
+
+class MIDPRICEIndicator(BaseIndicatorOptimizer):
+    """Midpoint Price over period indicator."""
+
+    indicator_name = "MIDPRICE"
+    talib_function = "ta.MIDPRICE"
+    category = "overlap"
+    outputs = ["midprice"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 50], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["midprice"] = ta.MIDPRICE(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["close"], df["midprice"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["close"], df["midprice"])
+
+
+class SAREXTIndicator(BaseIndicatorOptimizer):
+    """Parabolic SAR - Extended indicator."""
+
+    indicator_name = "SAREXT"
+    talib_function = "ta.SAREXT"
+    category = "overlap"
+    outputs = ["sarext"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "startvalue": {"default": 0.0, "range": [0.0, 0.1], "type": "float"},
+            "offsetonreverse": {"default": 0.0, "range": [0.0, 0.1], "type": "float"},
+            "accelerationinitlong": {"default": 0.02, "range": [0.01, 0.05], "type": "float"},
+            "accelerationlong": {"default": 0.02, "range": [0.01, 0.05], "type": "float"},
+            "accelerationmaxlong": {"default": 0.2, "range": [0.1, 0.4], "type": "float"},
+            "accelerationinitshort": {"default": 0.02, "range": [0.01, 0.05], "type": "float"},
+            "accelerationshort": {"default": 0.02, "range": [0.01, 0.05], "type": "float"},
+            "accelerationmaxshort": {"default": 0.2, "range": [0.1, 0.4], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["sarext"] = ta.SAREXT(
+            df,
+            startvalue=params.get("startvalue", 0.0),
+            offsetonreverse=params.get("offsetonreverse", 0.0),
+            accelerationinitlong=params.get("accelerationinitlong", 0.02),
+            accelerationlong=params.get("accelerationlong", 0.02),
+            accelerationmaxlong=params.get("accelerationmaxlong", 0.2),
+            accelerationinitshort=params.get("accelerationinitshort", 0.02),
+            accelerationshort=params.get("accelerationshort", 0.02),
+            accelerationmaxshort=params.get("accelerationmaxshort", 0.2)
+        )
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["close"], df["sarext"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["close"], df["sarext"])

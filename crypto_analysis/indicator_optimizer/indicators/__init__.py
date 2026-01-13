@@ -24,6 +24,19 @@ from .momentum import (
     BOPIndicator,
     AROONIndicator,
     AROONOSCIndicator,
+    # New momentum indicators
+    ADXRIndicator,
+    DXIndicator,
+    MACDEXTIndicator,
+    MACDFIXIndicator,
+    MINUS_DIIndicator,
+    MINUS_DMIndicator,
+    PLUS_DIIndicator,
+    PLUS_DMIndicator,
+    ROCPIndicator,
+    ROCRIndicator,
+    ROCR100Indicator,
+    STOCHFIndicator,
 )
 
 from .overlap import (
@@ -37,6 +50,13 @@ from .overlap import (
     T3Indicator,
     SARIndicator,
     BBANDSIndicator,
+    # New overlap indicators
+    HT_TRENDLINEIndicator,
+    MAIndicator,
+    MAMAIndicator,
+    MIDPOINTIndicator,
+    MIDPRICEIndicator,
+    SAREXTIndicator,
 )
 
 from .volume import (
@@ -48,11 +68,21 @@ from .volume import (
 from .volatility import (
     ATRIndicator,
     NATRIndicator,
+    # New volatility indicator
+    TRANGEIndicator,
+)
+
+from .cycle import (
+    HT_DCPERIODIndicator,
+    HT_DCPHASEIndicator,
+    HT_PHASORIndicator,
+    HT_SINEIndicator,
+    HT_TRENDMODEIndicator,
 )
 
 # Registry of all available indicators
 INDICATOR_REGISTRY = {
-    # Momentum
+    # Momentum (30 indicators)
     "RSI": RSIIndicator,
     "MACD": MACDIndicator,
     "STOCH": STOCHIndicator,
@@ -71,7 +101,19 @@ INDICATOR_REGISTRY = {
     "BOP": BOPIndicator,
     "AROON": AROONIndicator,
     "AROONOSC": AROONOSCIndicator,
-    # Overlap
+    "ADXR": ADXRIndicator,
+    "DX": DXIndicator,
+    "MACDEXT": MACDEXTIndicator,
+    "MACDFIX": MACDFIXIndicator,
+    "MINUS_DI": MINUS_DIIndicator,
+    "MINUS_DM": MINUS_DMIndicator,
+    "PLUS_DI": PLUS_DIIndicator,
+    "PLUS_DM": PLUS_DMIndicator,
+    "ROCP": ROCPIndicator,
+    "ROCR": ROCRIndicator,
+    "ROCR100": ROCR100Indicator,
+    "STOCHF": STOCHFIndicator,
+    # Overlap (16 indicators)
     "SMA": SMAIndicator,
     "EMA": EMAIndicator,
     "DEMA": DEMAIndicator,
@@ -82,13 +124,26 @@ INDICATOR_REGISTRY = {
     "T3": T3Indicator,
     "SAR": SARIndicator,
     "BBANDS": BBANDSIndicator,
-    # Volume
+    "HT_TRENDLINE": HT_TRENDLINEIndicator,
+    "MA": MAIndicator,
+    "MAMA": MAMAIndicator,
+    "MIDPOINT": MIDPOINTIndicator,
+    "MIDPRICE": MIDPRICEIndicator,
+    "SAREXT": SAREXTIndicator,
+    # Volume (3 indicators)
     "OBV": OBVIndicator,
     "AD": ADIndicator,
     "ADOSC": ADOSCIndicator,
-    # Volatility
+    # Volatility (3 indicators)
     "ATR": ATRIndicator,
     "NATR": NATRIndicator,
+    "TRANGE": TRANGEIndicator,
+    # Cycle (5 indicators)
+    "HT_DCPERIOD": HT_DCPERIODIndicator,
+    "HT_DCPHASE": HT_DCPHASEIndicator,
+    "HT_PHASOR": HT_PHASORIndicator,
+    "HT_SINE": HT_SINEIndicator,
+    "HT_TRENDMODE": HT_TRENDMODEIndicator,
 }
 
 

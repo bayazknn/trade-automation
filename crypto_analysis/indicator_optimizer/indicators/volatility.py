@@ -110,3 +110,41 @@ class NATRIndicator(BaseIndicatorOptimizer):
         # Exit when volatility drops significantly
         constant = params.get("entry_constant", 2.0)
         return df["natr"] < (constant * 0.5)
+
+
+class TRANGEIndicator(BaseIndicatorOptimizer):
+    """
+    True Range indicator.
+
+    TRANGE measures the greatest of:
+    - Current High - Current Low
+    - Abs(Current High - Previous Close)
+    - Abs(Current Low - Previous Close)
+    """
+
+    indicator_name = "TRANGE"
+    talib_function = "ta.TRANGE"
+    category = "volatility"
+    outputs = ["trange"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "entry_multiplier": {"default": 1.5, "range": [1.0, 3.0], "type": "float"},
+            "exit_multiplier": {"default": 0.5, "range": [0.3, 1.0], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["trange"] = ta.TRANGE(df)
+        # Calculate average true range for comparison
+        df["trange_avg"] = df["trange"].rolling(window=14).mean()
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Entry when true range exceeds average (breakout volatility)
+        multiplier = params.get("entry_multiplier", 1.5)
+        return df["trange"] > (df["trange_avg"] * multiplier)
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Exit when true range drops below average (volatility contraction)
+        multiplier = params.get("exit_multiplier", 0.5)
+        return df["trange"] < (df["trange_avg"] * multiplier)

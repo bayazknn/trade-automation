@@ -514,11 +514,11 @@ class LSTMMetaheuristicOptimizer:
 
 
             conditions = [
-                self.correlation_vector < 0.1,
+                self.correlation_vector < 0.15,
                 self.correlation_vector >= 0.80,
             ]
             choices = [
-                -self.elitist_constant * 1.4,
+                -self.elitist_constant * 1.6,
                 self.elitist_constant * 1.4,
             ]
             # default is used when no condition is met
@@ -627,7 +627,7 @@ class LSTMMetaheuristicOptimizer:
                 scheduler_patience=config_params['scheduler_patience'],
                 patience=10,
                 verbose=False,
-                device='cpu',  # Force CPU for thread safety
+                device='auto',  # Force CPU for thread safety
                 # bidirectional=True, # Experimentally commented out
             )
 

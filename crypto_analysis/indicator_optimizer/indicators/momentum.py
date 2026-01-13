@@ -525,3 +525,356 @@ class AROONOSCIndicator(BaseIndicatorOptimizer):
 
     def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
         return self._crossed_below(df["aroonosc"], 0)
+
+
+class ADXRIndicator(BaseIndicatorOptimizer):
+    """Average Directional Movement Index Rating indicator."""
+
+    indicator_name = "ADXR"
+    talib_function = "ta.ADXR"
+    category = "momentum"
+    outputs = ["adxr"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [7, 28], "type": "int"},
+            "entry_constant": {"default": 25, "range": [20, 40], "type": "float"},
+            "exit_constant": {"default": 20, "range": [15, 25], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["adxr"] = ta.ADXR(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("entry_constant", 25)
+        return df["adxr"] > constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("exit_constant", 20)
+        return df["adxr"] < constant
+
+
+class DXIndicator(BaseIndicatorOptimizer):
+    """Directional Movement Index indicator."""
+
+    indicator_name = "DX"
+    talib_function = "ta.DX"
+    category = "momentum"
+    outputs = ["dx"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 30], "type": "int"},
+            "entry_constant": {"default": 25, "range": [20, 40], "type": "float"},
+            "exit_constant": {"default": 20, "range": [10, 25], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["dx"] = ta.DX(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("entry_constant", 25)
+        return df["dx"] > constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("exit_constant", 20)
+        return df["dx"] < constant
+
+
+class MACDEXTIndicator(BaseIndicatorOptimizer):
+    """MACD with controllable MA type indicator."""
+
+    indicator_name = "MACDEXT"
+    talib_function = "ta.MACDEXT"
+    category = "momentum"
+    outputs = ["macd", "macdsignal", "macdhist"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "fastperiod": {"default": 12, "range": [5, 20], "type": "int"},
+            "slowperiod": {"default": 26, "range": [15, 40], "type": "int"},
+            "signalperiod": {"default": 9, "range": [5, 15], "type": "int"},
+            "fastmatype": {"default": 0, "range": [0, 8], "type": "int"},
+            "slowmatype": {"default": 0, "range": [0, 8], "type": "int"},
+            "signalmatype": {"default": 0, "range": [0, 8], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        macdext = ta.MACDEXT(
+            df,
+            fastperiod=params.get("fastperiod", 12),
+            slowperiod=params.get("slowperiod", 26),
+            signalperiod=params.get("signalperiod", 9),
+            fastmatype=params.get("fastmatype", 0),
+            slowmatype=params.get("slowmatype", 0),
+            signalmatype=params.get("signalmatype", 0)
+        )
+        df["macd"] = macdext["macd"]
+        df["macdsignal"] = macdext["macdsignal"]
+        df["macdhist"] = macdext["macdhist"]
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["macd"], df["macdsignal"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["macd"], df["macdsignal"])
+
+
+class MACDFIXIndicator(BaseIndicatorOptimizer):
+    """Moving Average Convergence/Divergence Fix 12/26 indicator."""
+
+    indicator_name = "MACDFIX"
+    talib_function = "ta.MACDFIX"
+    category = "momentum"
+    outputs = ["macd", "macdsignal", "macdhist"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "signalperiod": {"default": 9, "range": [5, 15], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        macdfix = ta.MACDFIX(
+            df,
+            signalperiod=params.get("signalperiod", 9)
+        )
+        df["macd"] = macdfix["macd"]
+        df["macdsignal"] = macdfix["macdsignal"]
+        df["macdhist"] = macdfix["macdhist"]
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["macd"], df["macdsignal"])
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["macd"], df["macdsignal"])
+
+
+class MINUS_DIIndicator(BaseIndicatorOptimizer):
+    """Minus Directional Indicator."""
+
+    indicator_name = "MINUS_DI"
+    talib_function = "ta.MINUS_DI"
+    category = "momentum"
+    outputs = ["minus_di"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 30], "type": "int"},
+            "entry_constant": {"default": 25, "range": [15, 40], "type": "float"},
+            "exit_constant": {"default": 20, "range": [10, 30], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["minus_di"] = ta.MINUS_DI(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Low minus_di indicates weak downtrend (potential entry)
+        constant = params.get("entry_constant", 25)
+        return df["minus_di"] < constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # High minus_di indicates strong downtrend (exit)
+        constant = params.get("exit_constant", 20)
+        return df["minus_di"] > constant
+
+
+class MINUS_DMIndicator(BaseIndicatorOptimizer):
+    """Minus Directional Movement indicator."""
+
+    indicator_name = "MINUS_DM"
+    talib_function = "ta.MINUS_DM"
+    category = "momentum"
+    outputs = ["minus_dm"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 30], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["minus_dm"] = ta.MINUS_DM(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Entry when minus_dm crosses below its previous value (downtrend weakening)
+        return self._crossed_below(df["minus_dm"], df["minus_dm"].shift(1))
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Exit when minus_dm crosses above its previous value (downtrend strengthening)
+        return self._crossed_above(df["minus_dm"], df["minus_dm"].shift(1))
+
+
+class PLUS_DIIndicator(BaseIndicatorOptimizer):
+    """Plus Directional Indicator."""
+
+    indicator_name = "PLUS_DI"
+    talib_function = "ta.PLUS_DI"
+    category = "momentum"
+    outputs = ["plus_di"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 30], "type": "int"},
+            "entry_constant": {"default": 25, "range": [15, 40], "type": "float"},
+            "exit_constant": {"default": 20, "range": [10, 30], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["plus_di"] = ta.PLUS_DI(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # High plus_di indicates strong uptrend (entry)
+        constant = params.get("entry_constant", 25)
+        return df["plus_di"] > constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Low plus_di indicates weak uptrend (exit)
+        constant = params.get("exit_constant", 20)
+        return df["plus_di"] < constant
+
+
+class PLUS_DMIndicator(BaseIndicatorOptimizer):
+    """Plus Directional Movement indicator."""
+
+    indicator_name = "PLUS_DM"
+    talib_function = "ta.PLUS_DM"
+    category = "momentum"
+    outputs = ["plus_dm"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 14, "range": [5, 30], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["plus_dm"] = ta.PLUS_DM(df, timeperiod=params.get("timeperiod", 14))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Entry when plus_dm crosses above its previous value (uptrend strengthening)
+        return self._crossed_above(df["plus_dm"], df["plus_dm"].shift(1))
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        # Exit when plus_dm crosses below its previous value (uptrend weakening)
+        return self._crossed_below(df["plus_dm"], df["plus_dm"].shift(1))
+
+
+class ROCPIndicator(BaseIndicatorOptimizer):
+    """Rate of Change Percentage indicator."""
+
+    indicator_name = "ROCP"
+    talib_function = "ta.ROCP"
+    category = "momentum"
+    outputs = ["rocp"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 10, "range": [5, 30], "type": "int"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["rocp"] = ta.ROCP(df, timeperiod=params.get("timeperiod", 10))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_above(df["rocp"], 0)
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        return self._crossed_below(df["rocp"], 0)
+
+
+class ROCRIndicator(BaseIndicatorOptimizer):
+    """Rate of Change Ratio indicator."""
+
+    indicator_name = "ROCR"
+    talib_function = "ta.ROCR"
+    category = "momentum"
+    outputs = ["rocr"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 10, "range": [5, 30], "type": "int"},
+            "entry_constant": {"default": 1.02, "range": [1.0, 1.05], "type": "float"},
+            "exit_constant": {"default": 0.98, "range": [0.95, 1.0], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["rocr"] = ta.ROCR(df, timeperiod=params.get("timeperiod", 10))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("entry_constant", 1.02)
+        return df["rocr"] > constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("exit_constant", 0.98)
+        return df["rocr"] < constant
+
+
+class ROCR100Indicator(BaseIndicatorOptimizer):
+    """Rate of Change Ratio 100 scale indicator."""
+
+    indicator_name = "ROCR100"
+    talib_function = "ta.ROCR100"
+    category = "momentum"
+    outputs = ["rocr100"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "timeperiod": {"default": 10, "range": [5, 30], "type": "int"},
+            "entry_constant": {"default": 102, "range": [100, 105], "type": "float"},
+            "exit_constant": {"default": 98, "range": [95, 100], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        df["rocr100"] = ta.ROCR100(df, timeperiod=params.get("timeperiod", 10))
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("entry_constant", 102)
+        return df["rocr100"] > constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("exit_constant", 98)
+        return df["rocr100"] < constant
+
+
+class STOCHFIndicator(BaseIndicatorOptimizer):
+    """Stochastic Fast indicator."""
+
+    indicator_name = "STOCHF"
+    talib_function = "ta.STOCHF"
+    category = "momentum"
+    outputs = ["fastk", "fastd"]
+
+    def get_optimizable_params(self) -> Dict[str, Dict]:
+        return {
+            "fastk_period": {"default": 5, "range": [3, 14], "type": "int"},
+            "fastd_period": {"default": 3, "range": [1, 5], "type": "int"},
+            "entry_constant": {"default": 20, "range": [10, 30], "type": "float"},
+            "exit_constant": {"default": 80, "range": [70, 90], "type": "float"},
+        }
+
+    def calculate_indicator(self, df: pd.DataFrame, **params) -> pd.DataFrame:
+        stochf = ta.STOCHF(
+            df,
+            fastk_period=params.get("fastk_period", 5),
+            fastd_period=params.get("fastd_period", 3)
+        )
+        df["fastk"] = stochf["fastk"]
+        df["fastd"] = stochf["fastd"]
+        return df
+
+    def generate_entry_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("entry_constant", 20)
+        return df["fastk"] < constant
+
+    def generate_exit_signal(self, df: pd.DataFrame, **params) -> pd.Series:
+        constant = params.get("exit_constant", 80)
+        return df["fastk"] > constant

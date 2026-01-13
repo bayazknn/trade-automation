@@ -7,7 +7,7 @@ A Python package for cryptocurrency data analysis and signal generation, designe
 - **Signal Population**: Generate entry/exit signals based on price percentage changes
 - **Indicator Optimization**: Optimize technical indicator parameters using grid search and hyperopt
 - **LSTM Signal Prediction**: PyTorch LSTM model for predicting entry/hold/exit signals
-- **33 Technical Indicators**: RSI, MACD, STOCH, BBANDS, EMA, SMA, and more
+- **57 Technical Indicators**: RSI, MACD, STOCH, BBANDS, EMA, SMA, Hilbert Transform, and more
 - **Parallel Processing**: Multi-threaded optimization with configurable worker count
 - **High Performance**: NumPy-vectorized operations for fast backtesting
 
@@ -241,17 +241,20 @@ Invalid sequences (e.g., multiple entries, exits without entry) are filtered out
 
 ## Available Indicators
 
-### Momentum (18)
-RSI, MACD, STOCH, STOCHRSI, CCI, MFI, WILLR, CMO, ADX, MOM, ROC, TRIX, ULTOSC, APO, PPO, BOP, AROON, AROONOSC
+### Momentum (30)
+RSI, MACD, STOCH, STOCHRSI, CCI, MFI, WILLR, CMO, ADX, MOM, ROC, TRIX, ULTOSC, APO, PPO, BOP, AROON, AROONOSC, ADXR, DX, MACDEXT, MACDFIX, MINUS_DI, MINUS_DM, PLUS_DI, PLUS_DM, ROCP, ROCR, ROCR100, STOCHF
 
-### Overlap/Moving Averages (10)
-SMA, EMA, DEMA, TEMA, KAMA, WMA, TRIMA, T3, SAR, BBANDS
+### Overlap/Moving Averages (16)
+SMA, EMA, DEMA, TEMA, KAMA, WMA, TRIMA, T3, SAR, BBANDS, HT_TRENDLINE, MA, MAMA, MIDPOINT, MIDPRICE, SAREXT
 
 ### Volume (3)
 OBV, AD, ADOSC
 
-### Volatility (2)
-ATR, NATR
+### Volatility (3)
+ATR, NATR, TRANGE
+
+### Cycle (5)
+HT_DCPERIOD, HT_DCPHASE, HT_PHASOR, HT_SINE, HT_TRENDMODE
 
 ## Creating Custom Indicators
 
@@ -302,7 +305,7 @@ The package uses NumPy-vectorized operations for high performance:
 | Operation | Time |
 |-----------|------|
 | Single indicator grid search (3000 combos) | ~2-5s |
-| Full optimization (33 indicators, 4 workers) | ~2-5 min |
+| Full optimization (57 indicators, 4 workers) | ~3-8 min |
 
 ## Data Format
 
