@@ -514,12 +514,16 @@ class LSTMMetaheuristicOptimizer:
 
 
             conditions = [
-                self.correlation_vector < 0.15,
-                self.correlation_vector >= 0.80,
+                self.correlation_vector < 0.10,
+                self.correlation_vector < 0.20,
+                self.correlation_vector > 0.80,
+                self.correlation_vector > 0.90,
             ]
             choices = [
+                -self.elitist_constant * 1.8,
                 -self.elitist_constant * 1.6,
-                self.elitist_constant * 1.4,
+                self.elitist_constant * 1.1,
+                self.elitist_constant * 1.3,
             ]
             # default is used when no condition is met
             constant = np.select(conditions, choices, default=self.elitist_constant)
