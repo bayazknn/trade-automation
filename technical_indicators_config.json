@@ -418,7 +418,7 @@
       "category": "overlap",
       "talib_function": "ta.SMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 200], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["sma"],
       "dual_ma": {
@@ -439,7 +439,7 @@
       "category": "overlap",
       "talib_function": "ta.EMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 200], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["ema"],
       "dual_ma": {
@@ -460,7 +460,7 @@
       "category": "overlap",
       "talib_function": "ta.DEMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 100], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["dema"],
       "entry": {
@@ -477,7 +477,7 @@
       "category": "overlap",
       "talib_function": "ta.TEMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 100], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["tema"],
       "entry": {
@@ -511,7 +511,7 @@
       "category": "overlap",
       "talib_function": "ta.WMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 100], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["wma"],
       "entry": {
@@ -528,7 +528,7 @@
       "category": "overlap",
       "talib_function": "ta.TRIMA",
       "params": {
-        "timeperiod": {"default": 20, "range": [5, 100], "type": "int"}
+        "timeperiod": {"default": 20, "range": [5, 50], "type": "int"}
       },
       "outputs": ["trima"],
       "entry": {
@@ -563,8 +563,8 @@
       "category": "overlap",
       "talib_function": "ta.SAR",
       "params": {
-        "acceleration": {"default": 0.02, "range": [0.01, 0.05], "type": "float"},
-        "maximum": {"default": 0.2, "range": [0.1, 0.4], "type": "float"}
+        "acceleration": {"default": 0.02, "range": [0.01, 0.2], "type": "float"},
+        "maximum": {"default": 0.2, "range": [0.1, 0.6], "type": "float"}
       },
       "outputs": ["sar"],
       "entry": {
