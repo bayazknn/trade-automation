@@ -97,7 +97,7 @@ class LSTMSignalPredictor(nn.Module):
         # Single classification head for binary prediction
         self.classifier = nn.Sequential(
             nn.Linear(decoder_input_size, config.hidden_size),
-            nn.ReLU(),
+            # nn.ReLU(),
             nn.Dropout(config.dropout),
             nn.Linear(config.hidden_size, config.num_classes)
         )
@@ -217,6 +217,159 @@ class LSTMSignalPredictor(nn.Module):
     def __repr__(self) -> str:
         return (
             f"LSTMSignalPredictor(\n"
+            f"  input_size={self.config.input_size},\n"
+            f"  hidden_size={self.config.hidden_size},\n"
+            f"  num_layers={self.config.num_layers},\n"
+            f"  bidirectional={self.config.bidirectional},\n"
+            f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
+            f"  total_params={self.get_num_parameters():,}\n"
+            f")"
+        )
+
+
+class CNNLSTMSignalPredictor(nn.Module):
+    """
+    CNN + LSTM hybrid model for binary trading signal prediction.
+
+    Architecture:
+    - CNN layers: Extract local patterns from feature sequences
+    - LSTM encoder: Capture temporal dependencies
+    - Classification head: Binary prediction
+
+    The CNN layers act as feature extractors, learning local patterns
+    in the input features before the LSTM processes temporal relationships.
+
+    Input: (batch, input_seq_length, input_size) = (batch, 16, n_features)
+    Output: (batch, num_classes) = (batch, 2) logits
+    """
+
+    def __init__(self, config: ModelConfig):
+        super().__init__()
+        self.config = config
+
+        # CNN feature extractor
+        # Input: (batch, input_size, seq_len) after transpose
+        self.conv_layers = nn.Sequential(
+            # First conv block
+            nn.Conv1d(config.input_size, config.hidden_size, kernel_size=3, padding=1),
+            nn.BatchNorm1d(config.hidden_size),
+            nn.ReLU(),
+            nn.Dropout(config.dropout * 0.5),
+
+            # Second conv block
+            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=3, padding=1),
+            nn.BatchNorm1d(config.hidden_size),
+            nn.ReLU(),
+            nn.Dropout(config.dropout * 0.5),
+        )
+
+        # LSTM encoder
+        self.lstm = nn.LSTM(
+            input_size=config.hidden_size,
+            hidden_size=config.hidden_size,
+            num_layers=config.num_layers,
+            batch_first=True,
+            dropout=config.dropout if config.num_layers > 1 else 0.0,
+            bidirectional=config.bidirectional
+        )
+
+        # Direction multiplier for bidirectional LSTM
+        self.num_directions = 2 if config.bidirectional else 1
+        lstm_output_size = config.hidden_size * self.num_directions
+
+        # Classification head with LayerNorm and ReLU
+        self.classifier = nn.Sequential(
+            nn.Linear(lstm_output_size, config.hidden_size),
+            nn.LayerNorm(config.hidden_size),
+            nn.ReLU(),
+            nn.Dropout(config.dropout),
+            nn.Linear(config.hidden_size, config.num_classes)
+        )
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights."""
+        for name, param in self.named_parameters():
+            if 'weight_ih' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+            elif 'bias' in name and ('bias_ih' in name or 'bias_hh' in name):
+                nn.init.zeros_(param)
+                n = param.size(0)
+                param.data[n // 4:n // 2].fill_(1.0)
+            elif 'conv' in name and 'weight' in name and param.dim() >= 2:
+                # Conv1d weights are 3D: (out_channels, in_channels, kernel_size)
+                nn.init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
+            elif 'weight' in name and param.dim() == 2:
+                nn.init.xavier_uniform_(param)
+            # Skip 1D params (BatchNorm weight/bias) - use PyTorch defaults
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None
+    ) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input features, shape (batch, input_seq_length, input_size)
+        hidden : tuple, optional
+            Initial hidden state (h_0, c_0). If None, uses zeros.
+
+        Returns
+        -------
+        torch.Tensor
+            Output logits, shape (batch, num_classes)
+        """
+        # CNN expects (batch, channels, seq_len)
+        x = x.transpose(1, 2)  # (batch, input_size, seq_len)
+
+        # CNN feature extraction
+        x = self.conv_layers(x)  # (batch, hidden_size, seq_len)
+
+        # Back to (batch, seq_len, hidden_size) for LSTM
+        x = x.transpose(1, 2)
+
+        # LSTM encoding
+        lstm_out, (h_n, c_n) = self.lstm(x, hidden)
+
+        # Extract context from final hidden state
+        if self.config.bidirectional:
+            h_forward = h_n[-2]
+            h_backward = h_n[-1]
+            context = torch.cat([h_forward, h_backward], dim=1)
+        else:
+            context = h_n[-1]
+
+        # Classification
+        return self.classifier(context)
+
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        """Get predicted class labels."""
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(x)
+            return torch.argmax(logits, dim=-1)
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        """Get prediction probabilities."""
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(x)
+            return torch.softmax(logits, dim=-1)
+
+    def get_num_parameters(self) -> int:
+        """Return total number of trainable parameters."""
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def __repr__(self) -> str:
+        return (
+            f"CNNLSTMSignalPredictor(\n"
             f"  input_size={self.config.input_size},\n"
             f"  hidden_size={self.config.hidden_size},\n"
             f"  num_layers={self.config.num_layers},\n"

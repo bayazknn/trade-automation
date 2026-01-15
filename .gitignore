@@ -1,18 +1,3 @@
-# Folders to ignore
-backtest_results/
-config_examples/
-hyperopt_results/
-data/
-docs/
-logs/
-.vscode/
-aco_logs/
-aco_strategies/
-aco_checkpoints/
-aco_results/
-# Config files (may contain secrets)
-config.json
-
 # Python cache
 __pycache__/
 *.py[cod]

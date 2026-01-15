@@ -65,6 +65,38 @@ class ConfigurationRecommendation:
 
 
 @dataclass
+class EliteParameterInfluence:
+    """Results from elite individual parameter influence analysis."""
+    param_name: str
+    elite_mean: float                    # Mean value in elite individuals
+    population_mean: float               # Mean value in overall population
+    elite_std: float                     # Std dev in elite individuals
+    population_std: float                # Std dev in overall population
+    effect_size: float                   # Cohen's d effect size
+    ks_statistic: float                  # Kolmogorov-Smirnov statistic
+    ks_pvalue: float                     # KS test p-value
+    mann_whitney_u: float                # Mann-Whitney U statistic
+    mann_whitney_pvalue: float           # Mann-Whitney p-value
+    influence_score: float               # Combined influence score (0-1)
+    elite_range: Tuple[float, float]     # (5th, 95th percentile) in elites
+    interpretation: str                  # Human-readable interpretation
+
+
+@dataclass
+class EliteAnalysisResult:
+    """Complete results from elite individual analysis."""
+    fitness_threshold: float             # Threshold used for elite selection
+    n_elite: int                         # Number of elite individuals
+    n_total: int                         # Total population size
+    elite_fraction: float                # Fraction of population that is elite
+    best_fitness: float                  # Best fitness value found
+    parameter_influences: Dict[str, EliteParameterInfluence]  # Per-param results
+    ranked_parameters: List[str]         # Parameters ranked by influence
+    feature_selection_in_elites: pd.Series  # Feature selection rates in elites
+    elite_individuals: pd.DataFrame      # The actual elite individuals
+
+
+@dataclass
 class AnalysisReport:
     """Complete analysis report."""
     run_ids: List[str]
@@ -569,6 +601,360 @@ class LSTMLogAnalyzer:
             })
 
         return pd.DataFrame(stability_data)
+
+    # =========================================================================
+    # Elite Individual Analysis
+    # =========================================================================
+
+    def analyze_elite_individuals(
+        self,
+        df: Optional[pd.DataFrame] = None,
+        fitness_threshold: float = 0.05,
+        use_absolute: bool = True,
+    ) -> EliteAnalysisResult:
+        """
+        Analyze individuals with exceptional fitness (below threshold).
+
+        Investigates which parameters have the most influence on achieving
+        elite-level fitness scores. Uses multiple statistical tests to
+        determine parameter importance.
+
+        Parameters
+        ----------
+        df : pd.DataFrame, optional
+            Data to analyze. If None, uses loaded data.
+        fitness_threshold : float
+            Fitness value threshold for elite selection (default: 0.05).
+            Individuals with fitness <= threshold are considered elite.
+        use_absolute : bool
+            If True, use absolute fitness value for threshold.
+            If False, use as percentile (e.g., 0.05 = top 5%).
+
+        Returns
+        -------
+        EliteAnalysisResult
+            Complete analysis of elite individuals and parameter influences.
+
+        Examples
+        --------
+        >>> analyzer = LSTMLogAnalyzer("optimization_logs")
+        >>> analyzer.load_logs()
+        >>> elite_result = analyzer.analyze_elite_individuals(fitness_threshold=0.05)
+        >>> print(f"Found {elite_result.n_elite} elite individuals")
+        >>> for param in elite_result.ranked_parameters[:5]:
+        ...     influence = elite_result.parameter_influences[param]
+        ...     print(f"{param}: influence={influence.influence_score:.3f}")
+        """
+        if df is None:
+            df = self._df
+        if df is None:
+            raise ValueError("No data loaded. Call load_logs() first.")
+
+        # Determine elite threshold
+        if use_absolute:
+            actual_threshold = fitness_threshold
+        else:
+            # Use as percentile
+            actual_threshold = np.percentile(df['fitness'], fitness_threshold * 100)
+
+        # Select elite individuals
+        elite_df = df[df['fitness'] <= actual_threshold].copy()
+        non_elite_df = df[df['fitness'] > actual_threshold].copy()
+
+        if len(elite_df) == 0:
+            raise ValueError(
+                f"No individuals found with fitness <= {actual_threshold}. "
+                f"Fitness range: [{df['fitness'].min():.4f}, {df['fitness'].max():.4f}]"
+            )
+
+        # Analyze each parameter
+        parameter_influences = {}
+        for param_name in self.HYPERPARAM_NAMES:
+            if param_name not in df.columns:
+                continue
+
+            influence = self._analyze_elite_parameter_influence(
+                param_name, elite_df, non_elite_df, df
+            )
+            parameter_influences[param_name] = influence
+
+        # Rank parameters by influence score
+        ranked_params = sorted(
+            parameter_influences.keys(),
+            key=lambda p: parameter_influences[p].influence_score,
+            reverse=True
+        )
+
+        # Feature selection rates in elites
+        feature_cols = self._feature_columns or []
+        feature_selection = elite_df[feature_cols].mean().sort_values(ascending=False)
+
+        return EliteAnalysisResult(
+            fitness_threshold=actual_threshold,
+            n_elite=len(elite_df),
+            n_total=len(df),
+            elite_fraction=len(elite_df) / len(df),
+            best_fitness=df['fitness'].min(),
+            parameter_influences=parameter_influences,
+            ranked_parameters=ranked_params,
+            feature_selection_in_elites=feature_selection,
+            elite_individuals=elite_df,
+        )
+
+    def _analyze_elite_parameter_influence(
+        self,
+        param_name: str,
+        elite_df: pd.DataFrame,
+        non_elite_df: pd.DataFrame,
+        full_df: pd.DataFrame,
+    ) -> EliteParameterInfluence:
+        """
+        Analyze how a single parameter influences elite status.
+
+        Uses multiple statistical measures:
+        - Cohen's d effect size
+        - Kolmogorov-Smirnov test (distribution difference)
+        - Mann-Whitney U test (rank-based comparison)
+        """
+        elite_values = elite_df[param_name].dropna()
+        non_elite_values = non_elite_df[param_name].dropna()
+        all_values = full_df[param_name].dropna()
+
+        # Basic statistics
+        elite_mean = elite_values.mean()
+        elite_std = elite_values.std()
+        pop_mean = all_values.mean()
+        pop_std = all_values.std()
+
+        # Cohen's d effect size
+        pooled_std = np.sqrt(
+            ((len(elite_values) - 1) * elite_std**2 +
+             (len(non_elite_values) - 1) * non_elite_values.std()**2) /
+            (len(elite_values) + len(non_elite_values) - 2)
+        )
+        if pooled_std > 0:
+            effect_size = (elite_mean - non_elite_values.mean()) / pooled_std
+        else:
+            effect_size = 0.0
+
+        # Kolmogorov-Smirnov test
+        try:
+            ks_stat, ks_pvalue = stats.ks_2samp(elite_values, non_elite_values)
+        except Exception:
+            ks_stat, ks_pvalue = 0.0, 1.0
+
+        # Mann-Whitney U test
+        try:
+            mw_stat, mw_pvalue = stats.mannwhitneyu(
+                elite_values, non_elite_values, alternative='two-sided'
+            )
+        except Exception:
+            mw_stat, mw_pvalue = 0.0, 1.0
+
+        # Calculate influence score (0-1)
+        # Combine effect size, KS statistic, and significance
+        abs_effect = min(abs(effect_size), 2.0) / 2.0  # Normalize to 0-1
+        significance = 1.0 - min(ks_pvalue, mw_pvalue)  # Higher = more significant
+        influence_score = (abs_effect * 0.4 + ks_stat * 0.3 + significance * 0.3)
+
+        # Elite range
+        elite_range = (
+            elite_values.quantile(0.05),
+            elite_values.quantile(0.95)
+        )
+
+        # Generate interpretation
+        interpretation = self._interpret_parameter_influence(
+            param_name, effect_size, ks_stat, ks_pvalue, elite_mean, pop_mean,
+            elite_range
+        )
+
+        return EliteParameterInfluence(
+            param_name=param_name,
+            elite_mean=elite_mean,
+            population_mean=pop_mean,
+            elite_std=elite_std,
+            population_std=pop_std,
+            effect_size=effect_size,
+            ks_statistic=ks_stat,
+            ks_pvalue=ks_pvalue,
+            mann_whitney_u=mw_stat,
+            mann_whitney_pvalue=mw_pvalue,
+            influence_score=influence_score,
+            elite_range=elite_range,
+            interpretation=interpretation,
+        )
+
+    def _interpret_parameter_influence(
+        self,
+        param_name: str,
+        effect_size: float,
+        ks_stat: float,
+        ks_pvalue: float,
+        elite_mean: float,
+        pop_mean: float,
+        elite_range: Tuple[float, float],
+    ) -> str:
+        """Generate human-readable interpretation of parameter influence."""
+        parts = []
+
+        # Effect size interpretation
+        abs_effect = abs(effect_size)
+        if abs_effect >= 0.8:
+            effect_desc = "very large"
+        elif abs_effect >= 0.5:
+            effect_desc = "medium"
+        elif abs_effect >= 0.2:
+            effect_desc = "small"
+        else:
+            effect_desc = "negligible"
+
+        direction = "higher" if effect_size > 0 else "lower"
+        parts.append(f"{effect_desc} effect ({direction} in elites)")
+
+        # Significance
+        if ks_pvalue < 0.01:
+            parts.append("highly significant (p<0.01)")
+        elif ks_pvalue < 0.05:
+            parts.append("significant (p<0.05)")
+        else:
+            parts.append("not significant")
+
+        # Distribution difference
+        if ks_stat > 0.3:
+            parts.append("distinct distribution")
+        elif ks_stat > 0.15:
+            parts.append("moderate distribution shift")
+
+        # Optimal range suggestion
+        parts.append(f"elite range: [{elite_range[0]:.4f}, {elite_range[1]:.4f}]")
+
+        return "; ".join(parts)
+
+    def plot_elite_analysis(
+        self,
+        result: EliteAnalysisResult,
+        top_k: int = 8,
+        figsize: Tuple[int, int] = (16, 12),
+        save_path: Optional[str] = None,
+    ) -> None:
+        """
+        Plot comprehensive elite analysis visualization.
+
+        Creates a multi-panel figure showing:
+        1. Parameter influence ranking
+        2. Top parameter distributions (elite vs population)
+        3. Feature selection in elites
+        4. Elite fitness distribution
+        """
+        fig = plt.figure(figsize=figsize)
+
+        # Create grid: 2 rows, 3 columns
+        gs = fig.add_gridspec(2, 3, hspace=0.3, wspace=0.3)
+
+        # Panel 1: Parameter influence ranking (full height left column)
+        ax1 = fig.add_subplot(gs[:, 0])
+        params = result.ranked_parameters
+        influences = [result.parameter_influences[p].influence_score for p in params]
+
+        colors = ['#2ecc71' if i >= 0.5 else '#f39c12' if i >= 0.3 else '#e74c3c'
+                  for i in influences]
+        ax1.barh(params, influences, color=colors)
+        ax1.set_xlabel('Influence Score')
+        ax1.set_title('Parameter Influence on Elite Status')
+        ax1.axvline(0.5, color='green', linestyle='--', alpha=0.5, label='High influence')
+        ax1.axvline(0.3, color='orange', linestyle='--', alpha=0.5, label='Medium')
+        ax1.invert_yaxis()
+        ax1.legend(fontsize=8)
+
+        # Panel 2 & 3: Top parameter distributions
+        top_params = result.ranked_parameters[:min(top_k, 4)]
+        for idx, param in enumerate(top_params):
+            row = idx // 2
+            col = 1 + idx % 2
+            ax = fig.add_subplot(gs[row, col])
+
+            influence = result.parameter_influences[param]
+            elite_vals = result.elite_individuals[param]
+            all_vals = self._df[param] if self._df is not None else elite_vals
+
+            # Histogram comparison
+            ax.hist(all_vals, bins=25, alpha=0.4, label='All', color='gray', density=True)
+            ax.hist(elite_vals, bins=25, alpha=0.7, label='Elite', color='green', density=True)
+
+            # Mark elite range
+            ax.axvline(influence.elite_range[0], color='darkgreen', linestyle='--', linewidth=2)
+            ax.axvline(influence.elite_range[1], color='darkgreen', linestyle='--', linewidth=2)
+
+            ax.set_title(f'{param}\nInfluence: {influence.influence_score:.3f}, Effect: {influence.effect_size:.2f}')
+            ax.legend(fontsize=8)
+
+        plt.suptitle(
+            f'Elite Analysis: {result.n_elite} individuals with fitness <= {result.fitness_threshold:.4f}\n'
+            f'({result.elite_fraction*100:.1f}% of population, best fitness: {result.best_fitness:.4f})',
+            fontsize=12, fontweight='bold'
+        )
+
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        plt.show()
+
+    def print_elite_summary(
+        self,
+        result: EliteAnalysisResult,
+        top_k: int = 10,
+    ) -> str:
+        """
+        Generate and print a text summary of elite analysis.
+
+        Returns the summary string for further use.
+        """
+        lines = [
+            "=" * 70,
+            "ELITE INDIVIDUAL ANALYSIS SUMMARY",
+            "=" * 70,
+            f"Fitness Threshold: <= {result.fitness_threshold:.4f}",
+            f"Elite Individuals: {result.n_elite} / {result.n_total} ({result.elite_fraction*100:.1f}%)",
+            f"Best Fitness Found: {result.best_fitness:.4f}",
+            "",
+            "TOP INFLUENTIAL PARAMETERS (ranked by influence score):",
+            "-" * 70,
+        ]
+
+        for i, param in enumerate(result.ranked_parameters[:top_k], 1):
+            influence = result.parameter_influences[param]
+            lines.append(
+                f"{i:2d}. {param:25s} | Score: {influence.influence_score:.3f} | "
+                f"Effect: {influence.effect_size:+.3f} | "
+                f"KS: {influence.ks_statistic:.3f} (p={influence.ks_pvalue:.4f})"
+            )
+            lines.append(f"    Elite: {influence.elite_mean:.4f} +/- {influence.elite_std:.4f} "
+                        f"| Pop: {influence.population_mean:.4f} +/- {influence.population_std:.4f}")
+            lines.append(f"    Range: [{influence.elite_range[0]:.4f}, {influence.elite_range[1]:.4f}]")
+            lines.append(f"    -> {influence.interpretation}")
+            lines.append("")
+
+        lines.extend([
+            "-" * 70,
+            "RECOMMENDED PARAMETER VALUES FOR ELITE PERFORMANCE:",
+            "-" * 70,
+        ])
+
+        # Show recommended values for top influential parameters
+        for param in result.ranked_parameters[:5]:
+            influence = result.parameter_influences[param]
+            if influence.influence_score >= 0.3:
+                lines.append(
+                    f"  {param}: target range [{influence.elite_range[0]:.4f}, "
+                    f"{influence.elite_range[1]:.4f}]"
+                )
+
+        lines.append("=" * 70)
+
+        summary = "\n".join(lines)
+        print(summary)
+        return summary
 
     # =========================================================================
     # Configuration Recommendations

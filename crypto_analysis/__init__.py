@@ -61,7 +61,15 @@ from .log_analyzer import (
     AnalysisReport,
 )
 
-__version__ = "0.4.0"  # Updated for 2-class binary classification
+# Import indicator association analyzer components
+from .indicator_association_analyzer import (
+    IndicatorAssociationAnalyzer,
+    IndicatorAssociationResult,
+    FeatureStatistics,
+    AssociationRule,
+)
+
+__version__ = "0.5.0"  # Added indicator association analyzer
 __all__ = [
     # Signal Population
     "SignalPopulator",
@@ -103,4 +111,9 @@ __all__ = [
     "EvolutionAnalysisResult",
     "ConfigurationRecommendation",
     "AnalysisReport",
+    # Indicator Association Analyzer
+    "IndicatorAssociationAnalyzer",
+    "IndicatorAssociationResult",
+    "FeatureStatistics",
+    "AssociationRule",
 ]

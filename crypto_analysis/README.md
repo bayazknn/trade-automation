@@ -7,6 +7,8 @@ A Python package for cryptocurrency data analysis and signal generation, designe
 - **Signal Population**: Generate entry/exit signals based on price percentage changes
 - **Indicator Optimization**: Optimize technical indicator parameters using grid search and hyperopt
 - **LSTM Signal Prediction**: PyTorch LSTM model for predicting entry/hold/exit signals
+- **LSTM Hyperparameter Optimization**: APO (Artificial Protozoa Optimizer) for joint feature selection and hyperparameter tuning
+- **Optimization Log Analysis**: Analyze optimization runs to extract insights and recommend configurations
 - **57 Technical Indicators**: RSI, MACD, STOCH, BBANDS, EMA, SMA, Hilbert Transform, and more
 - **Parallel Processing**: Multi-threaded optimization with configurable worker count
 - **High Performance**: NumPy-vectorized operations for fast backtesting
@@ -16,7 +18,7 @@ A Python package for cryptocurrency data analysis and signal generation, designe
 The package is part of the Freqtrade user_data directory. Ensure dependencies are installed:
 
 ```bash
-pip install pandas numpy ta-lib optuna torch scikit-learn
+pip install pandas numpy ta-lib optuna torch scikit-learn scipy matplotlib seaborn
 ```
 
 ## Quick Start
@@ -238,6 +240,268 @@ Only valid trading patterns are used for training:
 - **ENTRY_EXIT**: `[entry, hold*, hold*, exit]` - Valid trade sequence
 
 Invalid sequences (e.g., multiple entries, exits without entry) are filtered out.
+
+### LSTMMetaheuristicOptimizer
+
+APO (Artificial Protozoa Optimizer) for jointly optimizing LSTM hyperparameters and feature selection. Based on the bio-inspired metaheuristic algorithm modeling protozoa survival mechanisms.
+
+#### Basic Usage
+
+```python
+from crypto_analysis import LSTMMetaheuristicOptimizer
+
+# Load DatasetBuilder output
+df = builder.build(symbol="BTC", threshold_pct=3.0)
+
+# Create optimizer
+optimizer = LSTMMetaheuristicOptimizer(
+    df=df,
+    pop_size=10,              # Population size
+    iterations=50,            # Number of optimization iterations
+    n_workers=4,              # Parallel workers for evaluation
+    epochs_per_eval=100,      # Training epochs per fitness evaluation
+    verbose=True,
+    enable_logging=True,      # Enable CSV logging
+)
+
+# Run optimization
+result = optimizer.optimize()
+
+print(f"Best fitness: {result.best_fitness}")
+print(f"Selected features: {result.n_features_selected}")
+print(f"Best parameters: {result.best_params}")
+```
+
+#### Training from Optimization Result
+
+```python
+# Train a full model using best parameters
+trainer = optimizer.train_from_result(result, epochs=200)
+
+# Access the trained model
+model = trainer.model
+preprocessor = trainer.preprocessor
+```
+
+#### Key Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `pop_size` | 10 | Population size for APO algorithm |
+| `iterations` | 50 | Number of optimization iterations |
+| `n_workers` | 4 | Parallel workers for evaluation |
+| `min_features` | 5 | Minimum features that must be selected |
+| `epochs_per_eval` | 100 | Training epochs per fitness evaluation |
+| `np_neighbors` | 1 | Number of neighbor pairs for APO foraging |
+| `pf_max` | 0.1 | Maximum proportion fraction for dormancy/reproduction |
+| `elitist_selection` | False | Enable correlation-based feature selection |
+| `elitist_constant` | 0.25 | Scaling constant for elitist threshold |
+| `enable_logging` | False | Enable CSV logging of optimization progress |
+| `checkpoint_interval` | 5 | Save checkpoint every N iterations |
+
+#### APO Algorithm
+
+The optimizer uses the Artificial Protozoa Optimizer (APO) algorithm with four behaviors:
+
+1. **Autotrophic Foraging (Exploration)**: Photosynthesis-driven movement toward random solutions
+2. **Heterotrophic Foraging (Exploitation)**: Nutrient absorption behavior refining current solutions
+3. **Dormancy (Exploration)**: Random regeneration under stress conditions
+4. **Reproduction (Exploitation)**: Binary fission with perturbation for local search
+
+#### Fitness Function
+
+For binary classification (hold=0, trade=1), the fitness combines:
+
+```
+fitness = -(trade_score * hold_f1 * trade_recall_factor)
+```
+
+Where:
+- `trade_score`: Recall-biased geometric mean of trade precision/recall
+- `hold_f1`: F1 score for hold class
+- `trade_recall_factor`: Penalty for low trade recall (< 30%)
+
+#### Hyperparameter Search Space
+
+| Parameter | Range | Type | Description |
+|-----------|-------|------|-------------|
+| `class_weight_power` | 0.25-0.40 | float | Class imbalance handling |
+| `focal_gamma` | 1.0-4.0 | float | Focal loss gamma |
+| `learning_rate` | 0.0008-0.003 | float | Training learning rate |
+| `dropout` | 0.18-0.45 | float | Dropout rate |
+| `hidden_size` | 140-280 | int | LSTM hidden size |
+| `num_layers` | 2-3 | int | Number of LSTM layers |
+| `weight_decay` | 0.001-0.018 | float | L2 regularization |
+| `label_smoothing` | 0.06-0.20 | float | Label smoothing factor |
+| `batch_size` | 32-160 | int | Training batch size |
+| `scheduler_patience` | 6-12 | int | LR scheduler patience |
+| `input_seq_length` | 16 | int | Input sequence length |
+
+#### Resuming from Checkpoint
+
+```python
+# Resume optimization from checkpoint
+optimizer, start_iter = LSTMMetaheuristicOptimizer.from_checkpoint(
+    df=df,
+    checkpoint_path="lstm_optimization_checkpoints/checkpoint_iter_25.pkl",
+    pop_size=10,
+    iterations=50,
+)
+
+# Continue optimization
+result = optimizer.optimize(start_iteration=start_iter)
+```
+
+#### CSV Log Format
+
+When `enable_logging=True`, logs are saved to `optimization_logs/run_{run_id}.csv` with columns:
+- `run_id`, `iteration`, `individual_idx`
+- `feat_0`, `feat_1`, ... (binary feature selection)
+- Hyperparameter values and bounds
+- Optimizer settings
+- `fitness`
+
+### LSTMLogAnalyzer
+
+Analyzes optimization CSV logs to provide insights for configuring the APO optimizer, including feature importance, parameter value analysis, evolution tracking, and configuration recommendations.
+
+#### Basic Usage
+
+```python
+from crypto_analysis import LSTMLogAnalyzer
+
+# Initialize analyzer
+analyzer = LSTMLogAnalyzer(
+    log_dir="optimization_logs",
+    top_percentile=10.0  # Top 10% performers
+)
+
+# Run complete analysis
+report = analyzer.analyze_all(run_ids=['97618be3'])
+
+# Generate markdown report
+analyzer.generate_report(report, "analysis_report.md", format='markdown')
+
+# Generate JSON report
+analyzer.generate_report(report, "analysis_report.json", format='json')
+```
+
+#### Feature Importance Analysis
+
+```python
+# Load logs
+df = analyzer.load_logs(run_ids=['97618be3'])
+
+# Analyze feature importance
+feature_result = analyzer.analyze_feature_importance(df, top_k=20)
+
+print("Top features by correlation:")
+print(feature_result.feature_correlations.head(10))
+
+# Visualize
+analyzer.plot_feature_importance(feature_result)
+analyzer.plot_cooccurrence(feature_result)
+```
+
+#### Parameter Analysis
+
+```python
+# Analyze hyperparameter distributions
+param_results = analyzer.analyze_parameters(df)
+
+for param_name, result in param_results.items():
+    print(f"{param_name}:")
+    print(f"  Correlation: {result.fitness_correlation:.3f}")
+    print(f"  Utilization: {result.utilization:.2%}")
+    print(f"  Proximity: {result.bound_proximity}")
+    if result.recommended_bounds:
+        print(f"  Recommended: {result.recommended_bounds}")
+
+# Visualize
+analyzer.plot_parameter_distributions(param_results, df)
+analyzer.plot_bound_utilization(param_results)
+```
+
+#### Evolution Analysis
+
+```python
+# Analyze fitness progression over iterations
+evolution_result = analyzer.analyze_evolution(df)
+
+print(f"Converged parameters: {evolution_result.converged_params}")
+print(f"Still exploring: {evolution_result.diverse_params}")
+
+# Visualize
+analyzer.plot_fitness_evolution(evolution_result)
+analyzer.plot_parameter_convergence(evolution_result)
+```
+
+#### Elite Individual Analysis
+
+Analyze what distinguishes top-performing individuals using statistical tests (Cohen's d, KS test, Mann-Whitney U).
+
+```python
+# Analyze elite individuals (fitness <= threshold)
+elite_result = analyzer.analyze_elite_individuals(
+    df,
+    fitness_threshold=-0.48,  # Negative because fitness is negated
+    use_absolute=True
+)
+
+print(f"Elite count: {elite_result.n_elite} ({elite_result.elite_fraction:.1%})")
+print(f"Best fitness: {-elite_result.best_fitness:.4f}")
+
+# Top influential parameters
+for param in elite_result.ranked_parameters[:5]:
+    influence = elite_result.parameter_influences[param]
+    print(f"{param}: influence={influence.influence_score:.3f}, "
+          f"effect={influence.effect_size:+.3f}")
+
+# Print detailed summary
+analyzer.print_elite_summary(elite_result)
+
+# Visualize
+analyzer.plot_elite_analysis(elite_result)
+```
+
+#### Generate Configuration Recommendations
+
+```python
+# Get synthesized recommendations
+recommendations = analyzer.generate_recommendations(
+    feature_result, param_results, evolution_result, df
+)
+
+print(f"Confidence: {recommendations.confidence:.2f}")
+print(f"APO settings: {recommendations.apo_settings}")
+
+# Export as Python code
+analyzer.export_config_code(recommendations, "recommended_config.py")
+```
+
+#### Analysis Results Dataclasses
+
+| Class | Description |
+|-------|-------------|
+| `FeatureImportanceResult` | Feature correlations, top features, selection frequency, co-occurrence |
+| `ParameterAnalysisResult` | Per-parameter correlation, optimal range, bound proximity, utilization |
+| `EvolutionAnalysisResult` | Fitness progression, convergence scores, converged/diverse params |
+| `EliteAnalysisResult` | Elite individuals, parameter influences, ranked parameters |
+| `EliteParameterInfluence` | Effect size, KS/Mann-Whitney stats, influence score, interpretation |
+| `ConfigurationRecommendation` | Recommended bounds, APO settings, feature suggestions |
+| `AnalysisReport` | Complete analysis combining all results |
+
+#### Visualization Methods
+
+| Method | Description |
+|--------|-------------|
+| `plot_feature_importance()` | Feature correlation and selection frequency |
+| `plot_cooccurrence()` | Feature co-occurrence heatmap |
+| `plot_parameter_distributions()` | Parameter histograms with bounds |
+| `plot_bound_utilization()` | Bound utilization bar chart |
+| `plot_fitness_evolution()` | Fitness progression over iterations |
+| `plot_parameter_convergence()` | Parameter convergence scores |
+| `plot_elite_analysis()` | Multi-panel elite analysis visualization |
 
 ## Available Indicators
 

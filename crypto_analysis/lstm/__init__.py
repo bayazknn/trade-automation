@@ -1,7 +1,11 @@
 """
 LSTM Signal Prediction Package
 
-PyTorch-based LSTM model for binary classification of trading signals (hold/trade).
+PyTorch-based models for binary classification of trading signals (hold/trade).
+
+Supported model architectures:
+- LSTMSignalPredictor: Standard LSTM with input projection
+- CNNLSTMSignalPredictor: CNN feature extractor + LSTM encoder (hybrid model)
 
 Predicts whether the next period is tradeable:
 - hold (0): No trade opportunity
@@ -12,6 +16,7 @@ Usage:
         DataPreprocessor,
         SignalDataset,
         LSTMSignalPredictor,
+        CNNLSTMSignalPredictor,
         BinarySignalLoss,
         Trainer,
         TrainingConfig,
@@ -44,7 +49,7 @@ Example:
 
 from .data_preprocessor import DataPreprocessor
 from .dataset import SignalDataset, create_sequences
-from .model import LSTMSignalPredictor, ModelConfig
+from .model import LSTMSignalPredictor, CNNLSTMSignalPredictor, ModelConfig
 from .loss import BinarySignalLoss, FocalBinaryLoss, WeightedSignalLoss, FocalWeightedLoss
 from .trainer import Trainer, TrainingConfig, TrainingHistory
 from .predictor import Predictor, PredictionResult, ThresholdResult
@@ -59,8 +64,9 @@ __all__ = [
     # Dataset
     "SignalDataset",
     "create_sequences",
-    # Model
+    # Models
     "LSTMSignalPredictor",
+    "CNNLSTMSignalPredictor",
     "ModelConfig",
     # Loss (new names)
     "BinarySignalLoss",

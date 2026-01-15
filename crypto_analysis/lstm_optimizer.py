@@ -1,14 +1,18 @@
 """
-APO (Artificial Protozoa Optimizer) for LSTM Hyperparameters and Feature Selection
+APO (Artificial Protozoa Optimizer) for LSTM/CNN-LSTM Hyperparameters and Feature Selection
 
 Uses APO algorithm to jointly optimize:
 1. Feature selection from DatasetBuilder output
-2. LSTM training hyperparameters
+2. Model training hyperparameters (supports LSTM and CNN-LSTM architectures)
+
+Supported model architectures:
+- 'lstm': Standard LSTM with input projection (LSTMSignalPredictor)
+- 'cnn_lstm': CNN feature extractor + LSTM encoder (CNNLSTMSignalPredictor)
 
 Objective: Maximize trade_F1 * hold_F1 on test dataset (binary classification)
 
 For binary classification (hold=0, trade=1):
-- Input: 12 timesteps of features
+- Input: 16 timesteps of features
 - Output: Single prediction per sequence (0=hold, 1=trade)
 
 Based on: Wang, X., et al. (2024). "Artificial Protozoa Optimizer (APO):
@@ -55,7 +59,7 @@ def set_seed(seed: int) -> None:
 
 @dataclass
 class LSTMOptimizationResult:
-    """Result from LSTM metaheuristic optimization."""
+    """Result from LSTM/CNN-LSTM metaheuristic optimization."""
     best_fitness: float
     best_individual: np.ndarray
     selected_features: List[str]
@@ -64,6 +68,7 @@ class LSTMOptimizationResult:
     test_metrics: Dict[str, float]
     history: List[float]  # Best fitness per iteration
     seed: int = 42  # Seed used for the best individual (for reproducibility)
+    model_type: str = 'lstm'  # Model architecture used ('lstm' or 'cnn_lstm')
 
 
 @dataclass
@@ -153,24 +158,34 @@ class LSTMMetaheuristicOptimizer:
     >>> print(f"Best fitness: {result.best_fitness}")
     """
 
-    # Hyperparameter configurations with bounds and types
+    # Base hyperparameter configurations shared by all models
     # For binary classification (hold=0, trade=1)
-    HYPERPARAM_CONFIGS = [
+    BASE_HYPERPARAM_CONFIGS = [
         # Class imbalance handling
-        HyperparamConfig('class_weight_power', 0.3, 0.8, 'float', 'class_weight_power'),
-        HyperparamConfig('focal_gamma', 1.0, 3.0, 'float', 'focal_gamma'),
+        HyperparamConfig('class_weight_power', 0.25, 0.40, 'float', 'class_weight_power'),
+        HyperparamConfig('focal_gamma', 1.0, 4.0, 'float', 'focal_gamma'),
         # Training parameters
-        HyperparamConfig('learning_rate', 0.00005, 0.002, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.15, 0.40, 'float', 'dropout'),
-        HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
-        HyperparamConfig('num_layers', 2, 4, 'int', 'num_layers'),
-        HyperparamConfig('weight_decay', 0.0005, 0.015, 'float', 'weight_decay'),
-        HyperparamConfig('label_smoothing', 0.0, 0.15, 'float', 'label_smoothing'),
-        HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
+        HyperparamConfig('learning_rate', 0.0005, 0.003, 'float', 'learning_rate'),
+        HyperparamConfig('dropout', 0.15, 0.45, 'float', 'dropout'),
+        HyperparamConfig('hidden_size', 128, 320, 'int', 'hidden_size'),
+        HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
+        HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
+        HyperparamConfig('label_smoothing', 0.05, 0.20, 'float', 'label_smoothing'),
+        HyperparamConfig('batch_size', 32, 160, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
-        # Sequence length (can be tuned for binary classification)
-        HyperparamConfig('input_seq_length', 8, 16, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 16, 16, 'int', 'input_seq_length'),
     ]
+
+    # CNN-LSTM specific hyperparameters
+    CNN_HYPERPARAM_CONFIGS = [
+        # CNN kernel size for Conv1d layers (3, 5, or 7)
+        HyperparamConfig('kernel_size', 3, 7, 'int', 'kernel_size'),
+        # Number of CNN conv blocks (1-3)
+        HyperparamConfig('num_conv_layers', 1, 3, 'int', 'num_conv_layers'),
+    ]
+
+    # Default config uses base (for backward compatibility)
+    HYPERPARAM_CONFIGS = BASE_HYPERPARAM_CONFIGS
 
 
 
@@ -183,7 +198,7 @@ class LSTMMetaheuristicOptimizer:
         pop_size: int = 10,
         iterations: int = 50,
         n_workers: int = 4,
-        min_features: int = 5,
+        min_features: int = 1,
         epochs_per_eval: int = 100,
         checkpoint_interval: int = 5,
         checkpoint_dir: str = 'lstm_optimization_checkpoints',
@@ -195,6 +210,7 @@ class LSTMMetaheuristicOptimizer:
         enable_logging: bool = False,
         log_dir: str = 'optimization_logs',
         seed: int = 42,
+        model_type: str = 'lstm',
     ):
         self.df = df
         self.pop_size = pop_size
@@ -213,6 +229,17 @@ class LSTMMetaheuristicOptimizer:
         self.log_dir = Path(log_dir)
         self.seed = seed
         self.run_id: Optional[str] = None  # Generated when optimize() starts
+
+        # Model type selection
+        if model_type not in ('lstm', 'cnn_lstm'):
+            raise ValueError(f"model_type must be 'lstm' or 'cnn_lstm', got '{model_type}'")
+        self.model_type = model_type
+
+        # Set hyperparameter configs based on model type
+        if model_type == 'cnn_lstm':
+            self.HYPERPARAM_CONFIGS = self.BASE_HYPERPARAM_CONFIGS + self.CNN_HYPERPARAM_CONFIGS
+        else:
+            self.HYPERPARAM_CONFIGS = self.BASE_HYPERPARAM_CONFIGS
 
         # Identify selectable feature columns (all columns except excluded ones)
         self.feature_columns = [
@@ -243,6 +270,7 @@ class LSTMMetaheuristicOptimizer:
 
         if self.verbose:
             print(f"LSTMMetaheuristicOptimizer (APO) initialized:")
+            print(f"  - Model type: {self.model_type}")
             print(f"  - DataFrame mode: {self.dataframe_mode}")
             print(f"  - Feature columns: {self.n_features}")
             print(f"  - Hyperparameters: {self.n_params}")
@@ -373,13 +401,6 @@ class LSTMMetaheuristicOptimizer:
                     correlation_vector[i] = max_phi
                 except Exception:
                     correlation_vector[i] = 0.0
-
-        # Min-max normalization to [0, 1]
-        corr_min = correlation_vector.min()
-        corr_max = correlation_vector.max()
-        if corr_max > corr_min:
-            correlation_vector = (correlation_vector - corr_min) / (corr_max - corr_min)
-        # If all values are the same, leave as-is (already 0 or all equal)
 
         return correlation_vector
 
@@ -513,11 +534,18 @@ class LSTMMetaheuristicOptimizer:
             feature_lower = self.lower_bound[:self.n_features]
 
 
+            # Min-max normalization to [0, 1]
+            corr_min = self.correlation_vector.min()
+            corr_max = self.correlation_vector.max()
+            if corr_max > corr_min:
+                correlation_vector = (self.correlation_vector - corr_min) / (corr_max - corr_min)
+            # If all values are the same, leave as-is (already 0 or all equal)
+
             conditions = [
-                self.correlation_vector < 0.10,
-                self.correlation_vector < 0.20,
-                self.correlation_vector > 0.80,
-                self.correlation_vector > 0.90,
+                correlation_vector < 0.01,
+                correlation_vector < 0.05,
+                correlation_vector > 0.80,
+                correlation_vector > 0.90,
             ]
             choices = [
                 -self.elitist_constant * 1.8,
@@ -529,11 +557,11 @@ class LSTMMetaheuristicOptimizer:
             constant = np.select(conditions, choices, default=self.elitist_constant)
 
 
-            threshold = feature_lower * self.correlation_vector * constant
+            threshold = feature_lower * correlation_vector * constant
             feature_mask = feature_values > threshold
         else:
             # Standard selection: >= 0 = selected
-            feature_mask = feature_values >= 0
+            feature_mask = feature_values >= 0 # Experimental: select all features
 
         selected_features = [
             col for col, sel in zip(self.feature_columns, feature_mask) if sel
@@ -575,7 +603,7 @@ class LSTMMetaheuristicOptimizer:
         from .lstm import (
             DataPreprocessor, create_sequences,
             SignalDataset, TrainingConfig, ModelConfig,
-            LSTMSignalPredictor, Trainer
+            LSTMSignalPredictor, CNNLSTMSignalPredictor, Trainer
         )
 
         selected_features, config_params = self._decode_individual(individual)
@@ -643,8 +671,11 @@ class LSTMMetaheuristicOptimizer:
                 input_seq_length=input_seq_length,
             )
 
-            # 5. Train
-            model = LSTMSignalPredictor(model_config)
+            # 5. Create model based on model_type
+            if self.model_type == 'cnn_lstm':
+                model = CNNLSTMSignalPredictor(model_config)
+            else:
+                model = LSTMSignalPredictor(model_config)
             trainer = Trainer(model, training_config, preprocessor=preprocessor)
             trainer.train(dataset)
 
@@ -1154,6 +1185,7 @@ class LSTMMetaheuristicOptimizer:
             test_metrics=self.metrics_dict.get(best_idx, {}),
             history=self.best_fitness_history,
             seed=best_individual_seed,
+            model_type=self.model_type,
         )
 
     def train_from_result(
@@ -1187,7 +1219,7 @@ class LSTMMetaheuristicOptimizer:
         from .lstm import (
             DataPreprocessor, create_sequences,
             SignalDataset, TrainingConfig, ModelConfig,
-            LSTMSignalPredictor, Trainer
+            LSTMSignalPredictor, CNNLSTMSignalPredictor, Trainer
         )
 
         # Set seed for reproducibility (same seed used during optimization)
@@ -1196,11 +1228,13 @@ class LSTMMetaheuristicOptimizer:
         # Get parameters from result
         params = result.best_params
         selected_features = result.selected_features
+        model_type = result.model_type if hasattr(result, 'model_type') else self.model_type
 
         if verbose:
             print("=" * 60)
             print("Training Model from Optimization Result (Binary Classification)")
             print("=" * 60)
+            print(f"Model type: {model_type}")
             print(f"Seed: {result.seed}")
             print(f"Selected features: {len(selected_features)}")
             print(f"Parameters: {params}")
@@ -1255,10 +1289,13 @@ class LSTMMetaheuristicOptimizer:
             input_seq_length=input_seq_length,
         )
 
-        # 6. Create and train model
-        model = LSTMSignalPredictor(model_config)
+        # 6. Create and train model based on model_type
+        if model_type == 'cnn_lstm':
+            model = CNNLSTMSignalPredictor(model_config)
+        else:
+            model = LSTMSignalPredictor(model_config)
         trainer = Trainer(model, config, preprocessor=preprocessor)
-        history = trainer.train(dataset)
+        trainer.train(dataset)
 
         # 7. Evaluate and print report
         if verbose:
@@ -1270,6 +1307,7 @@ class LSTMMetaheuristicOptimizer:
     def __repr__(self) -> str:
         return (
             f"LSTMMetaheuristicOptimizer("
+            f"model_type='{self.model_type}', "
             f"n_features={self.n_features}, "
             f"n_params={self.n_params}, "
             f"pop_size={self.pop_size}, "
