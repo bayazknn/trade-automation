@@ -166,21 +166,21 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
         HyperparamConfig('focal_gamma', 1.0, 4.0, 'float', 'focal_gamma'),
         # Training parameters (narrowed based on elite analysis)
-        HyperparamConfig('learning_rate', 0.0003, 0.0017, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.10, 0.40, 'float', 'dropout'),
+        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
+        HyperparamConfig('dropout', 0.01, 0.10, 'float', 'dropout'),
         HyperparamConfig('hidden_size', 96, 256, 'int', 'hidden_size'),
-        HyperparamConfig('num_layers', 2, 3, 'int', 'num_layers'),
+        HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
         HyperparamConfig('label_smoothing', 0.05, 0.12, 'float', 'label_smoothing'),
         HyperparamConfig('batch_size', 64, 128, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
-        HyperparamConfig('input_seq_length', 10, 18, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 12, 21, 'int', 'input_seq_length'),
     ]
 
     # CNN-LSTM specific hyperparameters
     CNN_HYPERPARAM_CONFIGS = [
         # CNN kernel size for Conv1d layers (3, 5, or 7)
-        HyperparamConfig('kernel_size', 3, 7, 'int', 'kernel_size'),
+        HyperparamConfig('kernel_size', 3, 9, 'int', 'kernel_size'),
         # Number of CNN conv blocks (1-3)
         HyperparamConfig('num_conv_layers', 1, 3, 'int', 'num_conv_layers'),
     ]
@@ -562,7 +562,7 @@ class LSTMMetaheuristicOptimizer:
             feature_mask = feature_values > threshold
         else:
             # Standard selection: >= 0 = selected
-            feature_mask = feature_values >= 0 # Experimental: select all features
+            feature_mask = feature_values >= -30 # Experimental: select most features
 
         selected_features = [
             col for col, sel in zip(self.feature_columns, feature_mask) if sel
@@ -669,6 +669,7 @@ class LSTMMetaheuristicOptimizer:
                 hidden_size=config_params['hidden_size'],
                 num_layers=config_params['num_layers'],
                 dropout=config_params['dropout'],
+                kernel_size=config_params['kernel_size'],
                 input_seq_length=input_seq_length,
             )
 

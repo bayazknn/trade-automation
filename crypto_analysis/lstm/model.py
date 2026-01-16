@@ -27,6 +27,7 @@ class ModelConfig:
     bidirectional: bool = False  # Use bidirectional LSTM
     num_classes: int = 2      # Number of output classes (hold=0, trade=1)
     input_seq_length: int = 12   # Length of input sequences
+    kernel_size: int = 3      # Kernel size for CNN (if used)
 
 
 class LSTMSignalPredictor(nn.Module):
@@ -249,18 +250,25 @@ class CNNLSTMSignalPredictor(nn.Module):
 
         # CNN feature extractor
         # Input: (batch, input_size, seq_len) after transpose
+
         self.conv_layers = nn.Sequential(
             # First conv block
-            nn.Conv1d(config.input_size, config.hidden_size, kernel_size=3, padding=1),
+            nn.Conv1d(config.input_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
             nn.BatchNorm1d(config.hidden_size),
-            nn.ReLU(),
-            nn.Dropout(config.dropout * 0.5),
+            # nn.ReLU(),
+            # nn.Dropout(config.dropout * 0.3),
 
             # Second conv block
-            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=3, padding=1),
+            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
+            nn.BatchNorm1d(config.hidden_size),
+            # nn.ReLU(),
+            # nn.Dropout(config.dropout * 0.3),
+
+            # Third conv block
+            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
             nn.BatchNorm1d(config.hidden_size),
             nn.ReLU(),
-            nn.Dropout(config.dropout * 0.5),
+            # nn.Dropout(config.dropout * 0.3),
         )
 
         # LSTM encoder
@@ -282,7 +290,7 @@ class CNNLSTMSignalPredictor(nn.Module):
             nn.Linear(lstm_output_size, config.hidden_size),
             nn.LayerNorm(config.hidden_size),
             nn.ReLU(),
-            nn.Dropout(config.dropout),
+            # nn.Dropout(config.dropout),
             nn.Linear(config.hidden_size, config.num_classes)
         )
 
