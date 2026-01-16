@@ -122,6 +122,8 @@ class DualCNNMetaheuristicOptimizer:
 
     # Columns to exclude from feature selection
     EXCLUDED_COLUMNS = ['date', 'signal', 'signal_pct_change', 'period_id', 'tradeable']
+    # OHLCV columns - exclude from binary DataFrame (they need scaling, handled in technical)
+    OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
     # Hyperparameter configurations (Total: 20 params)
     # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
@@ -189,10 +191,13 @@ class DualCNNMetaheuristicOptimizer:
         self.run_id: Optional[str] = None
 
         # Identify feature columns
+        # Binary columns: exclude metadata AND OHLCV (OHLCV needs scaling, not binary)
+        binary_exclude = set(self.EXCLUDED_COLUMNS) | set(self.OHLCV_COLUMNS)
         self.binary_columns = [
             col for col in df_binary.columns
-            if col not in self.EXCLUDED_COLUMNS
+            if col not in binary_exclude
         ]
+        # Technical columns: exclude only metadata (OHLCV is included and will be scaled)
         self.technical_columns = [
             col for col in df_technical.columns
             if col not in self.EXCLUDED_COLUMNS
