@@ -99,15 +99,13 @@ class CNNBranch(nn.Module):
         # Use padding='same' to always preserve sequence length regardless of kernel size
         layers.append(nn.Conv1d(input_features, num_channels, kernel_size, padding='same'))
         layers.append(nn.BatchNorm1d(num_channels))
-        # layers.append(nn.GELU())
+        layers.append(nn.GELU())
 
         # Additional conv layers: num_channels -> num_channels
         for _ in range(num_layers - 1):
             layers.append(nn.Conv1d(num_channels, num_channels, kernel_size, padding='same'))
             layers.append(nn.BatchNorm1d(num_channels))
-            # if _ == num_layers - 2:
-            #     # No activation after last conv layer
-            #     layers.append(nn.ReLU())
+            layers.append(nn.GELU())
 
         self.conv_layers = nn.Sequential(*layers)
         self.output_channels = num_channels
@@ -214,9 +212,9 @@ class DualCNNLSTMPredictor(nn.Module):
             fusion_output_size = int(config.fusion_hidden_size)
             self.fusion = nn.Sequential(
                 nn.Linear(combined_features, fusion_output_size),
-                # nn.LayerNorm(fusion_output_size),
+                nn.LayerNorm(fusion_output_size),
                 nn.GELU(),
-                # nn.Dropout(config.fusion_dropout)
+                nn.Dropout(config.fusion_dropout)
             )
             lstm_input_size = fusion_output_size
         else:
@@ -242,9 +240,9 @@ class DualCNNLSTMPredictor(nn.Module):
             # Two-layer classifier with hidden layer
             self.classifier = nn.Sequential(
                 nn.Linear(lstm_output_size, config.classifier_hidden_size),
-                # nn.LayerNorm(config.classifier_hidden_size),
+                nn.LayerNorm(config.classifier_hidden_size),
                 nn.GELU(),
-                # nn.Dropout(config.classifier_dropout),
+                nn.Dropout(config.classifier_dropout),
                 nn.Linear(config.classifier_hidden_size, config.num_classes)
             )
         else:
@@ -341,8 +339,13 @@ class DualCNNLSTMPredictor(nn.Module):
         cnn1_out = self.cnn1(binary_features)  # (batch, seq_len, cnn1_channels)
         cnn2_out = self.cnn2(technical_features)  # (batch, seq_len, cnn2_channels)
 
-        # Concatenate CNN outputs
-        combined = torch.cat([cnn1_out, cnn2_out], dim=-1)  # (batch, seq_len, combined)
+        # Validate shapes match for concatenation
+        assert cnn1_out.shape[:2] == cnn2_out.shape[:2], (
+            f"CNN output shape mismatch: cnn1={cnn1_out.shape}, cnn2={cnn2_out.shape}"
+        )
+
+        # Concatenate CNN outputs along feature dimension
+        combined = torch.cat([cnn1_out, cnn2_out], dim=2)  # (batch, seq_len, cnn1_ch + cnn2_ch)
 
         # Apply fusion layer if present
         if self.fusion is not None:
