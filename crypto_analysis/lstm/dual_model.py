@@ -105,9 +105,9 @@ class CNNBranch(nn.Module):
         for _ in range(num_layers - 1):
             layers.append(nn.Conv1d(num_channels, num_channels, kernel_size, padding='same'))
             layers.append(nn.BatchNorm1d(num_channels))
-            if _ == num_layers - 2:
-                # No activation after last conv layer
-                layers.append(nn.ReLU())
+            # if _ == num_layers - 2:
+            #     # No activation after last conv layer
+            #     layers.append(nn.ReLU())
 
         self.conv_layers = nn.Sequential(*layers)
         self.output_channels = num_channels
@@ -211,11 +211,11 @@ class DualCNNLSTMPredictor(nn.Module):
         # Fusion layer (between CNN concat and LSTM)
         # Transforms concatenated CNN outputs before feeding to LSTM
         if config.fusion_hidden_size > 0:
-            fusion_output_size = int(config.fusion_hidden_size * 0.5)
+            fusion_output_size = int(config.fusion_hidden_size)
             self.fusion = nn.Sequential(
                 nn.Linear(combined_features, fusion_output_size),
                 # nn.LayerNorm(fusion_output_size),
-                # nn.GELU(),
+                nn.GELU(),
                 # nn.Dropout(config.fusion_dropout)
             )
             lstm_input_size = fusion_output_size

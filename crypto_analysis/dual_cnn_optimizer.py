@@ -129,15 +129,15 @@ class DualCNNMetaheuristicOptimizer:
     # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
     HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn1_kernel_size', 5, 9, 'int', 'cnn1_kernel_size'),
+        HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
         HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
-        HyperparamConfig('cnn1_num_layers', 2, 4, 'int', 'cnn1_num_layers'),
+        HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn2_kernel_size', 5, 9, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 64, 128, 'int', 'cnn2_num_channels'),
-        HyperparamConfig('cnn2_num_layers', 2, 4, 'int', 'cnn2_num_layers'),
+        HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
+        HyperparamConfig('cnn2_num_channels', 16, 64, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
         # Fusion layer (between CNN concat and LSTM)
-        HyperparamConfig('fusion_hidden_size', 64, 256, 'int', 'fusion_hidden_size'),
+        HyperparamConfig('fusion_hidden_size', 0, 0, 'int', 'fusion_hidden_size'),
         HyperparamConfig('fusion_dropout', 0.05, 0.10, 'float', 'fusion_dropout'),
         # LSTM
         HyperparamConfig('lstm_hidden_size', 64, 256, 'int', 'lstm_hidden_size'),
@@ -402,10 +402,10 @@ class DualCNNMetaheuristicOptimizer:
             class_weights = class_counts.sum() / (2.0 * class_counts)
             class_weights = class_weights.to(device)
 
-            # Initialize classifier bias to favor minority class
-            n_trade = (targets_flat == 1).sum().item()
-            class_prior = max(n_trade / len(targets_flat), 0.05)
-            model._init_classifier_bias(class_prior)
+            # # Initialize classifier bias to favor minority class
+            # n_trade = (targets_flat == 1).sum().item()
+            # class_prior = max(n_trade / len(targets_flat), 0.05)
+            # model._init_classifier_bias(class_prior)
 
             # Loss function: FocalBinaryLoss for hard example mining
             loss_fn = FocalBinaryLoss(
@@ -1029,10 +1029,10 @@ class DualCNNMetaheuristicOptimizer:
         class_weights = class_counts.sum() / (2.0 * class_counts)
         class_weights = class_weights.to(device)
 
-        # Initialize classifier bias to favor minority class
-        n_trade = (targets_flat == 1).sum().item()
-        class_prior = max(n_trade / len(targets_flat), 0.05)
-        model._init_classifier_bias(class_prior)
+        # # Initialize classifier bias to favor minority class
+        # n_trade = (targets_flat == 1).sum().item()
+        # class_prior = max(n_trade / len(targets_flat), 0.05)
+        # model._init_classifier_bias(class_prior)
 
         # Loss function: FocalBinaryLoss for hard example mining
         loss_fn = FocalBinaryLoss(
