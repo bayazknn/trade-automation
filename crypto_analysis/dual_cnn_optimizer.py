@@ -129,11 +129,11 @@ class DualCNNMetaheuristicOptimizer:
     # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
     HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn1_kernel_size', 2, 5, 'int', 'cnn1_kernel_size'),
+        HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
         HyperparamConfig('cnn1_num_channels', 48, 128, 'int', 'cnn1_num_channels'),
         HyperparamConfig('cnn1_num_layers', 2, 5, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn2_kernel_size', 2, 5, 'int', 'cnn2_kernel_size'),
+        HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
         HyperparamConfig('cnn2_num_channels', 48, 128, 'int', 'cnn2_num_channels'),
         HyperparamConfig('cnn2_num_layers', 2, 4, 'int', 'cnn2_num_layers'),
         # Fusion layer (between CNN concat and LSTM)
@@ -153,7 +153,7 @@ class DualCNNMetaheuristicOptimizer:
         # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
         HyperparamConfig('focal_gamma', 1.5, 3.0, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.02, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 20, 20, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 12, 12, 'int', 'input_seq_length'),
         HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
     ]
 
@@ -269,9 +269,9 @@ class DualCNNMetaheuristicOptimizer:
         binary_values = individual[:self.n_binary]
         technical_values = individual[self.n_binary:self.n_binary + self.n_technical]
 
-        # Simple threshold >= -30 for selection
-        binary_mask = binary_values >= -30
-        technical_mask = technical_values >= -30
+        # Simple threshold >= 0 for selection
+        binary_mask = binary_values >= 0
+        technical_mask = technical_values >= 0
 
         selected_binary = [
             col for col, sel in zip(self.binary_columns, binary_mask) if sel
