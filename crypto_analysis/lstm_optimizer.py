@@ -160,20 +160,21 @@ class LSTMMetaheuristicOptimizer:
 
     # Base hyperparameter configurations shared by all models
     # For binary classification (hold=0, trade=1)
+    # Updated based on run 7caf7327 analysis (elite individuals at 5th percentile)
     BASE_HYPERPARAM_CONFIGS = [
         # Class imbalance handling
-        HyperparamConfig('class_weight_power', 0.25, 0.40, 'float', 'class_weight_power'),
+        HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
         HyperparamConfig('focal_gamma', 1.0, 4.0, 'float', 'focal_gamma'),
-        # Training parameters
-        HyperparamConfig('learning_rate', 0.0005, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.15, 0.45, 'float', 'dropout'),
-        HyperparamConfig('hidden_size', 128, 320, 'int', 'hidden_size'),
-        HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
+        # Training parameters (narrowed based on elite analysis)
+        HyperparamConfig('learning_rate', 0.0003, 0.0017, 'float', 'learning_rate'),
+        HyperparamConfig('dropout', 0.10, 0.40, 'float', 'dropout'),
+        HyperparamConfig('hidden_size', 96, 256, 'int', 'hidden_size'),
+        HyperparamConfig('num_layers', 2, 3, 'int', 'num_layers'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
-        HyperparamConfig('label_smoothing', 0.05, 0.20, 'float', 'label_smoothing'),
-        HyperparamConfig('batch_size', 32, 160, 'int', 'batch_size'),
-        HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
-        HyperparamConfig('input_seq_length', 16, 16, 'int', 'input_seq_length'),
+        HyperparamConfig('label_smoothing', 0.05, 0.12, 'float', 'label_smoothing'),
+        HyperparamConfig('batch_size', 64, 128, 'int', 'batch_size'),
+        HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 10, 18, 'int', 'input_seq_length'),
     ]
 
     # CNN-LSTM specific hyperparameters
@@ -203,8 +204,8 @@ class LSTMMetaheuristicOptimizer:
         checkpoint_interval: int = 5,
         checkpoint_dir: str = 'lstm_optimization_checkpoints',
         verbose: bool = True,
-        np_neighbors: int = 1,
-        pf_max: float = 0.1,
+        np_neighbors: int = 2,
+        pf_max: float = 0.18,
         elitist_selection: bool = False,
         elitist_constant: float = 0.25,
         enable_logging: bool = False,
@@ -653,13 +654,13 @@ class LSTMMetaheuristicOptimizer:
                 weight_decay=config_params['weight_decay'],
                 auto_class_weights=True,
                 class_weight_power=config_params['class_weight_power'],
-                focal_loss=True,
+                focal_loss=False,
                 focal_gamma=config_params['focal_gamma'],
                 label_smoothing=config_params['label_smoothing'],
                 scheduler_patience=config_params['scheduler_patience'],
                 patience=10,
                 verbose=False,
-                device='auto',  # Force CPU for thread safety
+                device='cuda',  # Force CPU for thread safety
                 # bidirectional=True, # Experimentally commented out
             )
 
