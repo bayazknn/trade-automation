@@ -6,6 +6,7 @@ PyTorch-based models for binary classification of trading signals (hold/trade).
 Supported model architectures:
 - LSTMSignalPredictor: Standard LSTM with input projection
 - CNNLSTMSignalPredictor: CNN feature extractor + LSTM encoder (hybrid model)
+- DualCNNLSTMPredictor: Dual-CNN LSTM for separate binary and technical inputs
 
 Predicts whether the next period is tradeable:
 - hold (0): No trade opportunity
@@ -21,7 +22,14 @@ Usage:
         Trainer,
         TrainingConfig,
         Predictor,
-        create_sequences
+        create_sequences,
+        # Dual-CNN LSTM
+        DualModelConfig,
+        DualCNNLSTMPredictor,
+        DualDataPreprocessor,
+        DualSignalDataset,
+        create_dual_sequences,
+        DualCNNPredictor,
     )
 
 Example:
@@ -54,6 +62,11 @@ from .loss import BinarySignalLoss, FocalBinaryLoss, WeightedSignalLoss, FocalWe
 from .trainer import Trainer, TrainingConfig, TrainingHistory
 from .predictor import Predictor, PredictionResult, ThresholdResult
 
+# Dual-CNN LSTM components
+from .dual_model import DualModelConfig, DualCNNLSTMPredictor
+from .dual_preprocessor import DualDataPreprocessor, DualSignalDataset, create_dual_sequences
+from .dual_predictor import DualCNNPredictor, DualPredictionResult
+
 # Deprecated: SequenceValidator is no longer needed for binary classification
 # Import with deprecation warnings
 from .sequence_validator import SequenceValidator, SequenceType, ValidationResult
@@ -82,6 +95,14 @@ __all__ = [
     "Predictor",
     "PredictionResult",
     "ThresholdResult",
+    # Dual-CNN LSTM
+    "DualModelConfig",
+    "DualCNNLSTMPredictor",
+    "DualDataPreprocessor",
+    "DualSignalDataset",
+    "create_dual_sequences",
+    "DualCNNPredictor",
+    "DualPredictionResult",
     # Deprecated (kept for backwards compatibility)
     "SequenceValidator",
     "SequenceType",

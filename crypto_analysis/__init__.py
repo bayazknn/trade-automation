@@ -38,6 +38,14 @@ from .lstm import (
     Trainer,
     TrainingConfig,
     Predictor,
+    # Dual-CNN LSTM
+    DualModelConfig,
+    DualCNNLSTMPredictor,
+    DualDataPreprocessor,
+    DualSignalDataset,
+    create_dual_sequences,
+    DualCNNPredictor,
+    DualPredictionResult,
     # Deprecated
     SequenceValidator,
     SequenceType,
@@ -49,6 +57,12 @@ from .lstm_optimizer import (
     LSTMOptimizationResult,
     HyperparamConfig,
     OptimizationCheckpoint,
+)
+
+# Import Dual-CNN LSTM optimizer components
+from .dual_cnn_optimizer import (
+    DualCNNMetaheuristicOptimizer,
+    DualCNNOptimizationResult,
 )
 
 # Import log analyzer components
@@ -69,7 +83,7 @@ from .indicator_association_analyzer import (
     AssociationRule,
 )
 
-__version__ = "0.5.0"  # Added indicator association analyzer
+__version__ = "0.6.0"  # Added Dual-CNN LSTM optimizer
 __all__ = [
     # Signal Population
     "SignalPopulator",
@@ -96,6 +110,14 @@ __all__ = [
     "Trainer",
     "TrainingConfig",
     "Predictor",
+    # Dual-CNN LSTM
+    "DualModelConfig",
+    "DualCNNLSTMPredictor",
+    "DualDataPreprocessor",
+    "DualSignalDataset",
+    "create_dual_sequences",
+    "DualCNNPredictor",
+    "DualPredictionResult",
     # Deprecated LSTM components
     "SequenceValidator",
     "SequenceType",
@@ -104,6 +126,9 @@ __all__ = [
     "LSTMOptimizationResult",
     "HyperparamConfig",
     "OptimizationCheckpoint",
+    # Dual-CNN LSTM Optimizer
+    "DualCNNMetaheuristicOptimizer",
+    "DualCNNOptimizationResult",
     # Log Analyzer
     "LSTMLogAnalyzer",
     "FeatureImportanceResult",
