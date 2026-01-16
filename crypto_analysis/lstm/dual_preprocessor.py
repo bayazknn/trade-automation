@@ -54,6 +54,9 @@ class DualDataPreprocessor:
     # OHLCV columns that should be in technical DataFrame
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
+    # Metadata columns to exclude from NaN checking (not feature columns)
+    METADATA_COLUMNS = ['date', 'signal', 'signal_pct_change', 'period_id', 'tradeable']
+
     @staticmethod
     def align_dataframes(
         df_binary: pd.DataFrame,
@@ -65,8 +68,8 @@ class DualDataPreprocessor:
         """
         Align binary and technical DataFrames by dropping NaN rows.
 
-        Drops rows with NaN values from technical DataFrame and removes
-        corresponding rows from binary DataFrame to maintain alignment.
+        Drops rows with NaN values from technical DataFrame (feature columns only)
+        and removes corresponding rows from binary DataFrame to maintain alignment.
         Also ensures output row count is divisible by period_size to maintain
         period integrity (each period has the same tradeable value).
 
@@ -92,9 +95,10 @@ class DualDataPreprocessor:
         """
         original_len = len(df_technical)
 
-        # Find rows with NaN in technical DataFrame (check all columns except date)
-        technical_cols = [col for col in df_technical.columns if col != date_column]
-        nan_mask: pd.Series = df_technical[technical_cols].isna().any(axis=1)
+        # Find rows with NaN in technical DataFrame (check feature columns only, exclude metadata)
+        metadata_cols = set(DualDataPreprocessor.METADATA_COLUMNS)
+        feature_cols = [col for col in df_technical.columns if col not in metadata_cols]
+        nan_mask: pd.Series = df_technical[feature_cols].isna().any(axis=1)
         n_nan_rows = int(nan_mask.sum())
 
         if n_nan_rows == 0:
@@ -120,16 +124,55 @@ class DualDataPreprocessor:
                 df_binary_aligned = df_binary.loc[valid_mask.values].copy().reset_index(drop=True)
                 df_technical_aligned = df_technical.loc[valid_mask.values].copy().reset_index(drop=True)
 
-        # Ensure row count is divisible by period_size
-        # Trim from the start (NaN rows are typically at the start due to indicator lookback)
-        current_len = len(df_technical_aligned)
-        if period_size > 1 and current_len % period_size != 0:
-            trim_count = current_len % period_size
-            df_binary_aligned = df_binary_aligned.iloc[trim_count:].reset_index(drop=True)
-            df_technical_aligned = df_technical_aligned.iloc[trim_count:].reset_index(drop=True)
+        # Find optimal offset for period consistency
+        # Try offsets 0 to period_size-1 and choose the one with highest consistency
+        if period_size > 1 and 'tradeable' in df_binary_aligned.columns:
+            best_offset = 0
+            best_consistency = 0
 
-            if verbose:
-                print(f"Trimmed {trim_count} rows from start to ensure divisibility by {period_size}")
+            for offset in range(period_size):
+                consistent_count = 0
+                total_count = 0
+
+                for i in range(offset, len(df_binary_aligned) - period_size + 1, period_size):
+                    chunk = df_binary_aligned.iloc[i:i + period_size]['tradeable'].tolist()
+                    total_count += 1
+                    if len(set(chunk)) == 1:
+                        consistent_count += 1
+
+                if total_count > 0 and consistent_count > best_consistency:
+                    best_consistency = consistent_count
+                    best_offset = offset
+
+            # Trim from start using best offset, then from end for divisibility
+            current_len = len(df_binary_aligned)
+
+            # First, trim best_offset rows from start to align periods
+            if best_offset > 0:
+                df_binary_aligned = df_binary_aligned.iloc[best_offset:].reset_index(drop=True)
+                df_technical_aligned = df_technical_aligned.iloc[best_offset:].reset_index(drop=True)
+
+            # Then, trim from END to ensure divisibility
+            remaining_len = len(df_binary_aligned)
+            extra_trim = remaining_len % period_size
+            if extra_trim > 0:
+                df_binary_aligned = df_binary_aligned.iloc[:-extra_trim].reset_index(drop=True)
+                df_technical_aligned = df_technical_aligned.iloc[:-extra_trim].reset_index(drop=True)
+
+            total_trim = best_offset + extra_trim
+            if verbose and total_trim > 0:
+                final_groups = len(df_binary_aligned) // period_size
+                print(f"Trimmed {best_offset} from start, {extra_trim} from end for {final_groups} aligned periods")
+        elif period_size > 1:
+            # No tradeable column, just ensure divisibility
+            current_len = len(df_technical_aligned)
+            if current_len % period_size != 0:
+                trim_count = current_len % period_size
+                df_binary_aligned = df_binary_aligned.iloc[trim_count:].reset_index(drop=True)
+                df_technical_aligned = df_technical_aligned.iloc[trim_count:].reset_index(drop=True)
+
+                if verbose:
+                    print(f"Trimmed {trim_count} rows from start to ensure divisibility by {period_size}")
 
         if verbose:
             final_len = len(df_technical_aligned)
