@@ -336,6 +336,11 @@ class DualCNNMetaheuristicOptimizer:
             df_binary_selected = self.df_binary[['tradeable'] + selected_binary].copy()
             df_technical_selected = self.df_technical[['tradeable'] + selected_technical].copy()
 
+            # Align DataFrames by dropping NaN rows from technical and corresponding from binary
+            df_binary_selected, df_technical_selected = DualDataPreprocessor.align_dataframes(
+                df_binary_selected, df_technical_selected, verbose=False
+            )
+
             # Preprocess
             preprocessor = DualDataPreprocessor(target_shift=4)
             binary_feat, technical_feat, targets = preprocessor.fit_transform(
@@ -964,11 +969,16 @@ class DualCNNMetaheuristicOptimizer:
         selected_technical = result.selected_technical_features
 
         if self.verbose:
-            print(f"\nTraining final model for artifact saving...")
+            print("\nTraining final model for artifact saving...")
 
         # Build selected DataFrames
         df_binary_selected = self.df_binary[['tradeable'] + selected_binary].copy()
         df_technical_selected = self.df_technical[['tradeable'] + selected_technical].copy()
+
+        # Align DataFrames by dropping NaN rows from technical and corresponding from binary
+        df_binary_selected, df_technical_selected = DualDataPreprocessor.align_dataframes(
+            df_binary_selected, df_technical_selected, verbose=self.verbose
+        )
 
         # Preprocess
         preprocessor = DualDataPreprocessor(target_shift=4)

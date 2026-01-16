@@ -54,6 +54,80 @@ class DualDataPreprocessor:
     # OHLCV columns that should be in technical DataFrame
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
+    @staticmethod
+    def align_dataframes(
+        df_binary: pd.DataFrame,
+        df_technical: pd.DataFrame,
+        date_column: str = 'date',
+        verbose: bool = False
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Align binary and technical DataFrames by dropping NaN rows.
+
+        Drops rows with NaN values from technical DataFrame and removes
+        corresponding rows from binary DataFrame to maintain alignment.
+        Uses date column to align if present, otherwise uses index position.
+
+        Parameters
+        ----------
+        df_binary : pd.DataFrame
+            DataFrame with binary indicator signals
+        df_technical : pd.DataFrame
+            DataFrame with technical indicators + OHLCV (may contain NaN)
+        date_column : str, default='date'
+            Column name to use for alignment (if present)
+        verbose : bool, default=False
+            Print information about dropped rows
+
+        Returns
+        -------
+        tuple
+            (df_binary_aligned, df_technical_aligned) with same row count and date range
+        """
+        original_len = len(df_technical)
+
+        # Find rows with NaN in technical DataFrame (check all columns except date)
+        technical_cols = [col for col in df_technical.columns if col != date_column]
+        nan_mask: pd.Series = df_technical[technical_cols].isna().any(axis=1)
+        n_nan_rows = int(nan_mask.sum())
+
+        if n_nan_rows == 0:
+            if verbose:
+                print("No NaN rows found in technical DataFrame")
+            return df_binary.copy(), df_technical.copy()
+
+        # Get valid indices (rows without NaN)
+        valid_mask: pd.Series = ~nan_mask
+
+        if date_column in df_technical.columns and date_column in df_binary.columns:
+            # Align by date
+            valid_dates = df_technical.loc[valid_mask, date_column]
+            df_binary_aligned: pd.DataFrame = df_binary[
+                df_binary[date_column].isin(valid_dates)
+            ].copy()
+            df_technical_aligned: pd.DataFrame = df_technical[valid_mask].copy()
+
+            # Reset indices for consistency
+            df_binary_aligned = df_binary_aligned.reset_index(drop=True)
+            df_technical_aligned = df_technical_aligned.reset_index(drop=True)
+        else:
+            # Align by index position using boolean mask directly
+            df_binary_aligned = df_binary.loc[valid_mask.values].copy().reset_index(drop=True)
+            df_technical_aligned = df_technical.loc[valid_mask.values].copy().reset_index(drop=True)
+
+        if verbose:
+            print(f"Dropped {n_nan_rows} rows with NaN values from technical DataFrame")
+            print(f"Original rows: {original_len}, Aligned rows: {len(df_technical_aligned)}")
+
+        # Validate alignment
+        if len(df_binary_aligned) != len(df_technical_aligned):
+            raise ValueError(
+                f"Alignment failed: binary={len(df_binary_aligned)}, "
+                f"technical={len(df_technical_aligned)}"
+            )
+
+        return df_binary_aligned, df_technical_aligned
+
     def __init__(
         self,
         columns_to_drop: Optional[List[str]] = None,
