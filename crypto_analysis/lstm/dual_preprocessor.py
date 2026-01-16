@@ -59,6 +59,7 @@ class DualDataPreprocessor:
         df_binary: pd.DataFrame,
         df_technical: pd.DataFrame,
         date_column: str = 'date',
+        period_size: int = 4,
         verbose: bool = False
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -66,7 +67,8 @@ class DualDataPreprocessor:
 
         Drops rows with NaN values from technical DataFrame and removes
         corresponding rows from binary DataFrame to maintain alignment.
-        Uses date column to align if present, otherwise uses index position.
+        Also ensures output row count is divisible by period_size to maintain
+        period integrity (each period has the same tradeable value).
 
         Parameters
         ----------
@@ -76,13 +78,17 @@ class DualDataPreprocessor:
             DataFrame with technical indicators + OHLCV (may contain NaN)
         date_column : str, default='date'
             Column name to use for alignment (if present)
+        period_size : int, default=4
+            Ensure output row count is divisible by this value.
+            Set to 1 to disable period alignment.
         verbose : bool, default=False
             Print information about dropped rows
 
         Returns
         -------
         tuple
-            (df_binary_aligned, df_technical_aligned) with same row count and date range
+            (df_binary_aligned, df_technical_aligned) with same row count,
+            divisible by period_size
         """
         original_len = len(df_technical)
 
@@ -92,32 +98,43 @@ class DualDataPreprocessor:
         n_nan_rows = int(nan_mask.sum())
 
         if n_nan_rows == 0:
-            if verbose:
-                print("No NaN rows found in technical DataFrame")
-            return df_binary.copy(), df_technical.copy()
-
-        # Get valid indices (rows without NaN)
-        valid_mask: pd.Series = ~nan_mask
-
-        if date_column in df_technical.columns and date_column in df_binary.columns:
-            # Align by date
-            valid_dates = df_technical.loc[valid_mask, date_column]
-            df_binary_aligned: pd.DataFrame = df_binary[
-                df_binary[date_column].isin(valid_dates)
-            ].copy()
-            df_technical_aligned: pd.DataFrame = df_technical[valid_mask].copy()
-
-            # Reset indices for consistency
-            df_binary_aligned = df_binary_aligned.reset_index(drop=True)
-            df_technical_aligned = df_technical_aligned.reset_index(drop=True)
+            df_binary_aligned = df_binary.copy()
+            df_technical_aligned = df_technical.copy()
         else:
-            # Align by index position using boolean mask directly
-            df_binary_aligned = df_binary.loc[valid_mask.values].copy().reset_index(drop=True)
-            df_technical_aligned = df_technical.loc[valid_mask.values].copy().reset_index(drop=True)
+            # Get valid indices (rows without NaN)
+            valid_mask: pd.Series = ~nan_mask
+
+            if date_column in df_technical.columns and date_column in df_binary.columns:
+                # Align by date
+                valid_dates = df_technical.loc[valid_mask, date_column]
+                df_binary_aligned = df_binary[
+                    df_binary[date_column].isin(valid_dates)
+                ].copy()
+                df_technical_aligned = df_technical[valid_mask].copy()
+
+                # Reset indices for consistency
+                df_binary_aligned = df_binary_aligned.reset_index(drop=True)
+                df_technical_aligned = df_technical_aligned.reset_index(drop=True)
+            else:
+                # Align by index position using boolean mask directly
+                df_binary_aligned = df_binary.loc[valid_mask.values].copy().reset_index(drop=True)
+                df_technical_aligned = df_technical.loc[valid_mask.values].copy().reset_index(drop=True)
+
+        # Ensure row count is divisible by period_size
+        # Trim from the start (NaN rows are typically at the start due to indicator lookback)
+        current_len = len(df_technical_aligned)
+        if period_size > 1 and current_len % period_size != 0:
+            trim_count = current_len % period_size
+            df_binary_aligned = df_binary_aligned.iloc[trim_count:].reset_index(drop=True)
+            df_technical_aligned = df_technical_aligned.iloc[trim_count:].reset_index(drop=True)
+
+            if verbose:
+                print(f"Trimmed {trim_count} rows from start to ensure divisibility by {period_size}")
 
         if verbose:
-            print(f"Dropped {n_nan_rows} rows with NaN values from technical DataFrame")
-            print(f"Original rows: {original_len}, Aligned rows: {len(df_technical_aligned)}")
+            final_len = len(df_technical_aligned)
+            print(f"Dropped {n_nan_rows} NaN rows, trimmed for period alignment")
+            print(f"Original: {original_len}, Final: {final_len} (divisible by {period_size})")
 
         # Validate alignment
         if len(df_binary_aligned) != len(df_technical_aligned):
@@ -423,12 +440,13 @@ def create_dual_sequences(
     technical_features: np.ndarray,
     targets: np.ndarray,
     input_seq_length: int = 16,
-    output_seq_length: int = 1
+    output_seq_length: int = 1,
+    stride: int = 4
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Create sliding window sequences from dual feature arrays.
+    Create sequences from dual feature arrays with configurable stride.
 
-    For each valid start position i, creates:
+    For each valid start position i (with step=stride), creates:
     - Binary input sequence: binary_features[i : i + input_seq_length]
     - Technical input sequence: technical_features[i : i + input_seq_length]
     - Output: single target value at targets[i + input_seq_length]
@@ -445,6 +463,10 @@ def create_dual_sequences(
         Length of input sequences
     output_seq_length : int, default=1
         Length of output/target (1 for binary classification)
+    stride : int, default=4
+        Step size between sequence start positions.
+        - stride=1: sliding window (every position)
+        - stride=4: period-aligned (start at period boundaries)
 
     Returns
     -------
@@ -470,32 +492,42 @@ def create_dual_sequences(
     n_binary = binary_features.shape[1] if binary_features.ndim > 1 else 1
     n_technical = technical_features.shape[1] if technical_features.ndim > 1 else 1
 
-    # Calculate valid sequence start positions
-    max_start = n_timesteps - input_seq_length - output_seq_length + 1
+    # Calculate valid sequence start positions with stride
+    max_start_idx = n_timesteps - input_seq_length - output_seq_length + 1
 
-    if max_start <= 0:
+    if max_start_idx <= 0:
         raise ValueError(
             f"Not enough timesteps ({n_timesteps}) for "
             f"input_seq={input_seq_length} and output_seq={output_seq_length}. "
             f"Need at least {input_seq_length + output_seq_length} timesteps."
         )
 
+    # Generate start positions with stride
+    start_positions = list(range(0, max_start_idx, stride))
+    n_sequences = len(start_positions)
+
+    if n_sequences == 0:
+        raise ValueError(
+            f"No valid sequences with stride={stride}. "
+            f"max_start_idx={max_start_idx}"
+        )
+
     # Pre-allocate arrays
     binary_sequences = np.zeros(
-        (max_start, input_seq_length, n_binary),
+        (n_sequences, input_seq_length, n_binary),
         dtype=np.float32
     )
     technical_sequences = np.zeros(
-        (max_start, input_seq_length, n_technical),
+        (n_sequences, input_seq_length, n_technical),
         dtype=np.float32
     )
-    target_sequences = np.zeros(max_start, dtype=np.int64)
+    target_sequences = np.zeros(n_sequences, dtype=np.int64)
 
-    # Create sequences using sliding window
-    for i in range(max_start):
-        binary_sequences[i] = binary_features[i:i + input_seq_length]
-        technical_sequences[i] = technical_features[i:i + input_seq_length]
-        target_sequences[i] = targets[i + input_seq_length]
+    # Create sequences at each start position
+    for seq_idx, start_pos in enumerate(start_positions):
+        binary_sequences[seq_idx] = binary_features[start_pos:start_pos + input_seq_length]
+        technical_sequences[seq_idx] = technical_features[start_pos:start_pos + input_seq_length]
+        target_sequences[seq_idx] = targets[start_pos + input_seq_length]
 
     return binary_sequences, technical_sequences, target_sequences
 

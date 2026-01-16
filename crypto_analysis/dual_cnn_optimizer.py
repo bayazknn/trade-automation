@@ -352,10 +352,11 @@ class DualCNNMetaheuristicOptimizer:
             binary_seqs, technical_seqs, target_seqs = create_dual_sequences(
                 binary_feat, technical_feat, targets,
                 input_seq_length=input_seq_length,
-                output_seq_length=1
+                output_seq_length=1,
+                stride=4  # Period-aligned sequences
             )
 
-            if len(binary_seqs) < 100:
+            if len(binary_seqs) < 50:
                 return float('inf'), selected_binary, selected_technical, {}
 
             # Create dataset
@@ -991,7 +992,8 @@ class DualCNNMetaheuristicOptimizer:
         binary_seqs, technical_seqs, target_seqs = create_dual_sequences(
             binary_feat, technical_feat, targets,
             input_seq_length=input_seq_length,
-            output_seq_length=1
+            output_seq_length=1,
+            stride=4  # Period-aligned sequences
         )
 
         # Create dataset and split
