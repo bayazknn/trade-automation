@@ -127,12 +127,12 @@ class DualCNNMetaheuristicOptimizer:
     # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
     HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn1_kernel_size', 1, 4, 'int', 'cnn1_kernel_size'),
-        HyperparamConfig('cnn1_num_channels', 32, 128, 'int', 'cnn1_num_channels'),
+        HyperparamConfig('cnn1_kernel_size', 5, 9, 'int', 'cnn1_kernel_size'),
+        HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
         HyperparamConfig('cnn1_num_layers', 2, 4, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn2_kernel_size', 1, 4, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 32, 128, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_kernel_size', 5, 9, 'int', 'cnn2_kernel_size'),
+        HyperparamConfig('cnn2_num_channels', 64, 128, 'int', 'cnn2_num_channels'),
         HyperparamConfig('cnn2_num_layers', 2, 4, 'int', 'cnn2_num_layers'),
         # Fusion layer (between CNN concat and LSTM)
         HyperparamConfig('fusion_hidden_size', 64, 256, 'int', 'fusion_hidden_size'),
@@ -145,7 +145,7 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('classifier_hidden_size', 0, 128, 'int', 'classifier_hidden_size'),
         HyperparamConfig('classifier_dropout', 0.01, 0.15, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0005, 0.002, 'float', 'learning_rate'),
+        HyperparamConfig('learning_rate', 0.0005, 0.009, 'float', 'learning_rate'),
         HyperparamConfig('batch_size', 16, 64, 'int', 'batch_size'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
         # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
@@ -471,7 +471,7 @@ class DualCNNMetaheuristicOptimizer:
                     logits = model(binary_feat_batch, technical_feat_batch)
                     loss = loss_fn(logits, targets_batch)
                     loss.backward()
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                    # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                     optimizer.step()
 
                 # Validate

@@ -105,9 +105,9 @@ class CNNBranch(nn.Module):
         for _ in range(num_layers - 1):
             layers.append(nn.Conv1d(num_channels, num_channels, kernel_size, padding='same'))
             layers.append(nn.BatchNorm1d(num_channels))
-            # if _ == num_layers - 2:
-            #     # No activation after last conv layer
-            #     layers.append(nn.GELU())
+            if _ == num_layers - 2:
+                # No activation after last conv layer
+                layers.append(nn.ReLU())
 
         self.conv_layers = nn.Sequential(*layers)
         self.output_channels = num_channels
