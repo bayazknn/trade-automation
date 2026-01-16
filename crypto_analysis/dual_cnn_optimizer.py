@@ -129,31 +129,31 @@ class DualCNNMetaheuristicOptimizer:
     # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
     HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
-        HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
-        HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
+        HyperparamConfig('cnn1_kernel_size', 2, 5, 'int', 'cnn1_kernel_size'),
+        HyperparamConfig('cnn1_num_channels', 48, 128, 'int', 'cnn1_num_channels'),
+        HyperparamConfig('cnn1_num_layers', 2, 5, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
-        HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 16, 64, 'int', 'cnn2_num_channels'),
-        HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
+        HyperparamConfig('cnn2_kernel_size', 2, 5, 'int', 'cnn2_kernel_size'),
+        HyperparamConfig('cnn2_num_channels', 48, 128, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_layers', 2, 4, 'int', 'cnn2_num_layers'),
         # Fusion layer (between CNN concat and LSTM)
         HyperparamConfig('fusion_hidden_size', 0, 0, 'int', 'fusion_hidden_size'),
         HyperparamConfig('fusion_dropout', 0.05, 0.10, 'float', 'fusion_dropout'),
         # LSTM
-        HyperparamConfig('lstm_hidden_size', 64, 256, 'int', 'lstm_hidden_size'),
-        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_hidden_size', 128, 256, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 2, 4, 'int', 'lstm_num_layers'),
         HyperparamConfig('lstm_dropout', 0.01, 0.15, 'float', 'lstm_dropout'),
         # Classifier
         HyperparamConfig('classifier_hidden_size', 0, 128, 'int', 'classifier_hidden_size'),
         HyperparamConfig('classifier_dropout', 0.01, 0.15, 'float', 'classifier_dropout'),
         # Training
         HyperparamConfig('learning_rate', 0.0005, 0.009, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 16, 64, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 128, 128, 'int', 'batch_size'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
         # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
         HyperparamConfig('focal_gamma', 1.5, 3.0, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.02, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 12, 21, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 20, 20, 'int', 'input_seq_length'),
         HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
     ]
 
@@ -269,9 +269,9 @@ class DualCNNMetaheuristicOptimizer:
         binary_values = individual[:self.n_binary]
         technical_values = individual[self.n_binary:self.n_binary + self.n_technical]
 
-        # Simple threshold >= 0 for selection
-        binary_mask = binary_values >= 0
-        technical_mask = technical_values >= 0
+        # Simple threshold >= -30 for selection
+        binary_mask = binary_values >= -30
+        technical_mask = technical_values >= -30
 
         selected_binary = [
             col for col, sel in zip(self.binary_columns, binary_mask) if sel
@@ -468,7 +468,7 @@ class DualCNNMetaheuristicOptimizer:
             # Training loop
             best_val_loss = float('inf')
             patience_counter = 0
-            patience = 25  # Increased from 10 to allow more time to learn minority class
+            patience = 15  # Increased from 10 to allow more time to learn minority class
 
             for epoch in range(self.epochs_per_eval):
                 # Train
