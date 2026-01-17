@@ -153,7 +153,7 @@ class DualCNNMetaheuristicOptimizer:
         # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
         HyperparamConfig('focal_gamma', 1.5, 3.0, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.02, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 20, 20, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 16, 32, 'int', 'input_seq_length'),
         HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
     ]
 
@@ -293,6 +293,11 @@ class DualCNNMetaheuristicOptimizer:
         # Formula: odd_kernel = 2*val + 1 where val in [1,2,3,4] gives [3,5,7,9]
         config_params['cnn1_kernel_size'] = 2 * config_params['cnn1_kernel_size'] + 1
         config_params['cnn2_kernel_size'] = 2 * config_params['cnn2_kernel_size'] + 1
+
+        # Round input_seq_length to nearest multiple of 4 for period alignment
+        # With stride=4, this ensures sequences start/end at period boundaries
+        config_params['input_seq_length'] = 4 * round(config_params['input_seq_length'] / 4)
+        config_params['input_seq_length'] = max(16, config_params['input_seq_length'])  # Minimum 16
 
         return selected_binary, selected_technical, config_params
 
