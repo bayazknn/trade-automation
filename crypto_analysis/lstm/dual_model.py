@@ -304,7 +304,7 @@ class TCNBranch(nn.Module):
         self.network = nn.ModuleList(layers)
         self.output_channels = num_channels
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, return_sequence: bool = True) -> torch.Tensor:
         """
         Forward pass.
 
@@ -312,11 +312,14 @@ class TCNBranch(nn.Module):
         ----------
         x : torch.Tensor
             Input tensor, shape (batch, seq_len, features)
+        return_sequence : bool
+            If True, return full sequence. If False, return only last timestep.
 
         Returns
         -------
         torch.Tensor
-            Output tensor at last timestep, shape (batch, channels)
+            If return_sequence=True: (batch, seq_len, channels)
+            If return_sequence=False: (batch, channels)
         """
         # Conv1d expects (batch, channels, seq_len)
         x = x.transpose(1, 2)  # (batch, features, seq_len)
@@ -324,13 +327,17 @@ class TCNBranch(nn.Module):
         for layer in self.network:
             x = layer(x)
 
-        # Return last timestep: (batch, channels)
-        return x[:, :, -1]
+        if return_sequence:
+            # Return full sequence: (batch, seq_len, channels)
+            return x.transpose(1, 2)
+        else:
+            # Return last timestep: (batch, channels)
+            return x[:, :, -1]
 
 
 @dataclass
 class DualTCNConfig:
-    """Configuration for Dual-TCN model."""
+    """Configuration for Dual-TCN-LSTM model."""
 
     # Required fields (no defaults) - must come first
     cnn1_input_features: int  # Number of binary input features
@@ -342,8 +349,13 @@ class DualTCNConfig:
     tcn_num_layers: int = 4  # Number of TCN blocks (dilations: 1,2,4,8)
     tcn_dropout: float = 0.2  # Dropout in TCN blocks
 
+    # LSTM layer (between TCN and classifier)
+    lstm_hidden_size: int = 64  # LSTM hidden state size
+    lstm_num_layers: int = 1  # Number of LSTM layers
+    lstm_dropout: float = 0.1  # Dropout between LSTM layers (if num_layers > 1)
+
     # Classifier
-    classifier_hidden_size: int = 32  # Hidden layer size
+    classifier_hidden_size: int = 32  # Hidden layer size (0 = direct projection)
     classifier_dropout: float = 0.2  # Dropout before final layer
 
     # Output
@@ -355,19 +367,18 @@ class DualTCNConfig:
 
 class DualTCNPredictor(nn.Module):
     """
-    Dual-TCN model for binary trading signal prediction.
+    Dual-TCN-LSTM model for binary trading signal prediction.
 
     Architecture:
     - Two parallel TCN branches for binary and technical features
-    - Element-wise sum fusion of branch outputs
-    - Lightweight classifier for binary prediction
+    - Element-wise sum fusion of branch outputs (full sequence)
+    - LSTM layer for temporal aggregation
+    - Classifier head for binary prediction
 
-    Key advantages over GRU-based model:
-    - Parallel convolutions (faster training)
-    - Exact receptive field via dilations
-    - Fewer parameters (~30-80K vs ~275K)
-    - Better gradient flow via skip connections
-    - Sum fusion reduces classifier input size vs concatenation
+    Key advantages:
+    - TCN: Parallel convolutions, exact receptive field via dilations
+    - LSTM: Captures long-range temporal dependencies from TCN features
+    - Sum fusion reduces feature dimensionality
 
     Input:
     - binary_features: (batch, seq_len, n_binary) - pure 0/1 signals
@@ -420,13 +431,23 @@ class DualTCNPredictor(nn.Module):
             dropout=config.tcn_dropout
         )
 
-        # Combined feature size after element-wise sum (same as single branch)
-        combined_channels = config.tcn_num_channels
+        # LSTM layer for temporal aggregation of TCN features
+        self.lstm = nn.LSTM(
+            input_size=config.tcn_num_channels,  # TCN output channels (after sum)
+            hidden_size=config.lstm_hidden_size,
+            num_layers=config.lstm_num_layers,
+            batch_first=True,
+            dropout=config.lstm_dropout if config.lstm_num_layers > 1 else 0.0,
+            bidirectional=False
+        )
+
+        # Classifier input is LSTM hidden size
+        classifier_input_size = config.lstm_hidden_size
 
         # Classifier head
         if config.classifier_hidden_size > 0:
             self.classifier = nn.Sequential(
-                nn.Linear(combined_channels, config.classifier_hidden_size),
+                nn.Linear(classifier_input_size, config.classifier_hidden_size),
                 nn.LayerNorm(config.classifier_hidden_size),
                 nn.Mish(),
                 nn.Dropout(config.classifier_dropout),
@@ -435,13 +456,23 @@ class DualTCNPredictor(nn.Module):
         else:
             self.classifier = nn.Sequential(
                 nn.Dropout(config.classifier_dropout),
-                nn.Linear(combined_channels, config.num_classes)
+                nn.Linear(classifier_input_size, config.num_classes)
             )
 
-        self._init_classifier_weights()
+        self._init_weights()
 
-    def _init_classifier_weights(self):
-        """Initialize classifier weights."""
+    def _init_weights(self):
+        """Initialize LSTM and classifier weights."""
+        # Initialize LSTM weights
+        for name, param in self.lstm.named_parameters():
+            if 'weight_ih' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+            elif 'bias' in name:
+                nn.init.zeros_(param)
+
+        # Initialize classifier weights
         for m in self.classifier.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
@@ -486,15 +517,20 @@ class DualTCNPredictor(nn.Module):
         torch.Tensor
             Output logits, shape (batch, num_classes) for binary classification
         """
-        # Process through TCN branches (returns last timestep)
-        tcn1_out = self.tcn1(binary_features)   # (batch, channels)
-        tcn2_out = self.tcn2(technical_features)  # (batch, channels)
+        # Process through TCN branches (returns full sequence)
+        tcn1_out = self.tcn1(binary_features, return_sequence=True)   # (batch, seq_len, channels)
+        tcn2_out = self.tcn2(technical_features, return_sequence=True)  # (batch, seq_len, channels)
 
         # Element-wise sum of branch outputs
-        combined = tcn1_out + tcn2_out  # (batch, channels)
+        combined = tcn1_out + tcn2_out  # (batch, seq_len, channels)
+
+        # LSTM temporal aggregation
+        lstm_out, (h_n, c_n) = self.lstm(combined)
+        # h_n: (num_layers, batch, hidden_size) - use last layer's hidden state
+        context = h_n[-1]  # (batch, hidden_size)
 
         # Classification
-        output = self.classifier(combined)  # (batch, num_classes)
+        output = self.classifier(context)  # (batch, num_classes)
 
         return output
 
@@ -559,6 +595,7 @@ class DualTCNPredictor(nn.Module):
             f"k={self.config.tcn_kernel_size}, layers={self.config.tcn_num_layers},\n"
             f"  tcn2: in={self.config.cnn2_input_features}, ch={self.config.tcn_num_channels}, "
             f"k={self.config.tcn_kernel_size}, layers={self.config.tcn_num_layers},\n"
+            f"  lstm: hidden={self.config.lstm_hidden_size}, layers={self.config.lstm_num_layers},\n"
             f"  classifier: hidden={self.config.classifier_hidden_size}, "
             f"dropout={self.config.classifier_dropout},\n"
             f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"

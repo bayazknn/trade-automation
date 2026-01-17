@@ -162,26 +162,30 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
     ]
 
-    # Hyperparameter configurations for Dual-TCN model (Total: 13 params)
+    # Hyperparameter configurations for Dual-TCN-LSTM model (Total: 16 params)
     # Tuned for ~2400 sequences (~1450 train samples from 9751 rows)
-    # TCN has fewer hyperparameters and fewer parameters overall (~50-150K vs ~275K)
+    # Architecture: TCN branches → sum fusion → LSTM → classifier
     TCN_HYPERPARAM_CONFIGS = [
-        # TCN architecture - increased ranges for larger dataset
+        # TCN architecture
         HyperparamConfig('tcn_num_channels', 32, 96, 'int', 'tcn_num_channels'),
         HyperparamConfig('tcn_kernel_size', 2, 4, 'int', 'tcn_kernel_size'),  # Maps to 3,5,7
-        HyperparamConfig('tcn_num_layers', 3, 6, 'int', 'tcn_num_layers'),    # Allow deeper
-        HyperparamConfig('tcn_dropout', 0.05, 0.25, 'float', 'tcn_dropout'),  # Less dropout needed
-        # Classifier - larger capacity
-        HyperparamConfig('classifier_hidden_size', 32, 96, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('tcn_num_layers', 3, 6, 'int', 'tcn_num_layers'),
+        HyperparamConfig('tcn_dropout', 0.05, 0.25, 'float', 'tcn_dropout'),
+        # LSTM layer
+        HyperparamConfig('lstm_hidden_size', 32, 128, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 2, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        # Classifier
+        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
         HyperparamConfig('classifier_dropout', 0.05, 0.25, 'float', 'classifier_dropout'),
         # Training
         HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),  # Smaller batches = more updates
-        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),  # Less regularization
+        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
+        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
         HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),  # More patience
+        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
     ]
 
     # Backwards compatibility alias
@@ -314,8 +318,8 @@ class DualCNNMetaheuristicOptimizer:
         technical_values = individual[self.n_binary:self.n_binary + self.n_technical]
 
         # Simple threshold >= 0 for selection
-        binary_mask = binary_values >= -100
-        technical_mask = technical_values >= -100
+        binary_mask = binary_values >= 0
+        technical_mask = technical_values >= 0
 
         selected_binary = [
             col for col, sel in zip(self.binary_columns, binary_mask) if sel
@@ -445,6 +449,9 @@ class DualCNNMetaheuristicOptimizer:
                     tcn_kernel_size=config_params['tcn_kernel_size'],
                     tcn_num_layers=config_params['tcn_num_layers'],
                     tcn_dropout=config_params['tcn_dropout'],
+                    lstm_hidden_size=config_params['lstm_hidden_size'],
+                    lstm_num_layers=config_params['lstm_num_layers'],
+                    lstm_dropout=config_params['lstm_dropout'],
                     classifier_hidden_size=config_params['classifier_hidden_size'],
                     classifier_dropout=config_params['classifier_dropout'],
                     input_seq_length=input_seq_length,
@@ -1110,6 +1117,9 @@ class DualCNNMetaheuristicOptimizer:
                 tcn_kernel_size=params['tcn_kernel_size'],
                 tcn_num_layers=params['tcn_num_layers'],
                 tcn_dropout=params['tcn_dropout'],
+                lstm_hidden_size=params['lstm_hidden_size'],
+                lstm_num_layers=params['lstm_num_layers'],
+                lstm_dropout=params['lstm_dropout'],
                 classifier_hidden_size=params['classifier_hidden_size'],
                 classifier_dropout=params['classifier_dropout'],
                 input_seq_length=input_seq_length,
@@ -1307,6 +1317,11 @@ class DualCNNMetaheuristicOptimizer:
                     'kernel_size': params['tcn_kernel_size'],
                     'num_layers': params['tcn_num_layers'],
                     'dropout': params['tcn_dropout'],
+                },
+                'lstm': {
+                    'hidden_size': params['lstm_hidden_size'],
+                    'num_layers': params['lstm_num_layers'],
+                    'dropout': params['lstm_dropout'],
                 },
                 'classifier': {
                     'hidden_size': params['classifier_hidden_size'],
