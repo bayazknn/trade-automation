@@ -359,14 +359,15 @@ class DualTCNPredictor(nn.Module):
 
     Architecture:
     - Two parallel TCN branches for binary and technical features
-    - Feature concatenation after TCN processing
+    - Element-wise sum fusion of branch outputs
     - Lightweight classifier for binary prediction
 
     Key advantages over GRU-based model:
     - Parallel convolutions (faster training)
     - Exact receptive field via dilations
-    - Fewer parameters (~50-100K vs ~275K)
+    - Fewer parameters (~30-80K vs ~275K)
     - Better gradient flow via skip connections
+    - Sum fusion reduces classifier input size vs concatenation
 
     Input:
     - binary_features: (batch, seq_len, n_binary) - pure 0/1 signals
@@ -419,8 +420,8 @@ class DualTCNPredictor(nn.Module):
             dropout=config.tcn_dropout
         )
 
-        # Combined feature size after concatenation
-        combined_channels = config.tcn_num_channels * 2
+        # Combined feature size after element-wise sum (same as single branch)
+        combined_channels = config.tcn_num_channels
 
         # Classifier head
         if config.classifier_hidden_size > 0:
@@ -489,8 +490,8 @@ class DualTCNPredictor(nn.Module):
         tcn1_out = self.tcn1(binary_features)   # (batch, channels)
         tcn2_out = self.tcn2(technical_features)  # (batch, channels)
 
-        # Concatenate along feature dimension
-        combined = torch.cat([tcn1_out, tcn2_out], dim=1)  # (batch, 2*channels)
+        # Element-wise sum of branch outputs
+        combined = tcn1_out + tcn2_out  # (batch, channels)
 
         # Classification
         output = self.classifier(combined)  # (batch, num_classes)
