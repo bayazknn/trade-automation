@@ -126,12 +126,14 @@ class DualCNNMetaheuristicOptimizer:
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
     # Hyperparameter configurations (Total: 20 params)
-    # Note: kernel sizes use range [1, 4] which maps to odd values [3, 5, 7, 9]
+    # Tuned for small dataset (~1350 sequences, ~800 train samples)
+    # Note: kernel sizes use range [1, 3] which maps to odd values [3, 5, 7]
     HYPERPARAM_CONFIGS = [
-        # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
+        # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
         HyperparamConfig('cnn1_num_channels', 32, 96, 'int', 'cnn1_num_channels'),
         HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
+<<<<<<< HEAD
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7, 4->9
         HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
         HyperparamConfig('cnn2_num_channels', 32, 96, 'int', 'cnn2_num_channels'),
@@ -146,6 +148,22 @@ class DualCNNMetaheuristicOptimizer:
         # Classifier
         HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
         HyperparamConfig('classifier_dropout', 0.00, 0.10, 'float', 'classifier_dropout'),
+=======
+        # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
+        HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
+        HyperparamConfig('cnn2_num_channels', 32, 96, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
+        # Fusion layer (between CNN concat and LSTM) - 0 means disabled
+        HyperparamConfig('fusion_hidden_size', 0, 64, 'int', 'fusion_hidden_size'),
+        HyperparamConfig('fusion_dropout', 0.0, 0.15, 'float', 'fusion_dropout'),
+        # LSTM - moderate size for small dataset
+        HyperparamConfig('lstm_hidden_size', 64, 192, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        # Classifier - 0 means direct projection without hidden layer
+        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.0, 0.2, 'float', 'classifier_dropout'),
+>>>>>>> 58e28bb95ac757b7508a83db0a2a9de34d1ca150
         # Training
         HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
         HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
@@ -297,6 +315,10 @@ class DualCNNMetaheuristicOptimizer:
         # Round input_seq_length to nearest multiple of 4 for period alignment
         # With stride=4, this ensures sequences start/end at period boundaries
         config_params['input_seq_length'] = 4 * round(config_params['input_seq_length'] / 4)
+<<<<<<< HEAD
+=======
+        config_params['input_seq_length'] = max(12, config_params['input_seq_length'])  # Minimum 12
+>>>>>>> 58e28bb95ac757b7508a83db0a2a9de34d1ca150
 
         return selected_binary, selected_technical, config_params
 
