@@ -151,8 +151,8 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
         HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
         HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
-        # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
-        HyperparamConfig('focal_gamma', 1.5, 3.0, 'float', 'focal_gamma'),
+        # Focal loss gamma: focusing parameter for hard example mining (1.0-2.5)
+        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.1, 'float', 'label_smoothing'),
         HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
         HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
@@ -599,14 +599,17 @@ class DualCNNMetaheuristicOptimizer:
         technical_cols_dict: Dict[int, List[str]] = {}
         metrics_dict: Dict[int, Dict] = {}
 
+        # Determine padding width based on population size
+        id_width = len(str(len(population) - 1))
+
         with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
             futures = {
-                executor.submit(self._evaluate_individual, ind, idx): idx
+                executor.submit(self._evaluate_individual, ind, idx): (idx, ind)
                 for idx, ind in enumerate(population)
             }
 
             for future in as_completed(futures):
-                idx = futures[future]
+                idx, individual = futures[future]
                 try:
                     fitness, binary_cols, technical_cols, metrics = future.result()
                     fitness_values[idx] = fitness
@@ -615,16 +618,29 @@ class DualCNNMetaheuristicOptimizer:
                     metrics_dict[idx] = metrics
 
                     if self.verbose:
+                        padded_idx = str(idx).zfill(id_width)
                         if fitness != float('inf'):
+                            # Decode individual to get hyperparameter values
+                            _, _, config_params = self._decode_individual(individual)
+                            # Format hyperparameters
+                            param_strs = []
+                            for cfg in self.HYPERPARAM_CONFIGS:
+                                val = config_params[cfg.config_field]
+                                if cfg.param_type == 'float':
+                                    param_strs.append(f"{cfg.name}={val:.4f}")
+                                else:
+                                    param_strs.append(f"{cfg.name}={val}")
+                            params_str = " ".join(param_strs)
                             print(
-                                f"iter:{iteration} indv:{idx} fitness:{-fitness:.4f} "
-                                f"binary:{len(binary_cols)} technical:{len(technical_cols)}"
+                                f"iter:{iteration} indv:{padded_idx} fitness:{-fitness:.4f} "
+                                f"binary:{len(binary_cols)} technical:{len(technical_cols)} | {params_str}"
                             )
                         else:
-                            print(f"iter:{iteration} indv:{idx} fitness:invalid")
+                            print(f"iter:{iteration} indv:{padded_idx} fitness:invalid")
 
                 except Exception as e:
-                    print(f"iter:{iteration} indv:{idx} error: {e}")
+                    padded_idx = str(idx).zfill(id_width)
+                    print(f"iter:{iteration} indv:{padded_idx} error: {e}")
 
         return fitness_values, binary_cols_dict, technical_cols_dict, metrics_dict
 
