@@ -196,6 +196,7 @@ class DualCNNMetaheuristicOptimizer:
         df_binary: pd.DataFrame,
         df_technical: pd.DataFrame,
         model_type: str = 'dual_tcn',
+        use_lstm: bool = True,
         pop_size: int = 10,
         iterations: int = 50,
         n_workers: int = 4,
@@ -217,6 +218,7 @@ class DualCNNMetaheuristicOptimizer:
         self.df_binary = df_binary
         self.df_technical = df_technical
         self.model_type = model_type
+        self.use_lstm = use_lstm
         self.pop_size = pop_size
         self.iterations = iterations
         self.n_workers = n_workers
@@ -449,6 +451,7 @@ class DualCNNMetaheuristicOptimizer:
                     tcn_kernel_size=config_params['tcn_kernel_size'],
                     tcn_num_layers=config_params['tcn_num_layers'],
                     tcn_dropout=config_params['tcn_dropout'],
+                    use_lstm=self.use_lstm,
                     lstm_hidden_size=config_params['lstm_hidden_size'],
                     lstm_num_layers=config_params['lstm_num_layers'],
                     lstm_dropout=config_params['lstm_dropout'],
@@ -1117,6 +1120,7 @@ class DualCNNMetaheuristicOptimizer:
                 tcn_kernel_size=params['tcn_kernel_size'],
                 tcn_num_layers=params['tcn_num_layers'],
                 tcn_dropout=params['tcn_dropout'],
+                use_lstm=self.use_lstm,
                 lstm_hidden_size=params['lstm_hidden_size'],
                 lstm_num_layers=params['lstm_num_layers'],
                 lstm_dropout=params['lstm_dropout'],
