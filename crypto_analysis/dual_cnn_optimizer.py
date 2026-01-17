@@ -129,37 +129,35 @@ class DualCNNMetaheuristicOptimizer:
     # OHLCV columns - exclude from binary DataFrame (they need scaling, handled in technical)
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
-    # Hyperparameter configurations for Dual-CNN GRU model (Total: 20 params)
-    # Tuned for ~2400 sequences (~1450 train samples from 9751 rows)
+    # Hyperparameter configurations for Dual-CNN LSTM model (Total: 15 params)
+    # Tuned for ~9700 rows dataset
+    # Architecture: Linear -> CNN branches -> concat -> Fusion (half size) -> LSTM -> classifier
     # Note: kernel sizes use range [1, 3] which maps to odd values [3, 5, 7]
     GRU_HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
-        HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
+        HyperparamConfig('cnn1_num_channels', 48, 96, 'int', 'cnn1_num_channels'),
         HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 64, 128, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_channels', 48, 96, 'int', 'cnn2_num_channels'),
         HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
-        # Fusion layer (between CNN concat and GRU) - 0 means disabled
-        HyperparamConfig('fusion_hidden_size', 0, 128, 'int', 'fusion_hidden_size'),
-        HyperparamConfig('fusion_dropout', 0.0, 0.15, 'float', 'fusion_dropout'),
-        # GRU - can use larger sizes with more data
-        HyperparamConfig('gru_hidden_size', 128, 256, 'int', 'gru_hidden_size'),
-        HyperparamConfig('gru_num_layers', 1, 3, 'int', 'gru_num_layers'),
-        HyperparamConfig('gru_dropout', 0.0, 0.15, 'float', 'gru_dropout'),
+        # LSTM - can use larger sizes with more data (~9700 rows)
+        HyperparamConfig('lstm_hidden_size', 64, 128, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
         # Classifier
-        HyperparamConfig('classifier_hidden_size', 32, 96, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.05, 0.2, 'float', 'classifier_dropout'),
+        HyperparamConfig('classifier_hidden_size', 32, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.1, 0.25, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.0005, 0.002, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
+        HyperparamConfig('weight_decay', 0.0001, 0.003, 'float', 'weight_decay'),
         # Focal loss gamma: focusing parameter for hard example mining (1.0-2.5)
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
-        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
+        HyperparamConfig('label_smoothing', 0.02, 0.08, 'float', 'label_smoothing'),
+        HyperparamConfig('input_seq_length', 16, 48, 'int', 'input_seq_length'),
+        HyperparamConfig('scheduler_patience', 8, 15, 'int', 'scheduler_patience'),
     ]
 
     # Hyperparameter configurations for Dual-TCN-LSTM model (Total: 16 params)
@@ -508,11 +506,9 @@ class DualCNNMetaheuristicOptimizer:
                     cnn2_kernel_size=config_params['cnn2_kernel_size'],
                     cnn2_num_channels=config_params['cnn2_num_channels'],
                     cnn2_num_layers=config_params['cnn2_num_layers'],
-                    fusion_hidden_size=config_params['fusion_hidden_size'],
-                    fusion_dropout=config_params['fusion_dropout'],
-                    gru_hidden_size=config_params['gru_hidden_size'],
-                    gru_num_layers=config_params['gru_num_layers'],
-                    gru_dropout=config_params['gru_dropout'],
+                    lstm_hidden_size=config_params['lstm_hidden_size'],
+                    lstm_num_layers=config_params['lstm_num_layers'],
+                    lstm_dropout=config_params['lstm_dropout'],
                     classifier_hidden_size=config_params['classifier_hidden_size'],
                     classifier_dropout=config_params['classifier_dropout'],
                     input_seq_length=input_seq_length,
@@ -1190,11 +1186,9 @@ class DualCNNMetaheuristicOptimizer:
                 cnn2_kernel_size=params['cnn2_kernel_size'],
                 cnn2_num_channels=params['cnn2_num_channels'],
                 cnn2_num_layers=params['cnn2_num_layers'],
-                fusion_hidden_size=params['fusion_hidden_size'],
-                fusion_dropout=params['fusion_dropout'],
-                gru_hidden_size=params['gru_hidden_size'],
-                gru_num_layers=params['gru_num_layers'],
-                gru_dropout=params['gru_dropout'],
+                lstm_hidden_size=params['lstm_hidden_size'],
+                lstm_num_layers=params['lstm_num_layers'],
+                lstm_dropout=params['lstm_dropout'],
                 classifier_hidden_size=params['classifier_hidden_size'],
                 classifier_dropout=params['classifier_dropout'],
                 input_seq_length=input_seq_length,
@@ -1405,7 +1399,17 @@ class DualCNNMetaheuristicOptimizer:
                 },
             }
         else:
+            combined_features = params['cnn1_num_channels'] + params['cnn2_num_channels']
+            fusion_output = combined_features // 2
             metadata['model_architecture'] = {
+                'linear1': {
+                    'input_features': len(selected_binary),
+                    'output_features': len(selected_binary),
+                },
+                'linear2': {
+                    'input_features': len(selected_technical),
+                    'output_features': len(selected_technical),
+                },
                 'cnn1': {
                     'input_features': len(selected_binary),
                     'kernel_size': params['cnn1_kernel_size'],
@@ -1419,13 +1423,14 @@ class DualCNNMetaheuristicOptimizer:
                     'num_layers': params['cnn2_num_layers'],
                 },
                 'fusion': {
-                    'hidden_size': params['fusion_hidden_size'],
-                    'dropout': params['fusion_dropout'],
+                    'input_features': combined_features,
+                    'output_features': fusion_output,
+                    'dropout': 0.0,
                 },
-                'gru': {
-                    'hidden_size': params['gru_hidden_size'],
-                    'num_layers': params['gru_num_layers'],
-                    'dropout': params['gru_dropout'],
+                'lstm': {
+                    'hidden_size': params['lstm_hidden_size'],
+                    'num_layers': params['lstm_num_layers'],
+                    'dropout': params['lstm_dropout'],
                     'bidirectional': False,
                 },
                 'classifier': {
