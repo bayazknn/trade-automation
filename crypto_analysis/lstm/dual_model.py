@@ -739,6 +739,8 @@ class DualLSTMPredictor(nn.Module):
     Dual-LSTM model for binary trading signal prediction.
 
     Architecture:
+    - Linear projection layer for binary features (dimension-preserving)
+    - Linear projection layer for technical features (dimension-preserving)
     - Two parallel LSTM branches for binary and technical features
     - Element-wise sum fusion of branch outputs
     - Classifier head for binary prediction
@@ -782,6 +784,21 @@ class DualLSTMPredictor(nn.Module):
         num_directions = 2 if config.lstm_bidirectional else 1
         output_size = config.lstm_hidden_size * num_directions
 
+        # Linear projection layers (dimension-preserving transformation before LSTM)
+        # Binary features linear layer
+        self.linear1 = nn.Sequential(
+            nn.Linear(config.cnn1_input_features, config.cnn1_input_features),
+            nn.LayerNorm(config.cnn1_input_features),
+            nn.Mish()
+        )
+
+        # Technical features linear layer
+        self.linear2 = nn.Sequential(
+            nn.Linear(config.cnn2_input_features, config.cnn2_input_features),
+            nn.LayerNorm(config.cnn2_input_features),
+            nn.Mish()
+        )
+
         # LSTM1 Branch: Binary features
         self.lstm1 = LSTMBranch(
             input_features=config.cnn1_input_features,
@@ -818,7 +835,16 @@ class DualLSTMPredictor(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        """Initialize classifier weights."""
+        """Initialize linear projection and classifier weights."""
+        # Initialize linear projection layers
+        for layer in [self.linear1, self.linear2]:
+            for m in layer.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.xavier_uniform_(m.weight)
+                    if m.bias is not None:
+                        nn.init.zeros_(m.bias)
+
+        # Initialize classifier weights
         for m in self.classifier.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
@@ -863,9 +889,13 @@ class DualLSTMPredictor(nn.Module):
         torch.Tensor
             Output logits, shape (batch, num_classes) for binary classification
         """
+        # Apply linear projection layers (applied to each timestep)
+        binary_projected = self.linear1(binary_features)      # (batch, seq_len, n_binary)
+        technical_projected = self.linear2(technical_features)  # (batch, seq_len, n_technical)
+
         # Process through LSTM branches
-        lstm1_out = self.lstm1(binary_features)   # (batch, hidden_size)
-        lstm2_out = self.lstm2(technical_features)  # (batch, hidden_size)
+        lstm1_out = self.lstm1(binary_projected)   # (batch, hidden_size)
+        lstm2_out = self.lstm2(technical_projected)  # (batch, hidden_size)
 
         # Element-wise sum fusion
         combined = lstm1_out + lstm2_out  # (batch, hidden_size)
@@ -931,6 +961,8 @@ class DualLSTMPredictor(nn.Module):
         bidir_info = "bidirectional" if self.config.lstm_bidirectional else "unidirectional"
         return (
             f"DualLSTMPredictor(\n"
+            f"  linear1: {self.config.cnn1_input_features} -> {self.config.cnn1_input_features},\n"
+            f"  linear2: {self.config.cnn2_input_features} -> {self.config.cnn2_input_features},\n"
             f"  lstm1: in={self.config.cnn1_input_features}, hidden={self.config.lstm_hidden_size}, "
             f"layers={self.config.lstm_num_layers}, {bidir_info},\n"
             f"  lstm2: in={self.config.cnn2_input_features}, hidden={self.config.lstm_hidden_size}, "
