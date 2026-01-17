@@ -131,22 +131,22 @@ class DualCNNMetaheuristicOptimizer:
     HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
-        HyperparamConfig('cnn1_num_channels', 32, 96, 'int', 'cnn1_num_channels'),
+        HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
         HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 32, 96, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_channels', 64, 128, 'int', 'cnn2_num_channels'),
         HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
         # Fusion layer (between CNN concat and LSTM) - 0 means disabled
         HyperparamConfig('fusion_hidden_size', 0, 0, 'int', 'fusion_hidden_size'),
         HyperparamConfig('fusion_dropout', 0.0, 0.15, 'float', 'fusion_dropout'),
         # LSTM - moderate size for small dataset
-        HyperparamConfig('lstm_hidden_size', 64, 192, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_hidden_size', 128, 256, 'int', 'lstm_hidden_size'),
         HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
-        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        HyperparamConfig('lstm_dropout', 0.0, 0.1, 'float', 'lstm_dropout'),
         # Classifier - 0 means direct projection without hidden layer
         HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.0, 0.2, 'float', 'classifier_dropout'),
+        HyperparamConfig('classifier_dropout', 0.0, 0.1, 'float', 'classifier_dropout'),
         # Training
         HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
         HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
@@ -154,7 +154,7 @@ class DualCNNMetaheuristicOptimizer:
         # Focal loss gamma: focusing parameter for hard example mining (1.5-3.0)
         HyperparamConfig('focal_gamma', 1.5, 3.0, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.1, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 12, 28, 'int', 'input_seq_length'),
+        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
         HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
     ]
 
