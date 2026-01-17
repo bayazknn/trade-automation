@@ -1,15 +1,15 @@
 """
-Dual-CNN LSTM Optimizer using APO (Artificial Protozoa Optimizer)
+Dual-CNN GRU Optimizer using APO (Artificial Protozoa Optimizer)
 
 Jointly optimizes:
 1. Binary feature selection from df_binary (114 binary indicator columns)
 2. Technical feature selection from df_technical (76 technical + 5 OHLCV columns)
-3. Dual-CNN LSTM model hyperparameters
+3. Dual-CNN GRU model hyperparameters
 
 Architecture:
 - CNN1: Processes binary indicator signals (pure 0/1 entry/exit)
 - CNN2: Processes technical indicators + OHLCV (scaled continuous)
-- LSTM: Captures temporal dependencies from combined CNN outputs
+- GRU: Captures temporal dependencies from combined CNN outputs
 - Classifier: Binary prediction (hold=0, trade=1)
 
 Based on: Wang, X., et al. (2024). "Artificial Protozoa Optimizer (APO):
@@ -72,12 +72,12 @@ class HyperparamConfig:
 
 class DualCNNMetaheuristicOptimizer:
     """
-    APO-based optimizer for Dual-CNN LSTM hyperparameters and dual feature selection.
+    APO-based optimizer for Dual-CNN GRU hyperparameters and dual feature selection.
 
     Uses Artificial Protozoa Optimizer (APO) algorithm to jointly optimize:
     - Binary feature selection (114 columns)
     - Technical + OHLCV feature selection (81 columns)
-    - Dual-CNN LSTM architecture hyperparameters
+    - Dual-CNN GRU architecture hyperparameters
     - Training hyperparameters
 
     Individual Vector Structure (Total: 213 dimensions):
@@ -140,10 +140,10 @@ class DualCNNMetaheuristicOptimizer:
         # Fusion layer (between CNN concat and LSTM) - 0 means disabled
         HyperparamConfig('fusion_hidden_size', 0, 0, 'int', 'fusion_hidden_size'),
         HyperparamConfig('fusion_dropout', 0.0, 0.15, 'float', 'fusion_dropout'),
-        # LSTM - moderate size for small dataset
-        HyperparamConfig('lstm_hidden_size', 128, 256, 'int', 'lstm_hidden_size'),
-        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
-        HyperparamConfig('lstm_dropout', 0.0, 0.1, 'float', 'lstm_dropout'),
+        # GRU - moderate size for small dataset
+        HyperparamConfig('gru_hidden_size', 128, 256, 'int', 'gru_hidden_size'),
+        HyperparamConfig('gru_num_layers', 1, 3, 'int', 'gru_num_layers'),
+        HyperparamConfig('gru_dropout', 0.0, 0.1, 'float', 'gru_dropout'),
         # Classifier - 0 means direct projection without hidden layer
         HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
         HyperparamConfig('classifier_dropout', 0.0, 0.1, 'float', 'classifier_dropout'),
@@ -396,9 +396,9 @@ class DualCNNMetaheuristicOptimizer:
                 cnn2_num_layers=config_params['cnn2_num_layers'],
                 fusion_hidden_size=config_params['fusion_hidden_size'],
                 fusion_dropout=config_params['fusion_dropout'],
-                lstm_hidden_size=config_params['lstm_hidden_size'],
-                lstm_num_layers=config_params['lstm_num_layers'],
-                lstm_dropout=config_params['lstm_dropout'],
+                gru_hidden_size=config_params['gru_hidden_size'],
+                gru_num_layers=config_params['gru_num_layers'],
+                gru_dropout=config_params['gru_dropout'],
                 classifier_hidden_size=config_params['classifier_hidden_size'],
                 classifier_dropout=config_params['classifier_dropout'],
                 input_seq_length=input_seq_length,
@@ -1029,9 +1029,9 @@ class DualCNNMetaheuristicOptimizer:
             cnn2_num_layers=params['cnn2_num_layers'],
             fusion_hidden_size=params['fusion_hidden_size'],
             fusion_dropout=params['fusion_dropout'],
-            lstm_hidden_size=params['lstm_hidden_size'],
-            lstm_num_layers=params['lstm_num_layers'],
-            lstm_dropout=params['lstm_dropout'],
+            gru_hidden_size=params['gru_hidden_size'],
+            gru_num_layers=params['gru_num_layers'],
+            gru_dropout=params['gru_dropout'],
             classifier_hidden_size=params['classifier_hidden_size'],
             classifier_dropout=params['classifier_dropout'],
             input_seq_length=input_seq_length,
@@ -1166,7 +1166,7 @@ class DualCNNMetaheuristicOptimizer:
 
         # Save metadata
         metadata = {
-            'model_type': 'dual_cnn_lstm',
+            'model_type': 'dual_cnn_gru',
             'version': '1.0.0',
             'created_at': datetime.now().isoformat(),
             'optimization_run_id': self.run_id,
@@ -1193,10 +1193,10 @@ class DualCNNMetaheuristicOptimizer:
                     'hidden_size': params['fusion_hidden_size'],
                     'dropout': params['fusion_dropout'],
                 },
-                'lstm': {
-                    'hidden_size': params['lstm_hidden_size'],
-                    'num_layers': params['lstm_num_layers'],
-                    'dropout': params['lstm_dropout'],
+                'gru': {
+                    'hidden_size': params['gru_hidden_size'],
+                    'num_layers': params['gru_num_layers'],
+                    'dropout': params['gru_dropout'],
                     'bidirectional': False,
                 },
                 'classifier': {

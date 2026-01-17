@@ -1,23 +1,24 @@
 """
-Dual-CNN LSTM Model Module
+Dual-CNN GRU Model Module
 
-Implements the Dual-CNN LSTM architecture for binary classification of trading signals.
+Implements the Dual-CNN GRU architecture for binary classification of trading signals.
 
 Architecture:
 1. CNN1 Branch: Processes binary indicator signals (pure 0/1 entry/exit signals)
 2. CNN2 Branch: Processes technical indicators + OHLCV (scaled continuous values)
 3. Concatenation: Combines outputs from both CNN branches
-4. LSTM: Captures temporal dependencies from combined features
+4. GRU: Captures temporal dependencies from combined features
 5. Classifier: Binary prediction (hold=0, trade=1)
 
 Key Design Decisions:
-- GELU activations instead of ReLU (smoother gradients, avoids dead neurons)
+- Mish activations instead of ReLU (smooth, self-regularizing)
+- GRU instead of LSTM (simpler, faster, similar performance)
 - BatchNorm1d in CNN branches, LayerNorm in classifier
 - Light dropout only before classifier, none in CNN branches
 """
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -25,7 +26,7 @@ import torch.nn as nn
 
 @dataclass
 class DualModelConfig:
-    """Configuration for Dual-CNN LSTM model."""
+    """Configuration for Dual-CNN GRU model."""
 
     # Required fields (no defaults) - must come first
     cnn1_input_features: int  # Number of binary input features
@@ -41,15 +42,15 @@ class DualModelConfig:
     cnn2_num_channels: int = 64  # Output channels per conv layer
     cnn2_num_layers: int = 2  # Number of conv layers
 
-    # Fusion Layer (between CNN concat and LSTM)
+    # Fusion Layer (between CNN concat and GRU)
     fusion_hidden_size: int = 128  # Output size of fusion layer (0 = no fusion layer)
     fusion_dropout: float = 0.1  # Dropout after fusion linear layer
 
-    # LSTM
-    lstm_hidden_size: int = 128  # LSTM hidden state size
-    lstm_num_layers: int = 2  # Number of LSTM layers
-    lstm_dropout: float = 0.1  # Dropout between LSTM layers
-    lstm_bidirectional: bool = False  # Use bidirectional LSTM
+    # GRU
+    gru_hidden_size: int = 128  # GRU hidden state size
+    gru_num_layers: int = 2  # Number of GRU layers
+    gru_dropout: float = 0.1  # Dropout between GRU layers
+    gru_bidirectional: bool = False  # Use bidirectional GRU
 
     # Classifier
     classifier_hidden_size: int = 64  # Hidden layer size (0 = single layer)
@@ -66,7 +67,7 @@ class CNNBranch(nn.Module):
     """
     CNN branch for feature extraction.
 
-    Uses Conv1d layers with BatchNorm and GELU activations.
+    Uses Conv1d layers with BatchNorm and Mish activations.
     Preserves sequence length using 'same' padding.
     """
 
@@ -99,13 +100,13 @@ class CNNBranch(nn.Module):
         # Use padding='same' to always preserve sequence length regardless of kernel size
         layers.append(nn.Conv1d(input_features, num_channels, kernel_size, padding='same'))
         layers.append(nn.BatchNorm1d(num_channels))
-        layers.append(nn.GELU())
+        layers.append(nn.Mish())
 
         # Additional conv layers: num_channels -> num_channels
         for _ in range(num_layers - 1):
             layers.append(nn.Conv1d(num_channels, num_channels, kernel_size, padding='same'))
             layers.append(nn.BatchNorm1d(num_channels))
-            layers.append(nn.GELU())
+            layers.append(nn.Mish())
 
         self.conv_layers = nn.Sequential(*layers)
         self.output_channels = num_channels
@@ -146,12 +147,12 @@ class CNNBranch(nn.Module):
 
 class DualCNNLSTMPredictor(nn.Module):
     """
-    Dual-CNN LSTM model for binary trading signal prediction.
+    Dual-CNN GRU model for binary trading signal prediction.
 
     Architecture:
     - Two parallel CNN branches for binary and technical features
     - Feature concatenation after CNN processing
-    - LSTM encoder for temporal dependencies
+    - GRU encoder for temporal dependencies
     - Classification head for binary prediction
 
     Input:
@@ -206,8 +207,8 @@ class DualCNNLSTMPredictor(nn.Module):
         # Combined feature size after concatenation
         combined_features = config.cnn1_num_channels + config.cnn2_num_channels
 
-        # Fusion layer (between CNN concat and LSTM)
-        # Transforms concatenated CNN outputs before feeding to LSTM
+        # Fusion layer (between CNN concat and GRU)
+        # Transforms concatenated CNN outputs before feeding to GRU
         if config.fusion_hidden_size > 0:
             fusion_output_size = int(config.fusion_hidden_size)
             self.fusion = nn.Sequential(
@@ -216,30 +217,30 @@ class DualCNNLSTMPredictor(nn.Module):
                 nn.GELU(),
                 nn.Dropout(config.fusion_dropout)
             )
-            lstm_input_size = fusion_output_size
+            gru_input_size = fusion_output_size
         else:
             self.fusion = None
-            lstm_input_size = combined_features
+            gru_input_size = combined_features
 
-        # LSTM encoder
-        self.num_directions = 2 if config.lstm_bidirectional else 1
-        self.lstm = nn.LSTM(
-            input_size=lstm_input_size,
-            hidden_size=config.lstm_hidden_size,
-            num_layers=config.lstm_num_layers,
+        # GRU encoder
+        self.num_directions = 2 if config.gru_bidirectional else 1
+        self.gru = nn.GRU(
+            input_size=gru_input_size,
+            hidden_size=config.gru_hidden_size,
+            num_layers=config.gru_num_layers,
             batch_first=True,
-            dropout=config.lstm_dropout if config.lstm_num_layers > 1 else 0.0,
-            bidirectional=config.lstm_bidirectional
+            dropout=config.gru_dropout if config.gru_num_layers > 1 else 0.0,
+            bidirectional=config.gru_bidirectional
         )
 
-        # LSTM output size
-        lstm_output_size = config.lstm_hidden_size * self.num_directions
+        # GRU output size
+        gru_output_size = config.gru_hidden_size * self.num_directions
 
         # Classifier head
         if config.classifier_hidden_size > 0:
             # Two-layer classifier with hidden layer
             self.classifier = nn.Sequential(
-                nn.Linear(lstm_output_size, config.classifier_hidden_size),
+                nn.Linear(gru_output_size, config.classifier_hidden_size),
                 nn.LayerNorm(config.classifier_hidden_size),
                 nn.GELU(),
                 nn.Dropout(config.classifier_dropout),
@@ -249,13 +250,13 @@ class DualCNNLSTMPredictor(nn.Module):
             # Single layer classifier
             self.classifier = nn.Sequential(
                 nn.Dropout(config.classifier_dropout),
-                nn.Linear(lstm_output_size, config.num_classes)
+                nn.Linear(gru_output_size, config.num_classes)
             )
 
-        self._init_lstm_weights()
+        self._init_gru_weights()
 
-    def _init_lstm_weights(self):
-        """Initialize LSTM and fusion layer weights."""
+    def _init_gru_weights(self):
+        """Initialize GRU and fusion layer weights."""
         # Initialize fusion layer if present
         if self.fusion is not None:
             for m in self.fusion.modules():
@@ -264,17 +265,14 @@ class DualCNNLSTMPredictor(nn.Module):
                     if m.bias is not None:
                         nn.init.zeros_(m.bias)
 
-        # Initialize LSTM weights
-        for name, param in self.lstm.named_parameters():
+        # Initialize GRU weights
+        for name, param in self.gru.named_parameters():
             if 'weight_ih' in name:
                 nn.init.xavier_uniform_(param)
             elif 'weight_hh' in name:
                 nn.init.orthogonal_(param)
             elif 'bias' in name:
                 nn.init.zeros_(param)
-                # Set forget gate bias to 1 for better gradient flow
-                n = param.size(0)
-                param.data[n // 4:n // 2].fill_(1.0)
 
         # Initialize classifier linear layers
         for m in self.classifier.modules():
@@ -316,7 +314,7 @@ class DualCNNLSTMPredictor(nn.Module):
         self,
         binary_features: torch.Tensor,
         technical_features: torch.Tensor,
-        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None
+        hidden: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
         Forward pass.
@@ -327,8 +325,8 @@ class DualCNNLSTMPredictor(nn.Module):
             Binary indicator signals, shape (batch, seq_len, n_binary)
         technical_features : torch.Tensor
             Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
-        hidden : tuple, optional
-            Initial LSTM hidden state (h_0, c_0). If None, uses zeros.
+        hidden : torch.Tensor, optional
+            Initial GRU hidden state h_0. If None, uses zeros.
 
         Returns
         -------
@@ -351,13 +349,13 @@ class DualCNNLSTMPredictor(nn.Module):
         if self.fusion is not None:
             combined = self.fusion(combined)  # (batch, seq_len, fusion_hidden_size)
 
-        # LSTM encoding
-        lstm_out, (h_n, c_n) = self.lstm(combined, hidden)
-        # lstm_out: (batch, seq_len, hidden_size * num_directions)
+        # GRU encoding (only returns h_n, not c_n like LSTM)
+        gru_out, h_n = self.gru(combined, hidden)
+        # gru_out: (batch, seq_len, hidden_size * num_directions)
         # h_n: (num_layers * num_directions, batch, hidden_size)
 
         # Extract context from final hidden state
-        if self.config.lstm_bidirectional:
+        if self.config.gru_bidirectional:
             # Concatenate forward and backward final hidden states
             h_forward = h_n[-2]  # (batch, hidden_size)
             h_backward = h_n[-1]  # (batch, hidden_size)
@@ -436,8 +434,8 @@ class DualCNNLSTMPredictor(nn.Module):
             f"  cnn2: in={self.config.cnn2_input_features}, ch={self.config.cnn2_num_channels}, "
             f"k={self.config.cnn2_kernel_size}, layers={self.config.cnn2_num_layers},\n"
             f"  {fusion_info},\n"
-            f"  lstm: hidden={self.config.lstm_hidden_size}, layers={self.config.lstm_num_layers}, "
-            f"bidir={self.config.lstm_bidirectional},\n"
+            f"  gru: hidden={self.config.gru_hidden_size}, layers={self.config.gru_num_layers}, "
+            f"bidir={self.config.gru_bidirectional},\n"
             f"  classifier: hidden={self.config.classifier_hidden_size}, "
             f"dropout={self.config.classifier_dropout},\n"
             f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
