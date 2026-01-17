@@ -130,7 +130,7 @@ class DualCNNMetaheuristicOptimizer:
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
     # Hyperparameter configurations for Dual-CNN GRU model (Total: 20 params)
-    # Tuned for small dataset (~1350 sequences, ~800 train samples)
+    # Tuned for ~2400 sequences (~1450 train samples from 9751 rows)
     # Note: kernel sizes use range [1, 3] which maps to odd values [3, 5, 7]
     GRU_HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
@@ -141,46 +141,47 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
         HyperparamConfig('cnn2_num_channels', 64, 128, 'int', 'cnn2_num_channels'),
         HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
-        # Fusion layer (between CNN concat and LSTM) - 0 means disabled
-        HyperparamConfig('fusion_hidden_size', 0, 0, 'int', 'fusion_hidden_size'),
+        # Fusion layer (between CNN concat and GRU) - 0 means disabled
+        HyperparamConfig('fusion_hidden_size', 0, 128, 'int', 'fusion_hidden_size'),
         HyperparamConfig('fusion_dropout', 0.0, 0.15, 'float', 'fusion_dropout'),
-        # GRU - moderate size for small dataset
+        # GRU - can use larger sizes with more data
         HyperparamConfig('gru_hidden_size', 128, 256, 'int', 'gru_hidden_size'),
         HyperparamConfig('gru_num_layers', 1, 3, 'int', 'gru_num_layers'),
-        HyperparamConfig('gru_dropout', 0.0, 0.1, 'float', 'gru_dropout'),
-        # Classifier - 0 means direct projection without hidden layer
-        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.0, 0.1, 'float', 'classifier_dropout'),
+        HyperparamConfig('gru_dropout', 0.0, 0.15, 'float', 'gru_dropout'),
+        # Classifier
+        HyperparamConfig('classifier_hidden_size', 32, 96, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.2, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
+        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
         # Focal loss gamma: focusing parameter for hard example mining (1.0-2.5)
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
-        HyperparamConfig('label_smoothing', 0.01, 0.1, 'float', 'label_smoothing'),
+        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
         HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
+        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
     ]
 
-    # Hyperparameter configurations for Dual-TCN model (Total: 12 params)
-    # TCN has fewer hyperparameters and fewer parameters overall (~50-100K vs ~275K)
+    # Hyperparameter configurations for Dual-TCN model (Total: 13 params)
+    # Tuned for ~2400 sequences (~1450 train samples from 9751 rows)
+    # TCN has fewer hyperparameters and fewer parameters overall (~50-150K vs ~275K)
     TCN_HYPERPARAM_CONFIGS = [
-        # TCN architecture
-        HyperparamConfig('tcn_num_channels', 16, 64, 'int', 'tcn_num_channels'),
+        # TCN architecture - increased ranges for larger dataset
+        HyperparamConfig('tcn_num_channels', 32, 96, 'int', 'tcn_num_channels'),
         HyperparamConfig('tcn_kernel_size', 2, 4, 'int', 'tcn_kernel_size'),  # Maps to 3,5,7
-        HyperparamConfig('tcn_num_layers', 3, 5, 'int', 'tcn_num_layers'),
-        HyperparamConfig('tcn_dropout', 0.1, 0.3, 'float', 'tcn_dropout'),
-        # Classifier
-        HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.1, 0.3, 'float', 'classifier_dropout'),
-        # Training (same as GRU model)
-        HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('tcn_num_layers', 3, 6, 'int', 'tcn_num_layers'),    # Allow deeper
+        HyperparamConfig('tcn_dropout', 0.05, 0.25, 'float', 'tcn_dropout'),  # Less dropout needed
+        # Classifier - larger capacity
+        HyperparamConfig('classifier_hidden_size', 32, 96, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.25, 'float', 'classifier_dropout'),
+        # Training
+        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),  # Smaller batches = more updates
+        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),  # Less regularization
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
-        HyperparamConfig('label_smoothing', 0.01, 0.1, 'float', 'label_smoothing'),
+        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
         HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
+        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),  # More patience
     ]
 
     # Backwards compatibility alias
