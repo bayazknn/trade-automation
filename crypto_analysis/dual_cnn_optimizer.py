@@ -315,10 +315,7 @@ class DualCNNMetaheuristicOptimizer:
         # Round input_seq_length to nearest multiple of 4 for period alignment
         # With stride=4, this ensures sequences start/end at period boundaries
         config_params['input_seq_length'] = 4 * round(config_params['input_seq_length'] / 4)
-<<<<<<< HEAD
-=======
         config_params['input_seq_length'] = max(12, config_params['input_seq_length'])  # Minimum 12
->>>>>>> 58e28bb95ac757b7508a83db0a2a9de34d1ca150
 
         return selected_binary, selected_technical, config_params
 
