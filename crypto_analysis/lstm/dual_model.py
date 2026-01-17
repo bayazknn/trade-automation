@@ -18,10 +18,11 @@ Key Design Decisions:
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 @dataclass
@@ -143,6 +144,426 @@ class CNNBranch(nn.Module):
         x = self.conv_layers(x)  # (batch, num_channels, seq_len)
         x = x.transpose(1, 2)  # (batch, seq_len, num_channels)
         return x
+
+
+class TCNBlock(nn.Module):
+    """
+    Temporal Convolutional Block with residual connection.
+
+    Uses dilated causal convolutions to capture temporal dependencies
+    with an exact receptive field controlled by dilation factor.
+
+    Features:
+    - Causal padding: no future information leakage
+    - Residual connection for gradient flow
+    - BatchNorm + Mish activation
+    - Dropout for regularization
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        dilation: int,
+        dropout: float = 0.2
+    ):
+        """
+        Initialize TCN block.
+
+        Parameters
+        ----------
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            Kernel size for convolutions
+        dilation : int
+            Dilation factor for dilated convolutions
+        dropout : float
+            Dropout rate
+        """
+        super().__init__()
+        # Causal padding: pad only on the left side
+        self.padding = (kernel_size - 1) * dilation
+
+        self.conv1 = nn.Conv1d(
+            in_channels, out_channels, kernel_size,
+            dilation=dilation, padding=self.padding
+        )
+        self.conv2 = nn.Conv1d(
+            out_channels, out_channels, kernel_size,
+            dilation=dilation, padding=self.padding
+        )
+        self.bn1 = nn.BatchNorm1d(out_channels)
+        self.bn2 = nn.BatchNorm1d(out_channels)
+        self.dropout = nn.Dropout(dropout)
+
+        # Residual connection: 1x1 conv if channel mismatch, else identity
+        self.residual = (
+            nn.Conv1d(in_channels, out_channels, 1)
+            if in_channels != out_channels
+            else nn.Identity()
+        )
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights using Kaiming initialization."""
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.ones_(m.weight)
+                nn.init.zeros_(m.bias)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass with causal convolution.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor, shape (batch, channels, seq_len)
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor, shape (batch, out_channels, seq_len)
+        """
+        # First conv + BN + activation
+        out = self.conv1(x)
+        # Trim future timesteps for causal convolution
+        if self.padding > 0:
+            out = out[:, :, :-self.padding]
+        out = F.mish(self.bn1(out))
+        out = self.dropout(out)
+
+        # Second conv + BN
+        out = self.conv2(out)
+        if self.padding > 0:
+            out = out[:, :, :-self.padding]
+        out = self.bn2(out)
+
+        # Residual connection (trim to match output length if needed)
+        res = self.residual(x)
+        if res.size(2) > out.size(2):
+            res = res[:, :, :out.size(2)]
+
+        return F.mish(out + res)
+
+
+class TCNBranch(nn.Module):
+    """
+    TCN branch for temporal feature extraction.
+
+    Stacks multiple TCN blocks with exponentially increasing dilations
+    to achieve a large receptive field with few parameters.
+
+    Dilations: [1, 2, 4, 8, ...] for num_layers blocks
+    Receptive field: (kernel_size - 1) * sum(dilations) + 1
+    """
+
+    def __init__(
+        self,
+        input_features: int,
+        num_channels: int,
+        kernel_size: int = 3,
+        num_layers: int = 4,
+        dropout: float = 0.2
+    ):
+        """
+        Initialize TCN branch.
+
+        Parameters
+        ----------
+        input_features : int
+            Number of input features (channels)
+        num_channels : int
+            Number of output channels per TCN block
+        kernel_size : int
+            Kernel size for convolutions
+        num_layers : int
+            Number of TCN blocks (dilations = [2^0, 2^1, ..., 2^(num_layers-1)])
+        dropout : float
+            Dropout rate in each TCN block
+        """
+        super().__init__()
+        dilations = [2**i for i in range(num_layers)]  # [1, 2, 4, 8, ...]
+
+        layers = []
+        for i, dilation in enumerate(dilations):
+            in_ch = input_features if i == 0 else num_channels
+            layers.append(
+                TCNBlock(in_ch, num_channels, kernel_size, dilation, dropout)
+            )
+
+        self.network = nn.ModuleList(layers)
+        self.output_channels = num_channels
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor, shape (batch, seq_len, features)
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor at last timestep, shape (batch, channels)
+        """
+        # Conv1d expects (batch, channels, seq_len)
+        x = x.transpose(1, 2)  # (batch, features, seq_len)
+
+        for layer in self.network:
+            x = layer(x)
+
+        # Return last timestep: (batch, channels)
+        return x[:, :, -1]
+
+
+@dataclass
+class DualTCNConfig:
+    """Configuration for Dual-TCN model."""
+
+    # Required fields (no defaults) - must come first
+    cnn1_input_features: int  # Number of binary input features
+    cnn2_input_features: int  # Number of technical + OHLCV input features
+
+    # TCN architecture
+    tcn_num_channels: int = 32  # Output channels per TCN block
+    tcn_kernel_size: int = 3  # Kernel size for TCN convolutions
+    tcn_num_layers: int = 4  # Number of TCN blocks (dilations: 1,2,4,8)
+    tcn_dropout: float = 0.2  # Dropout in TCN blocks
+
+    # Classifier
+    classifier_hidden_size: int = 32  # Hidden layer size
+    classifier_dropout: float = 0.2  # Dropout before final layer
+
+    # Output
+    num_classes: int = 2  # Binary: hold=0, trade=1
+
+    # Sequence
+    input_seq_length: int = 16  # Length of input sequences
+
+
+class DualTCNPredictor(nn.Module):
+    """
+    Dual-TCN model for binary trading signal prediction.
+
+    Architecture:
+    - Two parallel TCN branches for binary and technical features
+    - Feature concatenation after TCN processing
+    - Lightweight classifier for binary prediction
+
+    Key advantages over GRU-based model:
+    - Parallel convolutions (faster training)
+    - Exact receptive field via dilations
+    - Fewer parameters (~50-100K vs ~275K)
+    - Better gradient flow via skip connections
+
+    Input:
+    - binary_features: (batch, seq_len, n_binary) - pure 0/1 signals
+    - technical_features: (batch, seq_len, n_technical) - scaled indicators + OHLCV
+
+    Output:
+    - logits: (batch, num_classes) = (batch, 2) for hold/trade prediction
+
+    Examples
+    --------
+    >>> config = DualTCNConfig(
+    ...     cnn1_input_features=114,
+    ...     cnn2_input_features=81
+    ... )
+    >>> model = DualTCNPredictor(config)
+    >>> binary = torch.randn(32, 16, 114)
+    >>> technical = torch.randn(32, 16, 81)
+    >>> output = model(binary, technical)
+    >>> print(output.shape)
+    torch.Size([32, 2])
+    """
+
+    def __init__(self, config: DualTCNConfig):
+        """
+        Initialize the model.
+
+        Parameters
+        ----------
+        config : DualTCNConfig
+            Model configuration
+        """
+        super().__init__()
+        self.config = config
+
+        # TCN1 Branch: Binary features
+        self.tcn1 = TCNBranch(
+            input_features=config.cnn1_input_features,
+            num_channels=config.tcn_num_channels,
+            kernel_size=config.tcn_kernel_size,
+            num_layers=config.tcn_num_layers,
+            dropout=config.tcn_dropout
+        )
+
+        # TCN2 Branch: Technical + OHLCV features
+        self.tcn2 = TCNBranch(
+            input_features=config.cnn2_input_features,
+            num_channels=config.tcn_num_channels,
+            kernel_size=config.tcn_kernel_size,
+            num_layers=config.tcn_num_layers,
+            dropout=config.tcn_dropout
+        )
+
+        # Combined feature size after concatenation
+        combined_channels = config.tcn_num_channels * 2
+
+        # Classifier head
+        if config.classifier_hidden_size > 0:
+            self.classifier = nn.Sequential(
+                nn.Linear(combined_channels, config.classifier_hidden_size),
+                nn.LayerNorm(config.classifier_hidden_size),
+                nn.Mish(),
+                nn.Dropout(config.classifier_dropout),
+                nn.Linear(config.classifier_hidden_size, config.num_classes)
+            )
+        else:
+            self.classifier = nn.Sequential(
+                nn.Dropout(config.classifier_dropout),
+                nn.Linear(combined_channels, config.num_classes)
+            )
+
+        self._init_classifier_weights()
+
+    def _init_classifier_weights(self):
+        """Initialize classifier weights."""
+        for m in self.classifier.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+    def _init_classifier_bias(self, class_prior: float = 0.1) -> None:
+        """
+        Initialize classifier bias to favor minority class predictions.
+
+        Parameters
+        ----------
+        class_prior : float, default=0.1
+            Approximate ratio of minority class (trade) samples in dataset.
+        """
+        class_prior = max(0.01, min(0.99, class_prior))
+
+        for module in reversed(list(self.classifier.modules())):
+            if isinstance(module, nn.Linear) and module.out_features == self.config.num_classes:
+                log_prior = torch.log(torch.tensor(class_prior / (1 - class_prior)))
+                module.bias.data[0] = -log_prior  # hold: negative bias
+                module.bias.data[1] = log_prior   # trade: positive bias
+                break
+
+    def forward(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Output logits, shape (batch, num_classes) for binary classification
+        """
+        # Process through TCN branches (returns last timestep)
+        tcn1_out = self.tcn1(binary_features)   # (batch, channels)
+        tcn2_out = self.tcn2(technical_features)  # (batch, channels)
+
+        # Concatenate along feature dimension
+        combined = torch.cat([tcn1_out, tcn2_out], dim=1)  # (batch, 2*channels)
+
+        # Classification
+        output = self.classifier(combined)  # (batch, num_classes)
+
+        return output
+
+    def predict(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Get predicted class labels.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Predicted class indices, shape (batch,) - 0=hold, 1=trade
+        """
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(binary_features, technical_features)
+            return torch.argmax(logits, dim=-1)
+
+    def predict_proba(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Get prediction probabilities.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Class probabilities, shape (batch, num_classes) - [hold_prob, trade_prob]
+        """
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(binary_features, technical_features)
+            return torch.softmax(logits, dim=-1)
+
+    def get_num_parameters(self) -> int:
+        """Return total number of trainable parameters."""
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def __repr__(self) -> str:
+        return (
+            f"DualTCNPredictor(\n"
+            f"  tcn1: in={self.config.cnn1_input_features}, ch={self.config.tcn_num_channels}, "
+            f"k={self.config.tcn_kernel_size}, layers={self.config.tcn_num_layers},\n"
+            f"  tcn2: in={self.config.cnn2_input_features}, ch={self.config.tcn_num_channels}, "
+            f"k={self.config.tcn_kernel_size}, layers={self.config.tcn_num_layers},\n"
+            f"  classifier: hidden={self.config.classifier_hidden_size}, "
+            f"dropout={self.config.classifier_dropout},\n"
+            f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
+            f"  total_params={self.get_num_parameters():,}\n"
+            f")"
+        )
 
 
 class DualCNNLSTMPredictor(nn.Module):
@@ -442,3 +863,292 @@ class DualCNNLSTMPredictor(nn.Module):
             f"  total_params={self.get_num_parameters():,}\n"
             f")"
         )
+
+
+def validate_model_architecture(
+    model: Union[DualCNNLSTMPredictor, DualTCNPredictor],
+    batch_size: int = 2,
+    device: str = 'cpu',
+    verbose: bool = True
+) -> Tuple[bool, List[str], List[str]]:
+    """
+    Comprehensive architecture validation for Dual-CNN GRU or Dual-TCN models.
+
+    Performs the following checks:
+    1. Parameter count (total, trainable, per-layer breakdown)
+    2. Forward pass with shape tracing
+    3. Gradient flow verification
+    4. Output validation (NaN/Inf checks, shape validation)
+
+    Parameters
+    ----------
+    model : Union[DualCNNLSTMPredictor, DualTCNPredictor]
+        Model to validate (either GRU-based or TCN-based)
+    batch_size : int, default=2
+        Batch size for test tensors
+    device : str, default='cpu'
+        Device to run validation on ('cpu' or 'cuda')
+    verbose : bool, default=True
+        Print detailed validation report
+
+    Returns
+    -------
+    tuple
+        (success: bool, errors: List[str], warnings: List[str])
+
+    Examples
+    --------
+    >>> config = DualModelConfig(cnn1_input_features=10, cnn2_input_features=20)
+    >>> model = DualCNNLSTMPredictor(config)
+    >>> success, errors, warnings = validate_model_architecture(model)
+
+    >>> tcn_config = DualTCNConfig(cnn1_input_features=10, cnn2_input_features=20)
+    >>> tcn_model = DualTCNPredictor(tcn_config)
+    >>> success, errors, warnings = validate_model_architecture(tcn_model)
+    """
+    errors: List[str] = []
+    warnings: List[str] = []
+    config = model.config
+
+    # Move model to device
+    model = model.to(device)
+
+    # Create test inputs
+    seq_len = config.input_seq_length
+    binary_input = torch.randn(batch_size, seq_len, config.cnn1_input_features).to(device)
+    technical_input = torch.randn(batch_size, seq_len, config.cnn2_input_features).to(device)
+
+    if verbose:
+        print("=" * 70)
+        print("MODEL ARCHITECTURE VALIDATION REPORT")
+        print("=" * 70)
+
+    # -------------------------------------------------------------------------
+    # 1. Parameter Count
+    # -------------------------------------------------------------------------
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    non_trainable_params = total_params - trainable_params
+
+    if verbose:
+        print("\n" + "-" * 70)
+        print("1. PARAMETER COUNT")
+        print("-" * 70)
+        print(f"{'Total parameters:':<30} {total_params:>15,}")
+        print(f"{'Trainable parameters:':<30} {trainable_params:>15,}")
+        print(f"{'Non-trainable parameters:':<30} {non_trainable_params:>15,}")
+
+        print(f"\n{'Layer':<40} {'Parameters':>12}  {'Shape'}")
+        print("-" * 70)
+        for name, param in model.named_parameters():
+            print(f"{name:<40} {param.numel():>12,}  {list(param.shape)}")
+
+    # Parameter sanity checks
+    if total_params < 1000:
+        warnings.append(f"Very few parameters ({total_params:,}) - model may be too simple")
+    if total_params > 100_000_000:
+        warnings.append(f"Very large model ({total_params:,} params) - check if intended")
+
+    # -------------------------------------------------------------------------
+    # 2. Forward Pass with Shape Tracing
+    # -------------------------------------------------------------------------
+    if verbose:
+        print("\n" + "-" * 70)
+        print("2. FORWARD PASS - SHAPE TRACE")
+        print("-" * 70)
+        print(f"{'Layer':<40} {'Output Shape':<25}")
+        print("-" * 70)
+        print(f"{'Input: binary_features':<40} {list(binary_input.shape)}")
+        print(f"{'Input: technical_features':<40} {list(technical_input.shape)}")
+
+    # Register hooks to capture intermediate shapes
+    shapes: Dict[str, torch.Size] = {}
+
+    def hook_fn(name: str):
+        def hook(module, input, output):
+            if isinstance(output, tuple):
+                # GRU returns (output, hidden_state)
+                shapes[name] = output[0].shape
+            else:
+                shapes[name] = output.shape
+        return hook
+
+    hooks = []
+    for name, layer in model.named_modules():
+        if name and not any(sub in name for sub in ['conv_layers']):
+            hooks.append(layer.register_forward_hook(hook_fn(name)))
+
+    # Forward pass
+    model.eval()
+    try:
+        with torch.no_grad():
+            output = model(binary_input, technical_input)
+
+        if verbose:
+            for name, shape in shapes.items():
+                print(f"{name:<40} {list(shape)}")
+            print("-" * 70)
+            print(f"{'Final Output':<40} {list(output.shape)}")
+
+    except RuntimeError as e:
+        errors.append(f"Forward pass failed: {e}")
+        # Remove hooks and return early
+        for hook in hooks:
+            hook.remove()
+        if verbose:
+            _print_validation_summary(errors, warnings, verbose)
+        return False, errors, warnings
+
+    # Remove hooks
+    for hook in hooks:
+        hook.remove()
+
+    # -------------------------------------------------------------------------
+    # 3. Output Validation
+    # -------------------------------------------------------------------------
+    if verbose:
+        print("\n" + "-" * 70)
+        print("3. OUTPUT VALIDATION")
+        print("-" * 70)
+
+    # Check output shape
+    expected_shape = (batch_size, config.num_classes)
+    if list(output.shape) != list(expected_shape):
+        errors.append(f"Output shape {list(output.shape)} != expected {list(expected_shape)}")
+        if verbose:
+            print(f"  ✗ Output shape mismatch: {list(output.shape)} != {list(expected_shape)}")
+    else:
+        if verbose:
+            print(f"  ✓ Output shape correct: {list(output.shape)}")
+
+    # Check for NaN/Inf
+    if torch.isnan(output).any():
+        errors.append("Output contains NaN values")
+        if verbose:
+            print("  ✗ Output contains NaN values")
+    else:
+        if verbose:
+            print("  ✓ No NaN values in output")
+
+    if torch.isinf(output).any():
+        errors.append("Output contains Inf values")
+        if verbose:
+            print("  ✗ Output contains Inf values")
+    else:
+        if verbose:
+            print("  ✓ No Inf values in output")
+
+    # Check batch dimension preserved
+    if output.shape[0] != batch_size:
+        errors.append(f"Batch size changed from {batch_size} to {output.shape[0]}")
+        if verbose:
+            print(f"  ✗ Batch size changed from {batch_size} to {output.shape[0]}")
+    else:
+        if verbose:
+            print(f"  ✓ Batch dimension preserved: {batch_size}")
+
+    # -------------------------------------------------------------------------
+    # 4. Gradient Flow Verification
+    # -------------------------------------------------------------------------
+    if verbose:
+        print("\n" + "-" * 70)
+        print("4. GRADIENT FLOW VERIFICATION")
+        print("-" * 70)
+        print(f"{'Layer':<40} {'Grad Norm':>12}  {'Status'}")
+        print("-" * 70)
+
+    model.train()
+    binary_input_grad = torch.randn_like(binary_input, requires_grad=True)
+    technical_input_grad = torch.randn_like(technical_input, requires_grad=True)
+
+    # Forward and backward pass
+    output = model(binary_input_grad, technical_input_grad)
+    target = torch.randint(0, config.num_classes, (batch_size,)).to(device)
+    loss = nn.CrossEntropyLoss()(output, target)
+    loss.backward()
+
+    grad_issues = []
+    for name, param in model.named_parameters():
+        if param.grad is not None:
+            grad_norm = param.grad.norm().item()
+            if grad_norm < 1e-10:
+                status = "⚠ Very small"
+                grad_issues.append(name)
+            else:
+                status = "✓ OK"
+        else:
+            grad_norm = 0.0
+            status = "✗ No gradient!"
+            grad_issues.append(name)
+
+        if verbose:
+            print(f"{name:<40} {grad_norm:>12.6f}  {status}")
+
+    if grad_issues:
+        warnings.append(f"Gradient issues in {len(grad_issues)} parameters: {grad_issues[:3]}...")
+
+    # -------------------------------------------------------------------------
+    # 5. Summary
+    # -------------------------------------------------------------------------
+    success = len(errors) == 0
+    _print_validation_summary(errors, warnings, verbose)
+
+    if verbose:
+        print(f"\nModel Configuration:")
+        is_tcn = isinstance(model, DualTCNPredictor)
+
+        if is_tcn:
+            # TCN model configuration
+            print(f"  TCN1: in={config.cnn1_input_features}, ch={config.tcn_num_channels}, "
+                  f"k={config.tcn_kernel_size}, layers={config.tcn_num_layers}")
+            print(f"  TCN2: in={config.cnn2_input_features}, ch={config.tcn_num_channels}, "
+                  f"k={config.tcn_kernel_size}, layers={config.tcn_num_layers}")
+        else:
+            # GRU model configuration
+            print(f"  CNN1: in={config.cnn1_input_features}, ch={config.cnn1_num_channels}, "
+                  f"k={config.cnn1_kernel_size}, layers={config.cnn1_num_layers}")
+            print(f"  CNN2: in={config.cnn2_input_features}, ch={config.cnn2_num_channels}, "
+                  f"k={config.cnn2_kernel_size}, layers={config.cnn2_num_layers}")
+            if config.fusion_hidden_size > 0:
+                print(f"  Fusion: hidden={config.fusion_hidden_size}, dropout={config.fusion_dropout}")
+            else:
+                print("  Fusion: disabled")
+            print(f"  GRU: hidden={config.gru_hidden_size}, layers={config.gru_num_layers}, "
+                  f"bidir={config.gru_bidirectional}")
+
+        print(f"  Classifier: hidden={config.classifier_hidden_size}, "
+              f"dropout={config.classifier_dropout}")
+        print(f"  Input: batch={batch_size}, seq_len={seq_len}, "
+              f"binary={config.cnn1_input_features}, technical={config.cnn2_input_features}")
+        print(f"  Output: ({batch_size}, {config.num_classes})")
+
+    return success, errors, warnings
+
+
+def _print_validation_summary(
+    errors: List[str],
+    warnings: List[str],
+    verbose: bool
+) -> None:
+    """Print validation summary with errors and warnings."""
+    if not verbose:
+        return
+
+    print("\n" + "=" * 70)
+    print("VALIDATION SUMMARY")
+    print("=" * 70)
+
+    if errors:
+        print("\n❌ ERRORS:")
+        for e in errors:
+            print(f"   • {e}")
+
+    if warnings:
+        print("\n⚠️  WARNINGS:")
+        for w in warnings:
+            print(f"   • {w}")
+
+    if not errors and not warnings:
+        print("\n✅ All validation checks passed!")
+    elif not errors:
+        print("\n✓ No critical errors found (warnings only)")

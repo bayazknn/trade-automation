@@ -72,18 +72,18 @@ class HyperparamConfig:
 
 class DualCNNMetaheuristicOptimizer:
     """
-    APO-based optimizer for Dual-CNN GRU hyperparameters and dual feature selection.
+    APO-based optimizer for Dual-CNN GRU or Dual-TCN hyperparameters and dual feature selection.
 
     Uses Artificial Protozoa Optimizer (APO) algorithm to jointly optimize:
     - Binary feature selection (114 columns)
     - Technical + OHLCV feature selection (81 columns)
-    - Dual-CNN GRU architecture hyperparameters
+    - Model architecture hyperparameters (GRU or TCN)
     - Training hyperparameters
 
-    Individual Vector Structure (Total: 213 dimensions):
+    Individual Vector Structure (Total: 213 dimensions for GRU, ~203 for TCN):
     - [0:114]    Binary feature selection (threshold >= 0)
     - [114:195]  Technical + OHLCV selection (threshold >= 0)
-    - [195:213]  Hyperparameters (18 params)
+    - [195:end]  Hyperparameters (model-specific)
 
     Parameters
     ----------
@@ -91,6 +91,8 @@ class DualCNNMetaheuristicOptimizer:
         DataFrame with binary indicator signals (114 columns)
     df_technical : pd.DataFrame
         DataFrame with technical indicators + OHLCV (81 columns)
+    model_type : str
+        Model architecture type: 'dual_cnn_gru' or 'dual_tcn' (default: 'dual_tcn')
     pop_size : int
         Population size (default: 10)
     iterations : int
@@ -112,8 +114,10 @@ class DualCNNMetaheuristicOptimizer:
     --------
     >>> df_binary = pd.read_csv('doge.csv')
     >>> df_technical = pd.read_csv('doge_ti.csv')
+    >>> # Use TCN model (recommended)
     >>> optimizer = DualCNNMetaheuristicOptimizer(
     ...     df_binary, df_technical,
+    ...     model_type='dual_tcn',
     ...     pop_size=10, iterations=50
     ... )
     >>> result = optimizer.optimize()
@@ -125,10 +129,10 @@ class DualCNNMetaheuristicOptimizer:
     # OHLCV columns - exclude from binary DataFrame (they need scaling, handled in technical)
     OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
 
-    # Hyperparameter configurations (Total: 20 params)
+    # Hyperparameter configurations for Dual-CNN GRU model (Total: 20 params)
     # Tuned for small dataset (~1350 sequences, ~800 train samples)
     # Note: kernel sizes use range [1, 3] which maps to odd values [3, 5, 7]
-    HYPERPARAM_CONFIGS = [
+    GRU_HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
         HyperparamConfig('cnn1_num_channels', 64, 128, 'int', 'cnn1_num_channels'),
@@ -158,10 +162,35 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
     ]
 
+    # Hyperparameter configurations for Dual-TCN model (Total: 12 params)
+    # TCN has fewer hyperparameters and fewer parameters overall (~50-100K vs ~275K)
+    TCN_HYPERPARAM_CONFIGS = [
+        # TCN architecture
+        HyperparamConfig('tcn_num_channels', 16, 64, 'int', 'tcn_num_channels'),
+        HyperparamConfig('tcn_kernel_size', 2, 4, 'int', 'tcn_kernel_size'),  # Maps to 3,5,7
+        HyperparamConfig('tcn_num_layers', 3, 5, 'int', 'tcn_num_layers'),
+        HyperparamConfig('tcn_dropout', 0.1, 0.3, 'float', 'tcn_dropout'),
+        # Classifier
+        HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.1, 0.3, 'float', 'classifier_dropout'),
+        # Training (same as GRU model)
+        HyperparamConfig('learning_rate', 0.0003, 0.005, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 128, 'int', 'batch_size'),
+        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
+        HyperparamConfig('label_smoothing', 0.01, 0.1, 'float', 'label_smoothing'),
+        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
+        HyperparamConfig('scheduler_patience', 5, 15, 'int', 'scheduler_patience'),
+    ]
+
+    # Backwards compatibility alias
+    HYPERPARAM_CONFIGS = GRU_HYPERPARAM_CONFIGS
+
     def __init__(
         self,
         df_binary: pd.DataFrame,
         df_technical: pd.DataFrame,
+        model_type: str = 'dual_tcn',
         pop_size: int = 10,
         iterations: int = 50,
         n_workers: int = 4,
@@ -175,8 +204,14 @@ class DualCNNMetaheuristicOptimizer:
         pf_max: float = 0.18,
         seed: int = 42,
     ):
+        # Validate model_type
+        valid_model_types = ['dual_cnn_gru', 'dual_tcn']
+        if model_type not in valid_model_types:
+            raise ValueError(f"model_type must be one of {valid_model_types}, got '{model_type}'")
+
         self.df_binary = df_binary
         self.df_technical = df_technical
+        self.model_type = model_type
         self.pop_size = pop_size
         self.iterations = iterations
         self.n_workers = n_workers
@@ -190,6 +225,12 @@ class DualCNNMetaheuristicOptimizer:
         self.pf_max = pf_max
         self.seed = seed
         self.run_id: Optional[str] = None
+
+        # Select hyperparameter config based on model type
+        if model_type == 'dual_tcn':
+            self.hyperparam_configs = self.TCN_HYPERPARAM_CONFIGS
+        else:
+            self.hyperparam_configs = self.GRU_HYPERPARAM_CONFIGS
 
         # Identify feature columns
         # Binary columns: exclude metadata AND OHLCV (OHLCV needs scaling, not binary)
@@ -206,7 +247,7 @@ class DualCNNMetaheuristicOptimizer:
 
         self.n_binary = len(self.binary_columns)
         self.n_technical = len(self.technical_columns)
-        self.n_params = len(self.HYPERPARAM_CONFIGS)
+        self.n_params = len(self.hyperparam_configs)
 
         # Total dimension: binary + technical + hyperparams
         self.dimension = self.n_binary + self.n_technical + self.n_params
@@ -224,6 +265,7 @@ class DualCNNMetaheuristicOptimizer:
 
         if self.verbose:
             print(f"DualCNNMetaheuristicOptimizer (APO) initialized:")
+            print(f"  - Model type: {self.model_type}")
             print(f"  - Binary features: {self.n_binary}")
             print(f"  - Technical features: {self.n_technical}")
             print(f"  - Hyperparameters: {self.n_params}")
@@ -242,9 +284,9 @@ class DualCNNMetaheuristicOptimizer:
         technical_lower = np.full(self.n_technical, -100.0)
         technical_upper = np.full(self.n_technical, 100.0)
 
-        # Hyperparameter bounds
-        param_lower = np.array([cfg.min_val for cfg in self.HYPERPARAM_CONFIGS])
-        param_upper = np.array([cfg.max_val for cfg in self.HYPERPARAM_CONFIGS])
+        # Hyperparameter bounds (use instance's hyperparam_configs)
+        param_lower = np.array([cfg.min_val for cfg in self.hyperparam_configs])
+        param_upper = np.array([cfg.max_val for cfg in self.hyperparam_configs])
 
         self.lower_bound = np.concatenate([binary_lower, technical_lower, param_lower])
         self.upper_bound = np.concatenate([binary_upper, technical_upper, param_upper])
@@ -281,19 +323,25 @@ class DualCNNMetaheuristicOptimizer:
             col for col, sel in zip(self.technical_columns, technical_mask) if sel
         ]
 
-        # Extract and convert hyperparameters
+        # Extract and convert hyperparameters (use instance's hyperparam_configs)
         params = individual[self.n_binary + self.n_technical:]
         config_params = {}
-        for i, cfg in enumerate(self.HYPERPARAM_CONFIGS):
+        for i, cfg in enumerate(self.hyperparam_configs):
             val = params[i]
             if cfg.param_type == 'int':
                 val = int(round(val))
             config_params[cfg.config_field] = val
 
-        # Map kernel sizes from [1,4] to odd values [3,5,7,9]
-        # Formula: odd_kernel = 2*val + 1 where val in [1,2,3,4] gives [3,5,7,9]
-        config_params['cnn1_kernel_size'] = 2 * config_params['cnn1_kernel_size'] + 1
-        config_params['cnn2_kernel_size'] = 2 * config_params['cnn2_kernel_size'] + 1
+        # Map kernel sizes based on model type
+        if self.model_type == 'dual_tcn':
+            # TCN: Map kernel sizes from [2,4] to odd values [3,5,7]
+            # Formula: odd_kernel = 2*val - 1 where val in [2,3,4] gives [3,5,7]
+            config_params['tcn_kernel_size'] = 2 * config_params['tcn_kernel_size'] - 1
+        else:
+            # GRU model: Map kernel sizes from [1,4] to odd values [3,5,7,9]
+            # Formula: odd_kernel = 2*val + 1 where val in [1,2,3,4] gives [3,5,7,9]
+            config_params['cnn1_kernel_size'] = 2 * config_params['cnn1_kernel_size'] + 1
+            config_params['cnn2_kernel_size'] = 2 * config_params['cnn2_kernel_size'] + 1
 
         # Round input_seq_length to nearest multiple of 4 for period alignment
         # With stride=4, this ensures sequences start/end at period boundaries
@@ -315,7 +363,10 @@ class DualCNNMetaheuristicOptimizer:
         tuple
             (fitness, selected_binary, selected_technical, metrics)
         """
-        from .lstm.dual_model import DualModelConfig, DualCNNLSTMPredictor
+        from .lstm.dual_model import (
+            DualModelConfig, DualCNNLSTMPredictor,
+            DualTCNConfig, DualTCNPredictor
+        )
         from .lstm.dual_preprocessor import (
             DualDataPreprocessor, create_dual_sequences, DualSignalDataset
         )
@@ -385,26 +436,39 @@ class DualCNNMetaheuristicOptimizer:
             # Create model
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-            model_config = DualModelConfig(
-                cnn1_input_features=len(selected_binary),
-                cnn2_input_features=len(selected_technical),
-                cnn1_kernel_size=config_params['cnn1_kernel_size'],
-                cnn1_num_channels=config_params['cnn1_num_channels'],
-                cnn1_num_layers=config_params['cnn1_num_layers'],
-                cnn2_kernel_size=config_params['cnn2_kernel_size'],
-                cnn2_num_channels=config_params['cnn2_num_channels'],
-                cnn2_num_layers=config_params['cnn2_num_layers'],
-                fusion_hidden_size=config_params['fusion_hidden_size'],
-                fusion_dropout=config_params['fusion_dropout'],
-                gru_hidden_size=config_params['gru_hidden_size'],
-                gru_num_layers=config_params['gru_num_layers'],
-                gru_dropout=config_params['gru_dropout'],
-                classifier_hidden_size=config_params['classifier_hidden_size'],
-                classifier_dropout=config_params['classifier_dropout'],
-                input_seq_length=input_seq_length,
-            )
-
-            model = DualCNNLSTMPredictor(model_config).to(device)
+            if self.model_type == 'dual_tcn':
+                model_config = DualTCNConfig(
+                    cnn1_input_features=len(selected_binary),
+                    cnn2_input_features=len(selected_technical),
+                    tcn_num_channels=config_params['tcn_num_channels'],
+                    tcn_kernel_size=config_params['tcn_kernel_size'],
+                    tcn_num_layers=config_params['tcn_num_layers'],
+                    tcn_dropout=config_params['tcn_dropout'],
+                    classifier_hidden_size=config_params['classifier_hidden_size'],
+                    classifier_dropout=config_params['classifier_dropout'],
+                    input_seq_length=input_seq_length,
+                )
+                model = DualTCNPredictor(model_config).to(device)
+            else:
+                model_config = DualModelConfig(
+                    cnn1_input_features=len(selected_binary),
+                    cnn2_input_features=len(selected_technical),
+                    cnn1_kernel_size=config_params['cnn1_kernel_size'],
+                    cnn1_num_channels=config_params['cnn1_num_channels'],
+                    cnn1_num_layers=config_params['cnn1_num_layers'],
+                    cnn2_kernel_size=config_params['cnn2_kernel_size'],
+                    cnn2_num_channels=config_params['cnn2_num_channels'],
+                    cnn2_num_layers=config_params['cnn2_num_layers'],
+                    fusion_hidden_size=config_params['fusion_hidden_size'],
+                    fusion_dropout=config_params['fusion_dropout'],
+                    gru_hidden_size=config_params['gru_hidden_size'],
+                    gru_num_layers=config_params['gru_num_layers'],
+                    gru_dropout=config_params['gru_dropout'],
+                    classifier_hidden_size=config_params['classifier_hidden_size'],
+                    classifier_dropout=config_params['classifier_dropout'],
+                    input_seq_length=input_seq_length,
+                )
+                model = DualCNNLSTMPredictor(model_config).to(device)
 
             # Compute class weights (direct inverse frequency - no power dampening)
             targets_flat = dataset.targets.flatten()
@@ -624,7 +688,7 @@ class DualCNNMetaheuristicOptimizer:
                             _, _, config_params = self._decode_individual(individual)
                             # Format hyperparameters
                             param_strs = []
-                            for cfg in self.HYPERPARAM_CONFIGS:
+                            for cfg in self.hyperparam_configs:
                                 val = config_params[cfg.config_field]
                                 if cfg.param_type == 'float':
                                     param_strs.append(f"{cfg.name}={val:.4f}")
@@ -972,7 +1036,10 @@ class DualCNNMetaheuristicOptimizer:
         dict
             Paths to saved artifacts: {'model': path, 'preprocessor': path, 'metadata': path}
         """
-        from .lstm.dual_model import DualModelConfig, DualCNNLSTMPredictor
+        from .lstm.dual_model import (
+            DualModelConfig, DualCNNLSTMPredictor,
+            DualTCNConfig, DualTCNPredictor
+        )
         from .lstm.dual_preprocessor import (
             DualDataPreprocessor, create_dual_sequences, DualSignalDataset
         )
@@ -1034,26 +1101,39 @@ class DualCNNMetaheuristicOptimizer:
         # Create model
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        model_config = DualModelConfig(
-            cnn1_input_features=len(selected_binary),
-            cnn2_input_features=len(selected_technical),
-            cnn1_kernel_size=params['cnn1_kernel_size'],
-            cnn1_num_channels=params['cnn1_num_channels'],
-            cnn1_num_layers=params['cnn1_num_layers'],
-            cnn2_kernel_size=params['cnn2_kernel_size'],
-            cnn2_num_channels=params['cnn2_num_channels'],
-            cnn2_num_layers=params['cnn2_num_layers'],
-            fusion_hidden_size=params['fusion_hidden_size'],
-            fusion_dropout=params['fusion_dropout'],
-            gru_hidden_size=params['gru_hidden_size'],
-            gru_num_layers=params['gru_num_layers'],
-            gru_dropout=params['gru_dropout'],
-            classifier_hidden_size=params['classifier_hidden_size'],
-            classifier_dropout=params['classifier_dropout'],
-            input_seq_length=input_seq_length,
-        )
-
-        model = DualCNNLSTMPredictor(model_config).to(device)
+        if self.model_type == 'dual_tcn':
+            model_config = DualTCNConfig(
+                cnn1_input_features=len(selected_binary),
+                cnn2_input_features=len(selected_technical),
+                tcn_num_channels=params['tcn_num_channels'],
+                tcn_kernel_size=params['tcn_kernel_size'],
+                tcn_num_layers=params['tcn_num_layers'],
+                tcn_dropout=params['tcn_dropout'],
+                classifier_hidden_size=params['classifier_hidden_size'],
+                classifier_dropout=params['classifier_dropout'],
+                input_seq_length=input_seq_length,
+            )
+            model = DualTCNPredictor(model_config).to(device)
+        else:
+            model_config = DualModelConfig(
+                cnn1_input_features=len(selected_binary),
+                cnn2_input_features=len(selected_technical),
+                cnn1_kernel_size=params['cnn1_kernel_size'],
+                cnn1_num_channels=params['cnn1_num_channels'],
+                cnn1_num_layers=params['cnn1_num_layers'],
+                cnn2_kernel_size=params['cnn2_kernel_size'],
+                cnn2_num_channels=params['cnn2_num_channels'],
+                cnn2_num_layers=params['cnn2_num_layers'],
+                fusion_hidden_size=params['fusion_hidden_size'],
+                fusion_dropout=params['fusion_dropout'],
+                gru_hidden_size=params['gru_hidden_size'],
+                gru_num_layers=params['gru_num_layers'],
+                gru_dropout=params['gru_dropout'],
+                classifier_hidden_size=params['classifier_hidden_size'],
+                classifier_dropout=params['classifier_dropout'],
+                input_seq_length=input_seq_length,
+            )
+            model = DualCNNLSTMPredictor(model_config).to(device)
 
         # Compute class weights (direct inverse frequency - no power dampening)
         targets_flat = dataset.targets.flatten()
@@ -1182,7 +1262,7 @@ class DualCNNMetaheuristicOptimizer:
 
         # Save metadata
         metadata = {
-            'model_type': 'dual_cnn_gru',
+            'model_type': self.model_type,
             'version': '1.0.0',
             'created_at': datetime.now().isoformat(),
             'optimization_run_id': self.run_id,
@@ -1192,7 +1272,49 @@ class DualCNNMetaheuristicOptimizer:
                 'n_binary_selected': len(selected_binary),
                 'n_technical_selected': len(selected_technical),
             },
-            'model_architecture': {
+            'training_config': {
+                'epochs': self.epochs_per_eval,
+                'batch_size': params['batch_size'],
+                'learning_rate': params['learning_rate'],
+                'weight_decay': params['weight_decay'],
+                'focal_gamma': params['focal_gamma'],
+                'label_smoothing': params['label_smoothing'],
+                'input_seq_length': params['input_seq_length'],
+                'scheduler_patience': params['scheduler_patience'],
+            },
+            'optimization_results': {
+                'best_fitness': result.best_fitness,
+                'seed': result.seed,
+                'iteration': result.iteration,
+                'test_metrics': result.test_metrics,
+            },
+        }
+
+        # Add model-specific architecture info
+        if self.model_type == 'dual_tcn':
+            metadata['model_architecture'] = {
+                'tcn1': {
+                    'input_features': len(selected_binary),
+                    'num_channels': params['tcn_num_channels'],
+                    'kernel_size': params['tcn_kernel_size'],
+                    'num_layers': params['tcn_num_layers'],
+                    'dropout': params['tcn_dropout'],
+                },
+                'tcn2': {
+                    'input_features': len(selected_technical),
+                    'num_channels': params['tcn_num_channels'],
+                    'kernel_size': params['tcn_kernel_size'],
+                    'num_layers': params['tcn_num_layers'],
+                    'dropout': params['tcn_dropout'],
+                },
+                'classifier': {
+                    'hidden_size': params['classifier_hidden_size'],
+                    'dropout': params['classifier_dropout'],
+                    'num_classes': 2,
+                },
+            }
+        else:
+            metadata['model_architecture'] = {
                 'cnn1': {
                     'input_features': len(selected_binary),
                     'kernel_size': params['cnn1_kernel_size'],
@@ -1220,24 +1342,7 @@ class DualCNNMetaheuristicOptimizer:
                     'dropout': params['classifier_dropout'],
                     'num_classes': 2,
                 },
-            },
-            'training_config': {
-                'epochs': self.epochs_per_eval,
-                'batch_size': params['batch_size'],
-                'learning_rate': params['learning_rate'],
-                'weight_decay': params['weight_decay'],
-                'focal_gamma': params['focal_gamma'],
-                'label_smoothing': params['label_smoothing'],
-                'input_seq_length': params['input_seq_length'],
-                'scheduler_patience': params['scheduler_patience'],
-            },
-            'optimization_results': {
-                'best_fitness': result.best_fitness,
-                'seed': result.seed,
-                'iteration': result.iteration,
-                'test_metrics': result.test_metrics,
-            },
-        }
+            }
 
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
@@ -1257,6 +1362,7 @@ class DualCNNMetaheuristicOptimizer:
     def __repr__(self) -> str:
         return (
             f"DualCNNMetaheuristicOptimizer("
+            f"model_type='{self.model_type}', "
             f"n_binary={self.n_binary}, "
             f"n_technical={self.n_technical}, "
             f"n_params={self.n_params}, "
