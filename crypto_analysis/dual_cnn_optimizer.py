@@ -188,6 +188,26 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
     ]
 
+    # Hyperparameter configurations for Dual-LSTM model (Total: 12 params)
+    # Architecture: Two parallel LSTM branches → sum fusion → classifier
+    LSTM_HYPERPARAM_CONFIGS = [
+        # LSTM architecture (shared for both branches)
+        HyperparamConfig('lstm_hidden_size', 32, 128, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        # Classifier
+        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.25, 'float', 'classifier_dropout'),
+        # Training
+        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
+        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
+        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
+        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
+        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
+        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
+    ]
+
     # Backwards compatibility alias
     HYPERPARAM_CONFIGS = GRU_HYPERPARAM_CONFIGS
 
@@ -211,7 +231,7 @@ class DualCNNMetaheuristicOptimizer:
         seed: int = 42,
     ):
         # Validate model_type
-        valid_model_types = ['dual_cnn_gru', 'dual_tcn']
+        valid_model_types = ['dual_cnn_gru', 'dual_tcn', 'dual_lstm']
         if model_type not in valid_model_types:
             raise ValueError(f"model_type must be one of {valid_model_types}, got '{model_type}'")
 
@@ -236,6 +256,8 @@ class DualCNNMetaheuristicOptimizer:
         # Select hyperparameter config based on model type
         if model_type == 'dual_tcn':
             self.hyperparam_configs = self.TCN_HYPERPARAM_CONFIGS
+        elif model_type == 'dual_lstm':
+            self.hyperparam_configs = self.LSTM_HYPERPARAM_CONFIGS
         else:
             self.hyperparam_configs = self.GRU_HYPERPARAM_CONFIGS
 
@@ -344,6 +366,9 @@ class DualCNNMetaheuristicOptimizer:
             # TCN: Map kernel sizes from [2,4] to odd values [3,5,7]
             # Formula: odd_kernel = 2*val - 1 where val in [2,3,4] gives [3,5,7]
             config_params['tcn_kernel_size'] = 2 * config_params['tcn_kernel_size'] - 1
+        elif self.model_type == 'dual_lstm':
+            # LSTM model: No kernel size mapping needed (pure LSTM branches)
+            pass
         else:
             # GRU model: Map kernel sizes from [1,4] to odd values [3,5,7,9]
             # Formula: odd_kernel = 2*val + 1 where val in [1,2,3,4] gives [3,5,7,9]
@@ -372,7 +397,8 @@ class DualCNNMetaheuristicOptimizer:
         """
         from .lstm.dual_model import (
             DualModelConfig, DualCNNLSTMPredictor,
-            DualTCNConfig, DualTCNPredictor
+            DualTCNConfig, DualTCNPredictor,
+            DualLSTMConfig, DualLSTMPredictor
         )
         from .lstm.dual_preprocessor import (
             DualDataPreprocessor, create_dual_sequences, DualSignalDataset
@@ -460,6 +486,18 @@ class DualCNNMetaheuristicOptimizer:
                     input_seq_length=input_seq_length,
                 )
                 model = DualTCNPredictor(model_config).to(device)
+            elif self.model_type == 'dual_lstm':
+                model_config = DualLSTMConfig(
+                    cnn1_input_features=len(selected_binary),
+                    cnn2_input_features=len(selected_technical),
+                    lstm_hidden_size=config_params['lstm_hidden_size'],
+                    lstm_num_layers=config_params['lstm_num_layers'],
+                    lstm_dropout=config_params['lstm_dropout'],
+                    classifier_hidden_size=config_params['classifier_hidden_size'],
+                    classifier_dropout=config_params['classifier_dropout'],
+                    input_seq_length=input_seq_length,
+                )
+                model = DualLSTMPredictor(model_config).to(device)
             else:
                 model_config = DualModelConfig(
                     cnn1_input_features=len(selected_binary),
@@ -1049,7 +1087,8 @@ class DualCNNMetaheuristicOptimizer:
         """
         from .lstm.dual_model import (
             DualModelConfig, DualCNNLSTMPredictor,
-            DualTCNConfig, DualTCNPredictor
+            DualTCNConfig, DualTCNPredictor,
+            DualLSTMConfig, DualLSTMPredictor
         )
         from .lstm.dual_preprocessor import (
             DualDataPreprocessor, create_dual_sequences, DualSignalDataset
@@ -1129,6 +1168,18 @@ class DualCNNMetaheuristicOptimizer:
                 input_seq_length=input_seq_length,
             )
             model = DualTCNPredictor(model_config).to(device)
+        elif self.model_type == 'dual_lstm':
+            model_config = DualLSTMConfig(
+                cnn1_input_features=len(selected_binary),
+                cnn2_input_features=len(selected_technical),
+                lstm_hidden_size=params['lstm_hidden_size'],
+                lstm_num_layers=params['lstm_num_layers'],
+                lstm_dropout=params['lstm_dropout'],
+                classifier_hidden_size=params['classifier_hidden_size'],
+                classifier_dropout=params['classifier_dropout'],
+                input_seq_length=input_seq_length,
+            )
+            model = DualLSTMPredictor(model_config).to(device)
         else:
             model_config = DualModelConfig(
                 cnn1_input_features=len(selected_binary),
@@ -1323,6 +1374,26 @@ class DualCNNMetaheuristicOptimizer:
                     'dropout': params['tcn_dropout'],
                 },
                 'lstm': {
+                    'hidden_size': params['lstm_hidden_size'],
+                    'num_layers': params['lstm_num_layers'],
+                    'dropout': params['lstm_dropout'],
+                },
+                'classifier': {
+                    'hidden_size': params['classifier_hidden_size'],
+                    'dropout': params['classifier_dropout'],
+                    'num_classes': 2,
+                },
+            }
+        elif self.model_type == 'dual_lstm':
+            metadata['model_architecture'] = {
+                'lstm1': {
+                    'input_features': len(selected_binary),
+                    'hidden_size': params['lstm_hidden_size'],
+                    'num_layers': params['lstm_num_layers'],
+                    'dropout': params['lstm_dropout'],
+                },
+                'lstm2': {
+                    'input_features': len(selected_technical),
                     'hidden_size': params['lstm_hidden_size'],
                     'num_layers': params['lstm_num_layers'],
                     'dropout': params['lstm_dropout'],

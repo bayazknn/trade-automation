@@ -622,6 +622,327 @@ class DualTCNPredictor(nn.Module):
         )
 
 
+class LSTMBranch(nn.Module):
+    """
+    LSTM branch for temporal feature extraction.
+
+    Processes sequential data and returns the final hidden state
+    as a fixed-size context vector.
+    """
+
+    def __init__(
+        self,
+        input_features: int,
+        hidden_size: int,
+        num_layers: int = 2,
+        dropout: float = 0.1,
+        bidirectional: bool = False
+    ):
+        """
+        Initialize LSTM branch.
+
+        Parameters
+        ----------
+        input_features : int
+            Number of input features (channels)
+        hidden_size : int
+            LSTM hidden state size
+        num_layers : int
+            Number of LSTM layers
+        dropout : float
+            Dropout rate between LSTM layers (if num_layers > 1)
+        bidirectional : bool
+            Whether to use bidirectional LSTM
+        """
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.num_directions = 2 if bidirectional else 1
+
+        self.lstm = nn.LSTM(
+            input_size=input_features,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0,
+            bidirectional=bidirectional
+        )
+
+        self.output_size = hidden_size * self.num_directions
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize LSTM weights."""
+        for name, param in self.lstm.named_parameters():
+            if 'weight_ih' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+            elif 'bias' in name:
+                nn.init.zeros_(param)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor, shape (batch, seq_len, input_features)
+
+        Returns
+        -------
+        torch.Tensor
+            Last hidden state, shape (batch, hidden_size * num_directions)
+        """
+        # lstm_out: (batch, seq_len, hidden_size * num_directions)
+        # h_n: (num_layers * num_directions, batch, hidden_size)
+        lstm_out, (h_n, c_n) = self.lstm(x)
+
+        if self.num_directions == 2:
+            # Concatenate forward and backward final hidden states
+            context = torch.cat([h_n[-2], h_n[-1]], dim=1)
+        else:
+            context = h_n[-1]
+
+        return context  # (batch, hidden_size * num_directions)
+
+
+@dataclass
+class DualLSTMConfig:
+    """Configuration for Dual-LSTM model with sum fusion."""
+
+    # Required fields (no defaults) - must come first
+    cnn1_input_features: int  # Number of binary input features
+    cnn2_input_features: int  # Number of technical + OHLCV input features
+
+    # LSTM architecture (shared hidden_size for sum fusion)
+    lstm_hidden_size: int = 64  # Hidden size for both branches
+    lstm_num_layers: int = 2  # Number of LSTM layers
+    lstm_dropout: float = 0.1  # Dropout between layers
+    lstm_bidirectional: bool = False  # Bidirectional LSTM
+
+    # Classifier
+    classifier_hidden_size: int = 32  # Hidden layer size (0 = direct projection)
+    classifier_dropout: float = 0.2  # Dropout before final layer
+
+    # Output
+    num_classes: int = 2  # Binary: hold=0, trade=1
+
+    # Sequence
+    input_seq_length: int = 16  # Length of input sequences
+
+
+class DualLSTMPredictor(nn.Module):
+    """
+    Dual-LSTM model for binary trading signal prediction.
+
+    Architecture:
+    - Two parallel LSTM branches for binary and technical features
+    - Element-wise sum fusion of branch outputs
+    - Classifier head for binary prediction
+
+    Key design choice: Both LSTM branches must have the same hidden_size
+    for sum fusion to work.
+
+    Input:
+    - binary_features: (batch, seq_len, n_binary) - pure 0/1 signals
+    - technical_features: (batch, seq_len, n_technical) - scaled indicators + OHLCV
+
+    Output:
+    - logits: (batch, num_classes) = (batch, 2) for hold/trade prediction
+
+    Examples
+    --------
+    >>> config = DualLSTMConfig(
+    ...     cnn1_input_features=114,
+    ...     cnn2_input_features=81
+    ... )
+    >>> model = DualLSTMPredictor(config)
+    >>> binary = torch.randn(32, 16, 114)
+    >>> technical = torch.randn(32, 16, 81)
+    >>> output = model(binary, technical)
+    >>> print(output.shape)
+    torch.Size([32, 2])
+    """
+
+    def __init__(self, config: DualLSTMConfig):
+        """
+        Initialize the model.
+
+        Parameters
+        ----------
+        config : DualLSTMConfig
+            Model configuration
+        """
+        super().__init__()
+        self.config = config
+
+        num_directions = 2 if config.lstm_bidirectional else 1
+        output_size = config.lstm_hidden_size * num_directions
+
+        # LSTM1 Branch: Binary features
+        self.lstm1 = LSTMBranch(
+            input_features=config.cnn1_input_features,
+            hidden_size=config.lstm_hidden_size,
+            num_layers=config.lstm_num_layers,
+            dropout=config.lstm_dropout,
+            bidirectional=config.lstm_bidirectional
+        )
+
+        # LSTM2 Branch: Technical features
+        self.lstm2 = LSTMBranch(
+            input_features=config.cnn2_input_features,
+            hidden_size=config.lstm_hidden_size,
+            num_layers=config.lstm_num_layers,
+            dropout=config.lstm_dropout,
+            bidirectional=config.lstm_bidirectional
+        )
+
+        # Classifier head
+        if config.classifier_hidden_size > 0:
+            self.classifier = nn.Sequential(
+                nn.Linear(output_size, config.classifier_hidden_size),
+                nn.LayerNorm(config.classifier_hidden_size),
+                nn.Mish(),
+                nn.Dropout(config.classifier_dropout),
+                nn.Linear(config.classifier_hidden_size, config.num_classes)
+            )
+        else:
+            self.classifier = nn.Sequential(
+                nn.Dropout(config.classifier_dropout),
+                nn.Linear(output_size, config.num_classes)
+            )
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize classifier weights."""
+        for m in self.classifier.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+    def _init_classifier_bias(self, class_prior: float = 0.1) -> None:
+        """
+        Initialize classifier bias to favor minority class predictions.
+
+        Parameters
+        ----------
+        class_prior : float, default=0.1
+            Approximate ratio of minority class (trade) samples in dataset.
+        """
+        class_prior = max(0.01, min(0.99, class_prior))
+
+        for module in reversed(list(self.classifier.modules())):
+            if isinstance(module, nn.Linear) and module.out_features == self.config.num_classes:
+                log_prior = torch.log(torch.tensor(class_prior / (1 - class_prior)))
+                module.bias.data[0] = -log_prior  # hold: negative bias
+                module.bias.data[1] = log_prior   # trade: positive bias
+                break
+
+    def forward(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Output logits, shape (batch, num_classes) for binary classification
+        """
+        # Process through LSTM branches
+        lstm1_out = self.lstm1(binary_features)   # (batch, hidden_size)
+        lstm2_out = self.lstm2(technical_features)  # (batch, hidden_size)
+
+        # Element-wise sum fusion
+        combined = lstm1_out + lstm2_out  # (batch, hidden_size)
+
+        # Classification
+        return self.classifier(combined)  # (batch, num_classes)
+
+    def predict(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Get predicted class labels.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Predicted class indices, shape (batch,) - 0=hold, 1=trade
+        """
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(binary_features, technical_features)
+            return torch.argmax(logits, dim=-1)
+
+    def predict_proba(
+        self,
+        binary_features: torch.Tensor,
+        technical_features: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Get prediction probabilities.
+
+        Parameters
+        ----------
+        binary_features : torch.Tensor
+            Binary indicator signals, shape (batch, seq_len, n_binary)
+        technical_features : torch.Tensor
+            Technical indicators + OHLCV, shape (batch, seq_len, n_technical)
+
+        Returns
+        -------
+        torch.Tensor
+            Class probabilities, shape (batch, num_classes) - [hold_prob, trade_prob]
+        """
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(binary_features, technical_features)
+            return torch.softmax(logits, dim=-1)
+
+    def get_num_parameters(self) -> int:
+        """Return total number of trainable parameters."""
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def __repr__(self) -> str:
+        bidir_info = "bidirectional" if self.config.lstm_bidirectional else "unidirectional"
+        return (
+            f"DualLSTMPredictor(\n"
+            f"  lstm1: in={self.config.cnn1_input_features}, hidden={self.config.lstm_hidden_size}, "
+            f"layers={self.config.lstm_num_layers}, {bidir_info},\n"
+            f"  lstm2: in={self.config.cnn2_input_features}, hidden={self.config.lstm_hidden_size}, "
+            f"layers={self.config.lstm_num_layers}, {bidir_info},\n"
+            f"  classifier: hidden={self.config.classifier_hidden_size}, "
+            f"dropout={self.config.classifier_dropout},\n"
+            f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
+            f"  total_params={self.get_num_parameters():,}\n"
+            f")"
+        )
+
+
 class DualCNNLSTMPredictor(nn.Module):
     """
     Dual-CNN GRU model for binary trading signal prediction.
@@ -922,13 +1243,13 @@ class DualCNNLSTMPredictor(nn.Module):
 
 
 def validate_model_architecture(
-    model: Union[DualCNNLSTMPredictor, DualTCNPredictor],
+    model: Union[DualCNNLSTMPredictor, DualTCNPredictor, DualLSTMPredictor],
     batch_size: int = 2,
     device: str = 'cpu',
     verbose: bool = True
 ) -> Tuple[bool, List[str], List[str]]:
     """
-    Comprehensive architecture validation for Dual-CNN GRU or Dual-TCN models.
+    Comprehensive architecture validation for Dual-CNN GRU, Dual-TCN, or Dual-LSTM models.
 
     Performs the following checks:
     1. Parameter count (total, trainable, per-layer breakdown)
@@ -938,8 +1259,8 @@ def validate_model_architecture(
 
     Parameters
     ----------
-    model : Union[DualCNNLSTMPredictor, DualTCNPredictor]
-        Model to validate (either GRU-based or TCN-based)
+    model : Union[DualCNNLSTMPredictor, DualTCNPredictor, DualLSTMPredictor]
+        Model to validate (GRU-based, TCN-based, or LSTM-based)
     batch_size : int, default=2
         Batch size for test tensors
     device : str, default='cpu'
@@ -961,6 +1282,10 @@ def validate_model_architecture(
     >>> tcn_config = DualTCNConfig(cnn1_input_features=10, cnn2_input_features=20)
     >>> tcn_model = DualTCNPredictor(tcn_config)
     >>> success, errors, warnings = validate_model_architecture(tcn_model)
+
+    >>> lstm_config = DualLSTMConfig(cnn1_input_features=10, cnn2_input_features=20)
+    >>> lstm_model = DualLSTMPredictor(lstm_config)
+    >>> success, errors, warnings = validate_model_architecture(lstm_model)
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1152,6 +1477,7 @@ def validate_model_architecture(
     if verbose:
         print(f"\nModel Configuration:")
         is_tcn = isinstance(model, DualTCNPredictor)
+        is_lstm = isinstance(model, DualLSTMPredictor)
 
         if is_tcn:
             # TCN model configuration
@@ -1159,6 +1485,13 @@ def validate_model_architecture(
                   f"k={config.tcn_kernel_size}, layers={config.tcn_num_layers}")
             print(f"  TCN2: in={config.cnn2_input_features}, ch={config.tcn_num_channels}, "
                   f"k={config.tcn_kernel_size}, layers={config.tcn_num_layers}")
+        elif is_lstm:
+            # LSTM model configuration
+            bidir_info = "bidirectional" if config.lstm_bidirectional else "unidirectional"
+            print(f"  LSTM1: in={config.cnn1_input_features}, hidden={config.lstm_hidden_size}, "
+                  f"layers={config.lstm_num_layers}, {bidir_info}")
+            print(f"  LSTM2: in={config.cnn2_input_features}, hidden={config.lstm_hidden_size}, "
+                  f"layers={config.lstm_num_layers}, {bidir_info}")
         else:
             # GRU model configuration
             print(f"  CNN1: in={config.cnn1_input_features}, ch={config.cnn1_num_channels}, "
