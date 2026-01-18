@@ -81,8 +81,13 @@ class LSTMSignalPredictor(nn.Module):
         # Direction multiplier for bidirectional LSTM
         self.num_directions = 2 if config.bidirectional else 1
 
-        # Input projection: project input features to hidden size
-        self.input_projection = nn.Linear(config.input_size, config.hidden_size)
+        # Initial projection: input_size -> input_size * 2
+        self.projection_size = config.input_size * 2
+        self.initial_projection = nn.Linear(config.input_size, self.projection_size)
+        self.initial_norm = nn.LayerNorm(self.projection_size)
+
+        # Input projection: project to hidden size for LSTM
+        self.input_projection = nn.Linear(self.projection_size, config.hidden_size)
 
         # Layer normalization after projection
         self.input_norm = nn.LayerNorm(config.hidden_size)
@@ -151,9 +156,11 @@ class LSTMSignalPredictor(nn.Module):
         torch.Tensor
             Output logits, shape (batch, num_classes) for binary classification
         """
-        batch_size = x.size(0)
+        # Initial projection: (batch, seq, input_size) -> (batch, seq, input_size * 2)
+        x = self.initial_projection(x)
+        x = self.initial_norm(x)
 
-        # Input projection: (batch, seq, input_size) -> (batch, seq, hidden_size)
+        # Input projection: (batch, seq, input_size * 2) -> (batch, seq, hidden_size)
         x = self.input_projection(x)
         x = self.input_norm(x)
 
@@ -224,6 +231,7 @@ class LSTMSignalPredictor(nn.Module):
         return (
             f"LSTMSignalPredictor(\n"
             f"  input_size={self.config.input_size},\n"
+            f"  projection_size={self.projection_size},\n"
             f"  hidden_size={self.config.hidden_size},\n"
             f"  num_layers={self.config.num_layers},\n"
             f"  bidirectional={self.config.bidirectional},\n"
@@ -253,12 +261,17 @@ class CNNLSTMSignalPredictor(nn.Module):
         super().__init__()
         self.config = config
 
-        # CNN feature extractor with dynamic number of layers
-        # Input: (batch, input_size, seq_len) after transpose
-        conv_blocks = []
-        in_channels = config.input_size
+        # Initial projection: input_size -> input_size * 2
+        self.projection_size = config.input_size * 2
+        self.initial_projection = nn.Linear(config.input_size, self.projection_size)
+        self.initial_norm = nn.LayerNorm(self.projection_size)
 
-        for i in range(config.cnn_num_layers):
+        # CNN feature extractor with dynamic number of layers
+        # Input: (batch, projection_size, seq_len) after transpose
+        conv_blocks = []
+        in_channels = self.projection_size
+
+        for _ in range(config.cnn_num_layers):
             out_channels = config.hidden_size
             # Calculate padding to maintain sequence length: padding = (kernel_size - 1) // 2
             padding = (config.kernel_size - 1) // 2
@@ -335,8 +348,12 @@ class CNNLSTMSignalPredictor(nn.Module):
         torch.Tensor
             Output logits, shape (batch, num_classes)
         """
+        # Initial projection: (batch, seq, input_size) -> (batch, seq, input_size * 2)
+        x = self.initial_projection(x)
+        x = self.initial_norm(x)
+
         # CNN expects (batch, channels, seq_len)
-        x = x.transpose(1, 2)  # (batch, input_size, seq_len)
+        x = x.transpose(1, 2)  # (batch, projection_size, seq_len)
 
         # CNN feature extraction
         x = self.conv_layers(x)  # (batch, hidden_size, seq_len)
@@ -380,6 +397,7 @@ class CNNLSTMSignalPredictor(nn.Module):
         return (
             f"CNNLSTMSignalPredictor(\n"
             f"  input_size={self.config.input_size},\n"
+            f"  projection_size={self.projection_size},\n"
             f"  hidden_size={self.config.hidden_size},\n"
             f"  cnn_num_layers={self.config.cnn_num_layers},\n"
             f"  kernel_size={self.config.kernel_size},\n"
