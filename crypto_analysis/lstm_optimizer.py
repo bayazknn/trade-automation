@@ -194,7 +194,6 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
         HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
         HyperparamConfig('dropout', 0.05, 0.15, 'float', 'dropout'),
-        HyperparamConfig('classifier_dropout', 0.05, 0.15, 'float', 'classifier_dropout'),
     ]
 
     # Default config uses LSTM (for backward compatibility)
@@ -705,15 +704,16 @@ class LSTMMetaheuristicOptimizer:
 
             # 5. Create model based on model_type
             if self.model_type == 'cnn_lstm':
+                dropout = config_params.get('dropout', 0.1)
                 model_config = ModelConfig(
                     input_size=preprocessor.get_num_features(),
                     hidden_size=config_params['hidden_size'],
                     num_layers=config_params['num_layers'],
                     kernel_size=config_params['kernel_size'],
                     cnn_num_layers=config_params['cnn_num_layers'],
-                    cnn_dropout=config_params['cnn_dropout'],
-                    lstm_dropout=config_params['lstm_dropout'],
-                    classifier_dropout=config_params['classifier_dropout'],
+                    cnn_dropout=dropout,
+                    lstm_dropout=dropout,
+                    classifier_dropout=dropout,
                     input_seq_length=input_seq_length,
                 )
                 model = CNNLSTMSignalPredictor(model_config)
@@ -1341,15 +1341,16 @@ class LSTMMetaheuristicOptimizer:
 
         # 5. Build model config and create model based on model_type
         if model_type == 'cnn_lstm':
+            dropout = params.get('dropout', 0.1)
             model_config = ModelConfig(
                 input_size=preprocessor.get_num_features(),
                 hidden_size=params['hidden_size'],
                 num_layers=params['num_layers'],
                 kernel_size=params['kernel_size'],
                 cnn_num_layers=params['cnn_num_layers'],
-                cnn_dropout=params['cnn_dropout'],
-                lstm_dropout=params['lstm_dropout'],
-                classifier_dropout=params['classifier_dropout'],
+                cnn_dropout=dropout,
+                lstm_dropout=dropout,
+                classifier_dropout=dropout,
                 input_seq_length=input_seq_length,
             )
             model = CNNLSTMSignalPredictor(model_config)
