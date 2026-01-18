@@ -193,7 +193,7 @@ class LSTMMetaheuristicOptimizer:
         # CNN parameters - kernel_size maps to odd values: 1->3, 2->5, 3->7
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
         HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
-        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'cnn_dropout'),
+        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'dropout'),
         HyperparamConfig('classifier_dropout', 0.05, 0.15, 'float', 'classifier_dropout'),
     ]
 
