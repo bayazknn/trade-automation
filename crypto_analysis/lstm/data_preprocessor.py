@@ -52,6 +52,112 @@ class DataPreprocessor:
     DEFAULT_TARGET_ENCODING = {'hold': 0, 'trade': 1}
     # Continuous columns that need scaling
     CONTINUOUS_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
+    # Metadata columns to exclude from NaN checking (not feature columns)
+    METADATA_COLUMNS = ['date', 'signal', 'signal_pct_change', 'period_id', 'tradeable']
+
+    @staticmethod
+    def align_dataframe(
+        df: pd.DataFrame,
+        period_size: int = 4,
+        target_column: str = 'tradeable',
+        verbose: bool = False
+    ) -> pd.DataFrame:
+        """
+        Align DataFrame for period-consistent sequences.
+
+        Drops rows with NaN values (feature columns only) and trims the DataFrame
+        so that row count is divisible by period_size and periods have consistent
+        target values (all hold or all trade within each period).
+
+        This ensures that when using stride=period_size in create_sequences,
+        each sequence's target will be from a consistent period.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to align
+        period_size : int, default=4
+            Ensure output row count is divisible by this value.
+            Set to 1 to disable period alignment.
+        target_column : str, default='tradeable'
+            Column containing target values for period consistency check
+        verbose : bool, default=False
+            Print information about dropped/trimmed rows
+
+        Returns
+        -------
+        pd.DataFrame
+            Aligned DataFrame with row count divisible by period_size
+
+        Examples
+        --------
+        >>> df = pd.read_csv('data.csv')
+        >>> df_aligned = DataPreprocessor.align_dataframe(df, period_size=4)
+        >>> # Now use with stride=4 for period-aligned sequences
+        >>> feat_seqs, tgt_seqs = create_sequences(features, targets, stride=4)
+        """
+        original_len = len(df)
+
+        # Find rows with NaN in feature columns (exclude metadata)
+        metadata_cols = set(DataPreprocessor.METADATA_COLUMNS)
+        feature_cols = [col for col in df.columns if col not in metadata_cols]
+        nan_mask = df[feature_cols].isna().any(axis=1)
+        n_nan_rows = int(nan_mask.sum())
+
+        if n_nan_rows > 0:
+            df_aligned = df[~nan_mask].copy().reset_index(drop=True)
+        else:
+            df_aligned = df.copy()
+
+        # Find optimal offset for period consistency
+        if period_size > 1 and target_column in df_aligned.columns:
+            best_offset = 0
+            best_consistency = 0
+
+            for offset in range(period_size):
+                consistent_count = 0
+                total_count = 0
+
+                for i in range(offset, len(df_aligned) - period_size + 1, period_size):
+                    chunk = df_aligned.iloc[i:i + period_size][target_column].tolist()
+                    total_count += 1
+                    if len(set(chunk)) == 1:
+                        consistent_count += 1
+
+                if total_count > 0 and consistent_count > best_consistency:
+                    best_consistency = consistent_count
+                    best_offset = offset
+
+            # Trim from start using best offset
+            if best_offset > 0:
+                df_aligned = df_aligned.iloc[best_offset:].reset_index(drop=True)
+
+            # Trim from end to ensure divisibility
+            remaining_len = len(df_aligned)
+            extra_trim = remaining_len % period_size
+            if extra_trim > 0:
+                df_aligned = df_aligned.iloc[:-extra_trim].reset_index(drop=True)
+
+            total_trim = best_offset + extra_trim
+            if verbose and (total_trim > 0 or n_nan_rows > 0):
+                final_groups = len(df_aligned) // period_size
+                print(f"Dropped {n_nan_rows} NaN rows, trimmed {best_offset} from start, "
+                      f"{extra_trim} from end for {final_groups} aligned periods")
+        elif period_size > 1:
+            # No target column, just ensure divisibility
+            current_len = len(df_aligned)
+            if current_len % period_size != 0:
+                trim_count = current_len % period_size
+                df_aligned = df_aligned.iloc[trim_count:].reset_index(drop=True)
+
+                if verbose:
+                    print(f"Trimmed {trim_count} rows from start to ensure divisibility by {period_size}")
+
+        if verbose:
+            final_len = len(df_aligned)
+            print(f"Original: {original_len}, Final: {final_len} (divisible by {period_size})")
+
+        return df_aligned
 
     def __init__(
         self,

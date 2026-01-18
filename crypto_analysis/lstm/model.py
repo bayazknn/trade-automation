@@ -23,11 +23,16 @@ class ModelConfig:
     input_size: int           # Number of input features
     hidden_size: int = 128    # LSTM hidden state size
     num_layers: int = 2       # Number of LSTM layers
-    dropout: float = 0.2      # Dropout rate
+    dropout: float = 0.2      # Dropout rate (general, used by LSTMSignalPredictor)
     bidirectional: bool = False  # Use bidirectional LSTM
     num_classes: int = 2      # Number of output classes (hold=0, trade=1)
     input_seq_length: int = 12   # Length of input sequences
-    kernel_size: int = 3      # Kernel size for CNN (if used)
+    # CNN-LSTM specific parameters
+    kernel_size: int = 3      # Kernel size for CNN
+    cnn_num_layers: int = 3   # Number of CNN conv blocks
+    cnn_dropout: float = 0.1  # Dropout rate for CNN layers
+    lstm_dropout: float = 0.1 # Dropout rate for LSTM layers
+    classifier_dropout: float = 0.2  # Dropout rate for classifier
 
 
 class LSTMSignalPredictor(nn.Module):
@@ -233,7 +238,7 @@ class CNNLSTMSignalPredictor(nn.Module):
     CNN + LSTM hybrid model for binary trading signal prediction.
 
     Architecture:
-    - CNN layers: Extract local patterns from feature sequences
+    - CNN layers: Extract local patterns from feature sequences (configurable depth)
     - LSTM encoder: Capture temporal dependencies
     - Classification head: Binary prediction
 
@@ -248,28 +253,24 @@ class CNNLSTMSignalPredictor(nn.Module):
         super().__init__()
         self.config = config
 
-        # CNN feature extractor
+        # CNN feature extractor with dynamic number of layers
         # Input: (batch, input_size, seq_len) after transpose
+        conv_blocks = []
+        in_channels = config.input_size
 
-        self.conv_layers = nn.Sequential(
-            # First conv block
-            nn.Conv1d(config.input_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
-            nn.BatchNorm1d(config.hidden_size),
-            # nn.ReLU(),
-            # nn.Dropout(config.dropout * 0.3),
+        for i in range(config.cnn_num_layers):
+            out_channels = config.hidden_size
+            # Calculate padding to maintain sequence length: padding = (kernel_size - 1) // 2
+            padding = (config.kernel_size - 1) // 2
+            conv_blocks.extend([
+                nn.Conv1d(in_channels, out_channels, kernel_size=config.kernel_size, padding=padding),
+                nn.BatchNorm1d(out_channels),
+                nn.ReLU(),
+                nn.Dropout(config.cnn_dropout),
+            ])
+            in_channels = out_channels
 
-            # Second conv block
-            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
-            nn.BatchNorm1d(config.hidden_size),
-            # nn.ReLU(),
-            # nn.Dropout(config.dropout * 0.3),
-
-            # Third conv block
-            nn.Conv1d(config.hidden_size, config.hidden_size, kernel_size=config.kernel_size, padding=1),
-            nn.BatchNorm1d(config.hidden_size),
-            nn.ReLU(),
-            # nn.Dropout(config.dropout * 0.3),
-        )
+        self.conv_layers = nn.Sequential(*conv_blocks)
 
         # LSTM encoder
         self.lstm = nn.LSTM(
@@ -277,7 +278,7 @@ class CNNLSTMSignalPredictor(nn.Module):
             hidden_size=config.hidden_size,
             num_layers=config.num_layers,
             batch_first=True,
-            dropout=config.dropout if config.num_layers > 1 else 0.0,
+            dropout=config.lstm_dropout if config.num_layers > 1 else 0.0,
             bidirectional=config.bidirectional
         )
 
@@ -290,7 +291,7 @@ class CNNLSTMSignalPredictor(nn.Module):
             nn.Linear(lstm_output_size, config.hidden_size),
             nn.LayerNorm(config.hidden_size),
             nn.ReLU(),
-            # nn.Dropout(config.dropout),
+            nn.Dropout(config.classifier_dropout),
             nn.Linear(config.hidden_size, config.num_classes)
         )
 
@@ -380,8 +381,13 @@ class CNNLSTMSignalPredictor(nn.Module):
             f"CNNLSTMSignalPredictor(\n"
             f"  input_size={self.config.input_size},\n"
             f"  hidden_size={self.config.hidden_size},\n"
-            f"  num_layers={self.config.num_layers},\n"
+            f"  cnn_num_layers={self.config.cnn_num_layers},\n"
+            f"  kernel_size={self.config.kernel_size},\n"
+            f"  cnn_dropout={self.config.cnn_dropout},\n"
+            f"  lstm_num_layers={self.config.num_layers},\n"
+            f"  lstm_dropout={self.config.lstm_dropout},\n"
             f"  bidirectional={self.config.bidirectional},\n"
+            f"  classifier_dropout={self.config.classifier_dropout},\n"
             f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
             f"  total_params={self.get_num_parameters():,}\n"
             f")"

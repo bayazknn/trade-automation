@@ -158,35 +158,48 @@ class LSTMMetaheuristicOptimizer:
     >>> print(f"Best fitness: {result.best_fitness}")
     """
 
-    # Base hyperparameter configurations shared by all models
+    # LSTM model hyperparameter configurations
     # For binary classification (hold=0, trade=1)
-    # Updated based on run 7caf7327 analysis (elite individuals at 5th percentile)
-    BASE_HYPERPARAM_CONFIGS = [
+    LSTM_HYPERPARAM_CONFIGS = [
         # Class imbalance handling
         HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
-        HyperparamConfig('focal_gamma', 1.0, 4.0, 'float', 'focal_gamma'),
-        # Training parameters (narrowed based on elite analysis)
-        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.01, 0.10, 'float', 'dropout'),
-        HyperparamConfig('hidden_size', 96, 256, 'int', 'hidden_size'),
-        HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
+        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
+        # Training parameters
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('dropout', 0.01, 0.15, 'float', 'dropout'),
+        HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
+        HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
-        HyperparamConfig('label_smoothing', 0.05, 0.12, 'float', 'label_smoothing'),
-        HyperparamConfig('batch_size', 64, 128, 'int', 'batch_size'),
-        HyperparamConfig('scheduler_patience', 5, 10, 'int', 'scheduler_patience'),
-        HyperparamConfig('input_seq_length', 12, 21, 'int', 'input_seq_length'),
+        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'),
     ]
 
-    # CNN-LSTM specific hyperparameters
-    CNN_HYPERPARAM_CONFIGS = [
-        # CNN kernel size for Conv1d layers (3, 5, or 7)
-        HyperparamConfig('kernel_size', 3, 9, 'int', 'kernel_size'),
-        # Number of CNN conv blocks (1-3)
-        HyperparamConfig('num_conv_layers', 1, 3, 'int', 'num_conv_layers'),
+    # CNN-LSTM model hyperparameter configurations
+    CNN_LSTM_HYPERPARAM_CONFIGS = [
+        # Class imbalance handling
+        HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
+        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
+        # Training parameters
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
+        HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
+        HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
+        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'),
+        # CNN parameters - kernel_size maps to odd values: 1->3, 2->5, 3->7
+        HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
+        HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
+        HyperparamConfig('cnn_dropout', 0.05, 0.15, 'float', 'cnn_dropout'),
+        HyperparamConfig('lstm_dropout', 0.05, 0.15, 'float', 'lstm_dropout'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.15, 'float', 'classifier_dropout'),
     ]
 
-    # Default config uses base (for backward compatibility)
-    HYPERPARAM_CONFIGS = BASE_HYPERPARAM_CONFIGS
+    # Default config uses LSTM (for backward compatibility)
+    HYPERPARAM_CONFIGS = LSTM_HYPERPARAM_CONFIGS
 
 
 
@@ -212,6 +225,7 @@ class LSTMMetaheuristicOptimizer:
         log_dir: str = 'optimization_logs',
         seed: int = 42,
         model_type: str = 'lstm',
+        use_feat_select: bool = True,
     ):
         self.df = df
         self.pop_size = pop_size
@@ -230,6 +244,7 @@ class LSTMMetaheuristicOptimizer:
         self.log_dir = Path(log_dir)
         self.seed = seed
         self.run_id: Optional[str] = None  # Generated when optimize() starts
+        self.use_feat_select = use_feat_select
 
         # Model type selection
         if model_type not in ('lstm', 'cnn_lstm'):
@@ -238,9 +253,9 @@ class LSTMMetaheuristicOptimizer:
 
         # Set hyperparameter configs based on model type
         if model_type == 'cnn_lstm':
-            self.HYPERPARAM_CONFIGS = self.BASE_HYPERPARAM_CONFIGS + self.CNN_HYPERPARAM_CONFIGS
+            self.hyperparam_configs = self.CNN_LSTM_HYPERPARAM_CONFIGS
         else:
-            self.HYPERPARAM_CONFIGS = self.BASE_HYPERPARAM_CONFIGS
+            self.hyperparam_configs = self.LSTM_HYPERPARAM_CONFIGS
 
         # Identify selectable feature columns (all columns except excluded ones)
         self.feature_columns = [
@@ -248,7 +263,7 @@ class LSTMMetaheuristicOptimizer:
             if col not in self.EXCLUDED_COLUMNS
         ]
         self.n_features = len(self.feature_columns)
-        self.n_params = len(self.HYPERPARAM_CONFIGS)
+        self.n_params = len(self.hyperparam_configs)
         self.dimension = self.n_features + self.n_params
 
         # Build bounds arrays
@@ -281,6 +296,7 @@ class LSTMMetaheuristicOptimizer:
             print(f"  - Workers: {self.n_workers}")
             print(f"  - APO np_neighbors: {self.np_neighbors}")
             print(f"  - APO pf_max: {self.pf_max}")
+            print(f"  - Feature selection: {self.use_feat_select}")
             print(f"  - Elitist selection: {self.elitist_selection}")
             if self.elitist_selection:
                 print(f"  - Elitist constant: {self.elitist_constant}")
@@ -295,8 +311,8 @@ class LSTMMetaheuristicOptimizer:
         feature_upper = np.full(self.n_features, 100.0)
 
         # Hyperparameter bounds
-        param_lower = np.array([cfg.min_val for cfg in self.HYPERPARAM_CONFIGS])
-        param_upper = np.array([cfg.max_val for cfg in self.HYPERPARAM_CONFIGS])
+        param_lower = np.array([cfg.min_val for cfg in self.hyperparam_configs])
+        param_upper = np.array([cfg.max_val for cfg in self.hyperparam_configs])
 
         self.lower_bound = np.concatenate([feature_lower, param_lower])
         self.upper_bound = np.concatenate([feature_upper, param_upper])
@@ -438,9 +454,9 @@ class LSTMMetaheuristicOptimizer:
         # Build header columns
         # Format: run_id, iteration, individual_idx, feature_0, feature_1, ..., param_0, param_1, ..., fitness
         feature_cols = [f"feat_{i}" for i in range(self.n_features)]
-        param_cols = [cfg.name for cfg in self.HYPERPARAM_CONFIGS]
-        param_bound_cols = [f"{cfg.name}_lower" for cfg in self.HYPERPARAM_CONFIGS] + \
-                          [f"{cfg.name}_upper" for cfg in self.HYPERPARAM_CONFIGS]
+        param_cols = [cfg.name for cfg in self.hyperparam_configs]
+        param_bound_cols = [f"{cfg.name}_lower" for cfg in self.hyperparam_configs] + \
+                          [f"{cfg.name}_upper" for cfg in self.hyperparam_configs]
 
         # Optimizer hyperparameters to log (only in first row of each iteration)
         optimizer_params = {
@@ -470,8 +486,8 @@ class LSTMMetaheuristicOptimizer:
                 writer.writerow(header)
 
             # Get parameter bounds
-            param_lower = [cfg.min_val for cfg in self.HYPERPARAM_CONFIGS]
-            param_upper = [cfg.max_val for cfg in self.HYPERPARAM_CONFIGS]
+            param_lower = [cfg.min_val for cfg in self.hyperparam_configs]
+            param_upper = [cfg.max_val for cfg in self.hyperparam_configs]
 
             for idx, (individual, fitness) in enumerate(zip(population, fitness_values)):
                 # Convert features to binary (0/1) based on selection threshold
@@ -529,7 +545,11 @@ class LSTMMetaheuristicOptimizer:
         """
         feature_values = individual[:self.n_features]
 
-        if self.elitist_selection and self.correlation_vector is not None:
+        # Feature selection
+        if not self.use_feat_select:
+            # Select all features when feature selection is disabled
+            selected_features = self.feature_columns.copy()
+        elif self.elitist_selection and self.correlation_vector is not None:
             # Elitist selection: threshold based on correlation
             # Higher correlation = lower (more negative) threshold = easier to select
             feature_lower = self.lower_bound[:self.n_features]
@@ -560,22 +580,33 @@ class LSTMMetaheuristicOptimizer:
 
             threshold = feature_lower * correlation_vector * constant
             feature_mask = feature_values > threshold
+            selected_features = [
+                col for col, sel in zip(self.feature_columns, feature_mask) if sel
+            ]
         else:
             # Standard selection: >= 0 = selected
             feature_mask = feature_values >= -30 # Experimental: select most features
-
-        selected_features = [
-            col for col, sel in zip(self.feature_columns, feature_mask) if sel
-        ]
+            selected_features = [
+                col for col, sel in zip(self.feature_columns, feature_mask) if sel
+            ]
 
         # Extract and convert hyperparameters
         params = individual[self.n_features:]
         config_params = {}
-        for i, cfg in enumerate(self.HYPERPARAM_CONFIGS):
+        for i, cfg in enumerate(self.hyperparam_configs):
             val = params[i]
             if cfg.param_type == 'int':
                 val = int(round(val))
             config_params[cfg.config_field] = val
+
+        # Map kernel_size to odd values for CNN-LSTM model: 1->3, 2->5, 3->7
+        if self.model_type == 'cnn_lstm' and 'kernel_size' in config_params:
+            config_params['kernel_size'] = 2 * config_params['kernel_size'] + 1
+
+        # Round input_seq_length to nearest multiple of 4 for period alignment
+        if 'input_seq_length' in config_params:
+            config_params['input_seq_length'] = 4 * round(config_params['input_seq_length'] / 4)
+            config_params['input_seq_length'] = max(12, config_params['input_seq_length'])  # Minimum 12
 
         return selected_features, config_params
 
@@ -623,17 +654,24 @@ class LSTMMetaheuristicOptimizer:
             # Build selected DataFrame (keep tradeable + selected features)
             df_selected = self.df[['tradeable'] + selected_features].copy()
 
-            # 1. Preprocess (uses 'tradeable' column for binary classification)
+            # 1. Align DataFrame for period-consistent sequences
+            df_selected = DataPreprocessor.align_dataframe(
+                df_selected, period_size=4, verbose=False
+            )
+
+            # 2. Preprocess (uses 'tradeable' column for binary classification)
             preprocessor = DataPreprocessor(target_shift=4)
             features, targets = preprocessor.fit_transform(df_selected)
 
             # 2. Create sequences (use input_seq_length from params)
             # output_seq_length=1 for binary classification
+            # stride=4 for period-aligned sequences
             input_seq_length = config_params['input_seq_length']
             feat_seqs, tgt_seqs = create_sequences(
                 features, targets,
                 input_seq_length=input_seq_length,
-                output_seq_length=1
+                output_seq_length=1,
+                stride=4
             )
 
             # Check we have enough sequences
@@ -664,19 +702,28 @@ class LSTMMetaheuristicOptimizer:
                 # bidirectional=True, # Experimentally commented out
             )
 
-            model_config = ModelConfig(
-                input_size=preprocessor.get_num_features(),
-                hidden_size=config_params['hidden_size'],
-                num_layers=config_params['num_layers'],
-                dropout=config_params['dropout'],
-                kernel_size=config_params['kernel_size'],
-                input_seq_length=input_seq_length,
-            )
-
             # 5. Create model based on model_type
             if self.model_type == 'cnn_lstm':
+                model_config = ModelConfig(
+                    input_size=preprocessor.get_num_features(),
+                    hidden_size=config_params['hidden_size'],
+                    num_layers=config_params['num_layers'],
+                    kernel_size=config_params['kernel_size'],
+                    cnn_num_layers=config_params['cnn_num_layers'],
+                    cnn_dropout=config_params['cnn_dropout'],
+                    lstm_dropout=config_params['lstm_dropout'],
+                    classifier_dropout=config_params['classifier_dropout'],
+                    input_seq_length=input_seq_length,
+                )
                 model = CNNLSTMSignalPredictor(model_config)
             else:
+                model_config = ModelConfig(
+                    input_size=preprocessor.get_num_features(),
+                    hidden_size=config_params['hidden_size'],
+                    num_layers=config_params['num_layers'],
+                    dropout=config_params['dropout'],
+                    input_seq_length=input_seq_length,
+                )
                 model = LSTMSignalPredictor(model_config)
             trainer = Trainer(model, training_config, preprocessor=preprocessor)
             trainer.train(dataset)
@@ -1245,16 +1292,23 @@ class LSTMMetaheuristicOptimizer:
         # Build selected DataFrame (use tradeable for binary classification)
         df_selected = self.df[['tradeable'] + selected_features].copy()
 
-        # 1. Preprocess (uses 'tradeable' column)
+        # 1. Align DataFrame for period-consistent sequences
+        df_selected = DataPreprocessor.align_dataframe(
+            df_selected, period_size=4, verbose=verbose
+        )
+
+        # 2. Preprocess (uses 'tradeable' column)
         preprocessor = DataPreprocessor(target_shift=4)
         features, targets = preprocessor.fit_transform(df_selected)
 
         # 2. Create sequences (output_seq_length=1 for binary classification)
+        # stride=4 for period-aligned sequences
         input_seq_length = params.get('input_seq_length', 12)
         feat_seqs, tgt_seqs = create_sequences(
             features, targets,
             input_seq_length=input_seq_length,
-            output_seq_length=1
+            output_seq_length=1,
+            stride=4
         )
 
         # 3. Create dataset (no sequence validation for binary)
@@ -1268,7 +1322,7 @@ class LSTMMetaheuristicOptimizer:
             learning_rate=params['learning_rate'],
             hidden_size=params['hidden_size'],
             num_layers=params['num_layers'],
-            dropout=params['dropout'],
+            dropout=params.get('dropout', 0.1),
             weight_decay=params['weight_decay'],
             auto_class_weights=True,
             class_weight_power=params['class_weight_power'],
@@ -1282,19 +1336,28 @@ class LSTMMetaheuristicOptimizer:
             bidirectional=True,
         )
 
-        # 5. Build model config
-        model_config = ModelConfig(
-            input_size=preprocessor.get_num_features(),
-            hidden_size=params['hidden_size'],
-            num_layers=params['num_layers'],
-            dropout=params['dropout'],
-            input_seq_length=input_seq_length,
-        )
-
-        # 6. Create and train model based on model_type
+        # 5. Build model config and create model based on model_type
         if model_type == 'cnn_lstm':
+            model_config = ModelConfig(
+                input_size=preprocessor.get_num_features(),
+                hidden_size=params['hidden_size'],
+                num_layers=params['num_layers'],
+                kernel_size=params['kernel_size'],
+                cnn_num_layers=params['cnn_num_layers'],
+                cnn_dropout=params['cnn_dropout'],
+                lstm_dropout=params['lstm_dropout'],
+                classifier_dropout=params['classifier_dropout'],
+                input_seq_length=input_seq_length,
+            )
             model = CNNLSTMSignalPredictor(model_config)
         else:
+            model_config = ModelConfig(
+                input_size=preprocessor.get_num_features(),
+                hidden_size=params['hidden_size'],
+                num_layers=params['num_layers'],
+                dropout=params.get('dropout', 0.1),
+                input_seq_length=input_seq_length,
+            )
             model = LSTMSignalPredictor(model_config)
         trainer = Trainer(model, config, preprocessor=preprocessor)
         trainer.train(dataset)

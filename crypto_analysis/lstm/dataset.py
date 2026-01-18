@@ -20,12 +20,13 @@ def create_sequences(
     features: np.ndarray,
     targets: np.ndarray,
     input_seq_length: int = 12,
-    output_seq_length: int = 1
+    output_seq_length: int = 1,
+    stride: int = 1
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Create sliding window sequences from flat arrays.
 
-    For each valid start position i, creates:
+    For each valid start position i (stepping by stride), creates:
     - Input sequence: features[i : i + input_seq_length]
     - Output: single target value at targets[i + input_seq_length]
 
@@ -39,6 +40,9 @@ def create_sequences(
         Length of input sequences
     output_seq_length : int, default=1
         Length of output/target (1 for binary classification)
+    stride : int, default=1
+        Step size between consecutive sequences. Use stride > 1 to reduce
+        overlap between sequences (e.g., stride=4 for period-aligned sequences)
 
     Returns
     -------
@@ -58,6 +62,10 @@ def create_sequences(
     >>> feat_seqs, tgt_seqs = create_sequences(features, targets)
     >>> print(feat_seqs.shape, tgt_seqs.shape)
     (88, 12, 10) (88,)
+    >>> # With stride=4 for period-aligned sequences
+    >>> feat_seqs, tgt_seqs = create_sequences(features, targets, stride=4)
+    >>> print(feat_seqs.shape, tgt_seqs.shape)
+    (22, 12, 10) (22,)
     """
     n_timesteps = len(features)
     n_features = features.shape[1] if features.ndim > 1 else 1
@@ -75,19 +83,22 @@ def create_sequences(
             f"Need at least {input_seq_length + output_seq_length} timesteps."
         )
 
+    # Calculate number of sequences with stride
+    n_sequences = (max_start - 1) // stride + 1
+
     # Pre-allocate arrays for efficiency
     feature_sequences = np.zeros(
-        (max_start, input_seq_length, n_features),
+        (n_sequences, input_seq_length, n_features),
         dtype=np.float32
     )
     # Single target per sequence
-    target_sequences = np.zeros(max_start, dtype=np.int64)
+    target_sequences = np.zeros(n_sequences, dtype=np.int64)
 
-    # Create sequences using sliding window
-    for i in range(max_start):
-        feature_sequences[i] = features[i:i + input_seq_length]
+    # Create sequences using sliding window with stride
+    for seq_idx, i in enumerate(range(0, max_start, stride)):
+        feature_sequences[seq_idx] = features[i:i + input_seq_length]
         # Single target value at the next timestep after input sequence
-        target_sequences[i] = targets[i + input_seq_length]
+        target_sequences[seq_idx] = targets[i + input_seq_length]
 
     return feature_sequences, target_sequences
 
