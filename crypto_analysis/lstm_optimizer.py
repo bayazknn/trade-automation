@@ -206,7 +206,9 @@ class LSTMMetaheuristicOptimizer:
 
     def __init__(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame = None,
+        df_binary: pd.DataFrame = None,
+        df_technical: pd.DataFrame = None,
         pop_size: int = 10,
         iterations: int = 50,
         n_workers: int = 4,
@@ -225,7 +227,21 @@ class LSTMMetaheuristicOptimizer:
         model_type: str = 'lstm',
         use_feat_select: bool = True,
     ):
-        self.df = df
+        # Determine dataframe mode based on inputs
+        if df is not None:
+            # Single dataframe mode (backward compatible)
+            self.df = df
+            self.dataframe_mode = 'single'
+        elif df_binary is not None and df_technical is not None:
+            # Dual dataframe mode (merged)
+            self.df = self.merge_dataframes(
+                df_binary, df_technical, verbose=verbose
+            )
+            self.dataframe_mode = 'merged'
+        else:
+            raise ValueError(
+                "Provide either 'df' or both 'df_binary' and 'df_technical'"
+            )
         self.pop_size = pop_size
         self.iterations = iterations
         self.n_workers = n_workers
@@ -257,7 +273,7 @@ class LSTMMetaheuristicOptimizer:
 
         # Identify selectable feature columns (all columns except excluded ones)
         self.feature_columns = [
-            col for col in df.columns
+            col for col in self.df.columns
             if col not in self.EXCLUDED_COLUMNS
         ]
         self.n_features = len(self.feature_columns)
@@ -279,8 +295,10 @@ class LSTMMetaheuristicOptimizer:
         self.metrics_dict: Dict[int, Dict] = {}
         self.best_fitness_history: List[float] = []
 
-        # Detect DataFrame mode (binary vs raw indicators)
-        self.dataframe_mode = self._detect_dataframe_mode()
+        # Detect DataFrame column mode (binary vs raw indicators) for single mode
+        # For 'merged' mode, keep the mode as-is since we already merged the dfs
+        if self.dataframe_mode == 'single':
+            self.dataframe_mode = self._detect_dataframe_mode()
 
         if self.verbose:
             print(f"LSTMMetaheuristicOptimizer (APO) initialized:")
@@ -347,6 +365,115 @@ class LSTMMetaheuristicOptimizer:
         else:
             # Default to binary if no indicator columns found
             return 'binary'
+
+    @staticmethod
+    def merge_dataframes(
+        df_binary: pd.DataFrame,
+        df_technical: pd.DataFrame,
+        date_column: str = 'date',
+        target_column: str = 'tradeable',
+        period_size: int = 4,
+        verbose: bool = False
+    ) -> pd.DataFrame:
+        """
+        Merge and align binary and technical DataFrames.
+
+        Steps:
+        1. Align by date column (inner join)
+        2. Drop shared columns (keep one copy of date, tradeable, etc.)
+        3. Drop rows with NaN in feature columns
+        4. Trim rows to ensure period alignment (row count divisible by period_size)
+        5. Find optimal offset for target consistency within periods
+
+        Parameters
+        ----------
+        df_binary : pd.DataFrame
+            Binary signals dataframe (0/1 indicator columns)
+        df_technical : pd.DataFrame
+            Technical indicators dataframe (continuous values + OHLCV)
+        date_column : str
+            Column to join on (default: 'date')
+        target_column : str
+            Target column for period consistency (default: 'tradeable')
+        period_size : int
+            Ensure row count divisible by this value (default: 4)
+        verbose : bool
+            Print alignment statistics
+
+        Returns
+        -------
+        pd.DataFrame
+            Merged and aligned dataframe
+        """
+        if verbose:
+            print(f"Merging dataframes:")
+            print(f"  - Binary: {df_binary.shape[0]} rows, {df_binary.shape[1]} cols")
+            print(f"  - Technical: {df_technical.shape[0]} rows, {df_technical.shape[1]} cols")
+
+        # Step 1: Inner join on date
+        df_merged = pd.merge(
+            df_binary,
+            df_technical,
+            on=date_column,
+            how='inner',
+            suffixes=('', '_dup')
+        )
+
+        # Step 2: Drop duplicate columns (from technical df)
+        dup_cols = [c for c in df_merged.columns if c.endswith('_dup')]
+        df_merged = df_merged.drop(columns=dup_cols)
+
+        if verbose:
+            print(f"  - After merge: {df_merged.shape[0]} rows, {df_merged.shape[1]} cols")
+            print(f"  - Dropped {len(dup_cols)} duplicate columns")
+
+        # Step 3: Drop NaN rows (feature columns only)
+        metadata_cols = {'date', 'signal', 'signal_pct_change', 'period_id', 'tradeable'}
+        feature_cols = [c for c in df_merged.columns if c not in metadata_cols]
+        nan_mask = df_merged[feature_cols].isna().any(axis=1)
+        rows_before = len(df_merged)
+        df_merged = df_merged[~nan_mask].reset_index(drop=True)
+
+        if verbose:
+            print(f"  - Dropped {rows_before - len(df_merged)} rows with NaN values")
+
+        # Step 4 & 5: Period alignment (find best offset)
+        if period_size > 1 and target_column in df_merged.columns:
+            best_offset = 0
+            best_consistency = 0
+
+            for offset in range(period_size):
+                consistent_count = 0
+                total_count = 0
+
+                for i in range(offset, len(df_merged) - period_size + 1, period_size):
+                    chunk = df_merged.iloc[i:i + period_size][target_column].tolist()
+                    total_count += 1
+                    if len(set(chunk)) == 1:  # All same value
+                        consistent_count += 1
+
+                if total_count > 0 and consistent_count > best_consistency:
+                    best_consistency = consistent_count
+                    best_offset = offset
+
+            # Trim from start
+            if best_offset > 0:
+                df_merged = df_merged.iloc[best_offset:].reset_index(drop=True)
+
+            # Trim from end to ensure divisibility
+            extra = len(df_merged) % period_size
+            if extra > 0:
+                df_merged = df_merged.iloc[:-extra].reset_index(drop=True)
+
+            if verbose:
+                consistency_pct = (best_consistency / max(1, total_count)) * 100
+                print(f"  - Period alignment: offset={best_offset}, "
+                      f"consistency={consistency_pct:.1f}%")
+
+        if verbose:
+            print(f"  - Final: {len(df_merged)} rows, {len(feature_cols)} features")
+
+        return df_merged
 
     def _calculate_correlation_vector(self) -> np.ndarray:
         """
@@ -909,8 +1036,10 @@ class LSTMMetaheuristicOptimizer:
     @classmethod
     def from_checkpoint(
         cls,
-        df: pd.DataFrame,
         checkpoint_path: str,
+        df: pd.DataFrame = None,
+        df_binary: pd.DataFrame = None,
+        df_technical: pd.DataFrame = None,
         **kwargs
     ) -> Tuple['LSTMMetaheuristicOptimizer', int]:
         """
@@ -918,10 +1047,14 @@ class LSTMMetaheuristicOptimizer:
 
         Parameters
         ----------
-        df : pd.DataFrame
-            DatasetBuilder output (must be same as original)
         checkpoint_path : str
             Path to checkpoint file
+        df : pd.DataFrame, optional
+            DatasetBuilder output for single dataframe mode
+        df_binary : pd.DataFrame, optional
+            Binary signals dataframe for merged mode
+        df_technical : pd.DataFrame, optional
+            Technical indicators dataframe for merged mode
         **kwargs
             Additional arguments passed to constructor
 
@@ -933,8 +1066,13 @@ class LSTMMetaheuristicOptimizer:
         with open(checkpoint_path, 'rb') as f:
             checkpoint: OptimizationCheckpoint = pickle.load(f)
 
-        # Create optimizer with same settings
-        optimizer = cls(df, **kwargs)
+        # Create optimizer with same settings (supports both modes)
+        optimizer = cls(
+            df=df,
+            df_binary=df_binary,
+            df_technical=df_technical,
+            **kwargs
+        )
 
         # Verify feature columns match
         if optimizer.feature_columns != checkpoint.feature_columns:

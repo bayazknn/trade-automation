@@ -83,14 +83,11 @@ class LSTMSignalPredictor(nn.Module):
 
         # Initial projection: input_size -> input_size * 2
         self.projection_size = config.input_size * 2
-        self.initial_projection = nn.Linear(config.input_size, self.projection_size)
-        self.initial_norm = nn.LayerNorm(self.projection_size)
-
-        # Input projection: project to hidden size for LSTM
-        self.input_projection = nn.Linear(self.projection_size, config.hidden_size)
-
-        # Layer normalization after projection
-        self.input_norm = nn.LayerNorm(config.hidden_size)
+        self.projection = nn.Sequential(
+            nn.Linear(config.input_size, self.projection_size),
+            nn.Linear(self.projection_size, config.hidden_size),
+            nn.GELU()
+        )
 
         # LSTM encoder
         self.lstm = nn.LSTM(
@@ -108,7 +105,7 @@ class LSTMSignalPredictor(nn.Module):
         # Single classification head for binary prediction
         self.classifier = nn.Sequential(
             nn.Linear(decoder_input_size, config.hidden_size),
-            # nn.ReLU(),
+            nn.GELU(),
             nn.Dropout(config.dropout),
             nn.Linear(config.hidden_size, config.num_classes)
         )
@@ -157,13 +154,8 @@ class LSTMSignalPredictor(nn.Module):
             Output logits, shape (batch, num_classes) for binary classification
         """
         # Initial projection: (batch, seq, input_size) -> (batch, seq, input_size * 2)
-        x = self.initial_projection(x)
-        x = self.initial_norm(x)
-
-        # Input projection: (batch, seq, input_size * 2) -> (batch, seq, hidden_size)
-        x = self.input_projection(x)
-        x = self.input_norm(x)
-
+        x = self.projection(x)
+        
         # LSTM encoding
         lstm_out, (h_n, c_n) = self.lstm(x, hidden)
         # lstm_out: (batch, seq_len, hidden_size * num_directions)
@@ -263,8 +255,11 @@ class CNNLSTMSignalPredictor(nn.Module):
 
         # Initial projection: input_size -> input_size * 2
         self.projection_size = config.input_size * 2
-        self.initial_projection = nn.Linear(config.input_size, self.projection_size)
-        self.initial_norm = nn.LayerNorm(self.projection_size)
+        self.projection = nn.Sequential(
+            nn.Linear(config.input_size, self.projection_size),
+            nn.Linear(self.projection_size, config.hidden_size),
+            nn.GELU()
+        )
 
         # CNN feature extractor with dynamic number of layers
         # Input: (batch, projection_size, seq_len) after transpose
@@ -278,7 +273,7 @@ class CNNLSTMSignalPredictor(nn.Module):
             conv_blocks.extend([
                 nn.Conv1d(in_channels, out_channels, kernel_size=config.kernel_size, padding=padding),
                 nn.BatchNorm1d(out_channels),
-                nn.ReLU(),
+                nn.GELU(),
                 nn.Dropout(config.cnn_dropout),
             ])
             in_channels = out_channels
@@ -303,7 +298,7 @@ class CNNLSTMSignalPredictor(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(lstm_output_size, config.hidden_size),
             nn.LayerNorm(config.hidden_size),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Dropout(config.classifier_dropout),
             nn.Linear(config.hidden_size, config.num_classes)
         )
@@ -349,8 +344,7 @@ class CNNLSTMSignalPredictor(nn.Module):
             Output logits, shape (batch, num_classes)
         """
         # Initial projection: (batch, seq, input_size) -> (batch, seq, input_size * 2)
-        x = self.initial_projection(x)
-        x = self.initial_norm(x)
+        x = self.projection(x)
 
         # CNN expects (batch, channels, seq_len)
         x = x.transpose(1, 2)  # (batch, projection_size, seq_len)
