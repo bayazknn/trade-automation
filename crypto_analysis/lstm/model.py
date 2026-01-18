@@ -267,9 +267,9 @@ class CNNLSTMSignalPredictor(nn.Module):
         )
 
         # CNN feature extractor with dynamic number of layers
-        # Input: (batch, projection_size, seq_len) after transpose
+        # Input: (batch, hidden_size, seq_len) after transpose (projection outputs hidden_size)
         conv_blocks = []
-        in_channels = self.projection_size
+        in_channels = config.hidden_size
 
         for _ in range(config.cnn_num_layers):
             out_channels = config.hidden_size
@@ -352,7 +352,7 @@ class CNNLSTMSignalPredictor(nn.Module):
         x = self.projection(x)
 
         # CNN expects (batch, channels, seq_len)
-        x = x.transpose(1, 2)  # (batch, projection_size, seq_len)
+        x = x.transpose(1, 2)  # (batch, hidden_size, seq_len)
 
         # CNN feature extraction
         x = self.conv_layers(x)  # (batch, hidden_size, seq_len)
