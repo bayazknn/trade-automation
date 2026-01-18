@@ -27,6 +27,7 @@ class ModelConfig:
     bidirectional: bool = False  # Use bidirectional LSTM
     num_classes: int = 2      # Number of output classes (hold=0, trade=1)
     input_seq_length: int = 12   # Length of input sequences
+    classifier_hidden_size: int = 64  # Hidden size for classifier layer
     # CNN-LSTM specific parameters
     kernel_size: int = 3      # Kernel size for CNN
     cnn_num_layers: int = 3   # Number of CNN conv blocks
@@ -104,10 +105,10 @@ class LSTMSignalPredictor(nn.Module):
 
         # Single classification head for binary prediction
         self.classifier = nn.Sequential(
-            nn.Linear(decoder_input_size, config.hidden_size),
+            nn.Linear(decoder_input_size, config.classifier_hidden_size),
             nn.GELU(),
             nn.Dropout(config.dropout),
-            nn.Linear(config.hidden_size, config.num_classes)
+            nn.Linear(config.classifier_hidden_size, config.num_classes)
         )
 
         # Initialize weights
@@ -226,6 +227,7 @@ class LSTMSignalPredictor(nn.Module):
             f"  projection_size={self.projection_size},\n"
             f"  hidden_size={self.config.hidden_size},\n"
             f"  num_layers={self.config.num_layers},\n"
+            f"  classifier_hidden_size={self.config.classifier_hidden_size},\n"
             f"  bidirectional={self.config.bidirectional},\n"
             f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
             f"  total_params={self.get_num_parameters():,}\n"
@@ -296,11 +298,11 @@ class CNNLSTMSignalPredictor(nn.Module):
 
         # Classification head with LayerNorm and ReLU
         self.classifier = nn.Sequential(
-            nn.Linear(lstm_output_size, config.hidden_size),
-            nn.LayerNorm(config.hidden_size),
+            nn.Linear(lstm_output_size, config.classifier_hidden_size),
+            nn.LayerNorm(config.classifier_hidden_size),
             nn.GELU(),
             nn.Dropout(config.classifier_dropout),
-            nn.Linear(config.hidden_size, config.num_classes)
+            nn.Linear(config.classifier_hidden_size, config.num_classes)
         )
 
         self._init_weights()
@@ -398,8 +400,9 @@ class CNNLSTMSignalPredictor(nn.Module):
             f"  cnn_dropout={self.config.cnn_dropout},\n"
             f"  lstm_num_layers={self.config.num_layers},\n"
             f"  lstm_dropout={self.config.lstm_dropout},\n"
-            f"  bidirectional={self.config.bidirectional},\n"
+            f"  classifier_hidden_size={self.config.classifier_hidden_size},\n"
             f"  classifier_dropout={self.config.classifier_dropout},\n"
+            f"  bidirectional={self.config.bidirectional},\n"
             f"  num_classes={self.config.num_classes} (hold=0, trade=1),\n"
             f"  total_params={self.get_num_parameters():,}\n"
             f")"
