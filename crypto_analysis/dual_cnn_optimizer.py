@@ -93,6 +93,8 @@ class DualCNNMetaheuristicOptimizer:
         DataFrame with technical indicators + OHLCV (81 columns)
     model_type : str
         Model architecture type: 'dual_cnn_gru' or 'dual_tcn' (default: 'dual_tcn')
+    use_feat_select : bool
+        Whether to use feature selection (default: True)
     pop_size : int
         Population size (default: 10)
     iterations : int
@@ -136,28 +138,28 @@ class DualCNNMetaheuristicOptimizer:
     GRU_HYPERPARAM_CONFIGS = [
         # CNN1 (Binary branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn1_kernel_size', 1, 3, 'int', 'cnn1_kernel_size'),
-        HyperparamConfig('cnn1_num_channels', 48, 96, 'int', 'cnn1_num_channels'),
+        HyperparamConfig('cnn1_num_channels', 24, 48, 'int', 'cnn1_num_channels'), # old values: 48, 96
         HyperparamConfig('cnn1_num_layers', 1, 3, 'int', 'cnn1_num_layers'),
         # CNN2 (Technical branch) - kernel_size maps to odd: 1->3, 2->5, 3->7
         HyperparamConfig('cnn2_kernel_size', 1, 3, 'int', 'cnn2_kernel_size'),
-        HyperparamConfig('cnn2_num_channels', 48, 96, 'int', 'cnn2_num_channels'),
+        HyperparamConfig('cnn2_num_channels', 16, 32, 'int', 'cnn2_num_channels'), # old values: 32, 64
         HyperparamConfig('cnn2_num_layers', 1, 3, 'int', 'cnn2_num_layers'),
-        # LSTM - can use larger sizes with more data (~9700 rows)
-        HyperparamConfig('lstm_hidden_size', 64, 128, 'int', 'lstm_hidden_size'),
-        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
-        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        # LSTM - can use larger sizes with more data (~9700 rows) for full features
+        HyperparamConfig('lstm_hidden_size', 32, 256, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 4, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.05, 0.10, 'float', 'lstm_dropout'),
         # Classifier
-        HyperparamConfig('classifier_hidden_size', 32, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.1, 0.25, 'float', 'classifier_dropout'),
+        HyperparamConfig('classifier_hidden_size', 4, 24, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.10, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0005, 0.002, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.003, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'), 
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        # HyperparamConfig('weight_decay', 0.0001, 0.003, 'float', 'weight_decay'),
         # Focal loss gamma: focusing parameter for hard example mining (1.0-2.5)
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.02, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 16, 48, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 8, 15, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'), # old values: 32, 64
+        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
     ]
 
     # Hyperparameter configurations for Dual-TCN-LSTM model (Total: 16 params)
@@ -168,42 +170,42 @@ class DualCNNMetaheuristicOptimizer:
         HyperparamConfig('tcn_num_channels', 32, 96, 'int', 'tcn_num_channels'),
         HyperparamConfig('tcn_kernel_size', 2, 4, 'int', 'tcn_kernel_size'),  # Maps to 3,5,7
         HyperparamConfig('tcn_num_layers', 3, 6, 'int', 'tcn_num_layers'),
-        HyperparamConfig('tcn_dropout', 0.05, 0.25, 'float', 'tcn_dropout'),
+        HyperparamConfig('tcn_dropout', 0.05, 0.10, 'float', 'tcn_dropout'),
         # LSTM layer
         HyperparamConfig('lstm_hidden_size', 32, 128, 'int', 'lstm_hidden_size'),
         HyperparamConfig('lstm_num_layers', 1, 2, 'int', 'lstm_num_layers'),
-        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        HyperparamConfig('lstm_dropout', 0.05, 0.1, 'float', 'lstm_dropout'),
         # Classifier
-        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.05, 0.25, 'float', 'classifier_dropout'),
+        HyperparamConfig('classifier_hidden_size', 4, 24, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.10, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        # HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'),
+        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
     ]
 
     # Hyperparameter configurations for Dual-LSTM model (Total: 12 params)
     # Architecture: Two parallel LSTM branches → sum fusion → classifier
     LSTM_HYPERPARAM_CONFIGS = [
         # LSTM architecture (shared for both branches)
-        HyperparamConfig('lstm_hidden_size', 32, 128, 'int', 'lstm_hidden_size'),
-        HyperparamConfig('lstm_num_layers', 1, 3, 'int', 'lstm_num_layers'),
-        HyperparamConfig('lstm_dropout', 0.0, 0.2, 'float', 'lstm_dropout'),
+        HyperparamConfig('lstm_hidden_size', 32, 256, 'int', 'lstm_hidden_size'),
+        HyperparamConfig('lstm_num_layers', 1, 4, 'int', 'lstm_num_layers'),
+        HyperparamConfig('lstm_dropout', 0.05, 0.10, 'float', 'lstm_dropout'),
         # Classifier
-        HyperparamConfig('classifier_hidden_size', 0, 64, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('classifier_dropout', 0.05, 0.25, 'float', 'classifier_dropout'),
+        HyperparamConfig('classifier_hidden_size', 32, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_dropout', 0.05, 0.10, 'float', 'classifier_dropout'),
         # Training
-        HyperparamConfig('learning_rate', 0.0003, 0.003, 'float', 'learning_rate'),
-        HyperparamConfig('batch_size', 32, 96, 'int', 'batch_size'),
-        HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        # HyperparamConfig('weight_decay', 0.0001, 0.005, 'float', 'weight_decay'),
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('input_seq_length', 24, 60, 'int', 'input_seq_length'),
-        HyperparamConfig('scheduler_patience', 8, 20, 'int', 'scheduler_patience'),
+        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'), # old values: 32, 64
+        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
     ]
 
     # Backwards compatibility alias
@@ -214,6 +216,7 @@ class DualCNNMetaheuristicOptimizer:
         df_binary: pd.DataFrame,
         df_technical: pd.DataFrame,
         model_type: str = 'dual_tcn',
+        use_feat_select = True,
         use_lstm: bool = True,
         pop_size: int = 10,
         iterations: int = 50,
@@ -236,6 +239,7 @@ class DualCNNMetaheuristicOptimizer:
         self.df_binary = df_binary
         self.df_technical = df_technical
         self.model_type = model_type
+        self.use_feat_select = use_feat_select
         self.use_lstm = use_lstm
         self.pop_size = pop_size
         self.iterations = iterations
@@ -340,8 +344,11 @@ class DualCNNMetaheuristicOptimizer:
         technical_values = individual[self.n_binary:self.n_binary + self.n_technical]
 
         # Simple threshold >= 0 for selection
-        binary_mask = binary_values >= 0
-        technical_mask = technical_values >= 0
+        threshold = 0.0
+        if not self.use_feat_select:
+            threshold = -100.0  # Select all features if feature selection is disabled
+        binary_mask = binary_values >= threshold
+        technical_mask = technical_values >= threshold
 
         selected_binary = [
             col for col, sel in zip(self.binary_columns, binary_mask) if sel
@@ -403,7 +410,7 @@ class DualCNNMetaheuristicOptimizer:
         )
         from .lstm.loss import FocalBinaryLoss
         from torch.utils.data import DataLoader, Subset
-        from torch.optim import AdamW
+        from torch.optim import AdamW, Adam
         from torch.optim.lr_scheduler import ReduceLROnPlateau
         from sklearn.metrics import precision_recall_fscore_support
 
@@ -536,13 +543,19 @@ class DualCNNMetaheuristicOptimizer:
             ).to(device)
 
             # Optimizer and scheduler
-            optimizer = AdamW(
+            # optimizer = AdamW(
+            #     model.parameters(),
+            #     lr=config_params['learning_rate'],
+            #     weight_decay=config_params['weight_decay']
+            # )
+
+            optimizer = Adam(
                 model.parameters(),
                 lr=config_params['learning_rate'],
-                weight_decay=config_params['weight_decay']
             )
+
             scheduler = ReduceLROnPlateau(
-                optimizer, mode='min', factor=0.5,
+                optimizer, mode='min', factor=0.5, min_lr=0.0003,
                 patience=config_params['scheduler_patience']
             )
 

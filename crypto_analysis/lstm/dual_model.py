@@ -97,13 +97,13 @@ class CNNBranch(nn.Module):
         # Use padding='same' to always preserve sequence length regardless of kernel size
         layers.append(nn.Conv1d(input_features, num_channels, kernel_size, padding='same'))
         layers.append(nn.BatchNorm1d(num_channels))
-        layers.append(nn.Mish())
+        layers.append(nn.GELU())
 
         # Additional conv layers: num_channels -> num_channels
         for _ in range(num_layers - 1):
             layers.append(nn.Conv1d(num_channels, num_channels, kernel_size, padding='same'))
             layers.append(nn.BatchNorm1d(num_channels))
-            layers.append(nn.Mish())
+            layers.append(nn.GELU())
 
         self.conv_layers = nn.Sequential(*layers)
         self.output_channels = num_channels
@@ -783,21 +783,21 @@ class DualLSTMPredictor(nn.Module):
         # Linear projection layers (dimension-preserving transformation before LSTM)
         # Binary features linear layer
         self.linear1 = nn.Sequential(
-            nn.Linear(config.cnn1_input_features, config.cnn1_input_features),
-            nn.LayerNorm(config.cnn1_input_features),
-            nn.Mish()
+            nn.Linear(config.cnn1_input_features, config.cnn1_input_features * 2),
+            nn.LayerNorm(config.cnn1_input_features * 2),
+            nn.ReLU()
         )
 
         # Technical features linear layer
         self.linear2 = nn.Sequential(
-            nn.Linear(config.cnn2_input_features, config.cnn2_input_features),
-            nn.LayerNorm(config.cnn2_input_features),
-            nn.Mish()
+            nn.Linear(config.cnn2_input_features, config.cnn2_input_features * 2),
+            nn.LayerNorm(config.cnn2_input_features * 2),
+            nn.ReLU()
         )
 
         # LSTM1 Branch: Binary features
         self.lstm1 = LSTMBranch(
-            input_features=config.cnn1_input_features,
+            input_features=config.cnn1_input_features * 2,
             hidden_size=config.lstm_hidden_size,
             num_layers=config.lstm_num_layers,
             dropout=config.lstm_dropout,
@@ -806,7 +806,7 @@ class DualLSTMPredictor(nn.Module):
 
         # LSTM2 Branch: Technical features
         self.lstm2 = LSTMBranch(
-            input_features=config.cnn2_input_features,
+            input_features=config.cnn2_input_features * 2,
             hidden_size=config.lstm_hidden_size,
             num_layers=config.lstm_num_layers,
             dropout=config.lstm_dropout,
@@ -816,9 +816,9 @@ class DualLSTMPredictor(nn.Module):
         # Classifier head
         if config.classifier_hidden_size > 0:
             self.classifier = nn.Sequential(
+                nn.LayerNorm(output_size),
                 nn.Linear(output_size, config.classifier_hidden_size),
-                nn.LayerNorm(config.classifier_hidden_size),
-                nn.Mish(),
+                nn.ReLU(),
                 nn.Dropout(config.classifier_dropout),
                 nn.Linear(config.classifier_hidden_size, config.num_classes)
             )
@@ -892,9 +892,11 @@ class DualLSTMPredictor(nn.Module):
         # Process through LSTM branches
         lstm1_out = self.lstm1(binary_projected)   # (batch, hidden_size)
         lstm2_out = self.lstm2(technical_projected)  # (batch, hidden_size)
-
+    
         # Element-wise sum fusion
-        combined = lstm1_out + lstm2_out  # (batch, hidden_size)
+        # combined = lstm1_out + lstm2_out  # (batch, hidden_size)
+        maxs = torch.maximum(lstm1_out, lstm2_out) # (batch, hidden_size)
+        combined = lstm1_out + lstm2_out # (batch, hidden_size)
 
         # Classification
         return self.classifier(combined)  # (batch, num_classes)
@@ -1018,22 +1020,24 @@ class DualCNNLSTMPredictor(nn.Module):
 
         # Linear projection layers (dimension-preserving transformation before CNN)
         # Binary features linear layer
+        cnn1_input_features = config.cnn1_input_features * 2
         self.linear1 = nn.Sequential(
-            nn.Linear(config.cnn1_input_features, config.cnn1_input_features),
-            nn.LayerNorm(config.cnn1_input_features),
-            nn.Mish()
+            nn.Linear(config.cnn1_input_features, cnn1_input_features),
+            nn.LayerNorm(cnn1_input_features),
+            nn.ReLU()
         )
 
         # Technical features linear layer
+        cnn2_input_features = config.cnn2_input_features * 2
         self.linear2 = nn.Sequential(
-            nn.Linear(config.cnn2_input_features, config.cnn2_input_features),
-            nn.LayerNorm(config.cnn2_input_features),
-            nn.Mish()
+            nn.Linear(config.cnn2_input_features, cnn2_input_features),
+            nn.LayerNorm(cnn2_input_features),
+            nn.ReLU()
         )
 
         # CNN1 Branch: Binary features
         self.cnn1 = CNNBranch(
-            input_features=config.cnn1_input_features,
+            input_features=cnn1_input_features,
             num_channels=config.cnn1_num_channels,
             kernel_size=config.cnn1_kernel_size,
             num_layers=config.cnn1_num_layers
@@ -1041,7 +1045,7 @@ class DualCNNLSTMPredictor(nn.Module):
 
         # CNN2 Branch: Technical + OHLCV features
         self.cnn2 = CNNBranch(
-            input_features=config.cnn2_input_features,
+            input_features=cnn2_input_features,
             num_channels=config.cnn2_num_channels,
             kernel_size=config.cnn2_kernel_size,
             num_layers=config.cnn2_num_layers
@@ -1056,7 +1060,7 @@ class DualCNNLSTMPredictor(nn.Module):
         self.fusion = nn.Sequential(
             nn.Linear(combined_features, fusion_output_size),
             nn.LayerNorm(fusion_output_size),
-            nn.Mish()
+            nn.ReLU()
         )
         lstm_input_size = fusion_output_size
 
@@ -1078,9 +1082,9 @@ class DualCNNLSTMPredictor(nn.Module):
         if config.classifier_hidden_size > 0:
             # Two-layer classifier with hidden layer
             self.classifier = nn.Sequential(
+                nn.LayerNorm(lstm_output_size),
                 nn.Linear(lstm_output_size, config.classifier_hidden_size),
-                nn.LayerNorm(config.classifier_hidden_size),
-                nn.Mish(),
+                nn.ReLU(),
                 nn.Dropout(config.classifier_dropout),
                 nn.Linear(config.classifier_hidden_size, config.num_classes)
             )
