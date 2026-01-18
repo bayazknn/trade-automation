@@ -166,7 +166,7 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
         # Training parameters
         HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.01, 0.15, 'float', 'dropout'),
+        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'dropout'),
         HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
         HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
         HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
@@ -193,8 +193,7 @@ class LSTMMetaheuristicOptimizer:
         # CNN parameters - kernel_size maps to odd values: 1->3, 2->5, 3->7
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
         HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
-        HyperparamConfig('cnn_dropout', 0.05, 0.15, 'float', 'cnn_dropout'),
-        HyperparamConfig('lstm_dropout', 0.05, 0.15, 'float', 'lstm_dropout'),
+        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'cnn_dropout'),
         HyperparamConfig('classifier_dropout', 0.05, 0.15, 'float', 'classifier_dropout'),
     ]
 
@@ -682,14 +681,16 @@ class LSTMMetaheuristicOptimizer:
             dataset = SignalDataset(feat_seqs, tgt_seqs)
 
             # 4. Build configs - force CPU for thread safety
+            # Use dropout from config if available, otherwise use lstm_dropout for CNN_LSTM model
+            dropout_val = config_params.get('dropout', config_params.get('lstm_dropout', 0.1))
             training_config = TrainingConfig(
                 epochs=self.epochs_per_eval,
                 batch_size=config_params['batch_size'],
                 learning_rate=config_params['learning_rate'],
                 hidden_size=config_params['hidden_size'],
                 num_layers=config_params['num_layers'],
-                dropout=config_params['dropout'],
-                weight_decay=config_params['weight_decay'],
+                dropout=dropout_val,
+                weight_decay=config_params.get('weight_decay', 0.001),
                 auto_class_weights=True,
                 class_weight_power=config_params['class_weight_power'],
                 focal_loss=False,
@@ -1316,13 +1317,15 @@ class LSTMMetaheuristicOptimizer:
 
         # 4. Build training config
         training_epochs = epochs if epochs is not None else self.epochs_per_eval
+        # Use dropout from params if available, otherwise use lstm_dropout for CNN_LSTM model
+        dropout_val = params.get('dropout', params.get('lstm_dropout', 0.1))
         config = TrainingConfig(
             epochs=training_epochs,
             batch_size=params['batch_size'],
             learning_rate=params['learning_rate'],
             hidden_size=params['hidden_size'],
             num_layers=params['num_layers'],
-            dropout=params.get('dropout', 0.1),
+            dropout=dropout_val,
             weight_decay=params['weight_decay'],
             auto_class_weights=True,
             class_weight_power=params['class_weight_power'],
