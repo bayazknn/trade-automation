@@ -39,10 +39,29 @@
         "ccxt_config": {},
         "ccxt_async_config": {},
         "pair_whitelist": [
-            "DOGE/USDT"
+            "BTC/USDT",
+            "ETH/USDT",
+            "BNB/USDT",
+            "XRP/USDT",
+            "SOL/USDT",
+            "ADA/USDT",
+            "DOGE/USDT",
+            "POLKA/USDT",
+            "LINK/USDT",
+            "AVAX/USDT",
+            "MATIC/USDT",
+            "XLM/USDT",
+            "ATOM/USDT",
+            "NEAR/USDT",
+            "ARBITRUM/USDT",
+            "OP/USDT",
+            "LIDO/USDT",
+            "PEPE/USDT",
+            "SHIB/USDT",
+            "ICP/USDT"
         ],
         "pair_blacklist": [
-            "BNB/.*"
+
         ]
     },
     "pairlists": [
