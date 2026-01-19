@@ -29,3 +29,4 @@ Thumbs.db
 # notebooks/
 # plot/
 notebooks/dual_cnn_checkpoints/
+notebooks/mlruns/

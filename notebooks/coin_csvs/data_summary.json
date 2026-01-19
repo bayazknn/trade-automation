@@ -1,0 +1,216 @@
+{
+  "total_coins": 16,
+  "successful": 16,
+  "failed": 0,
+  "total_processing_time": 46765.44264936447,
+  "coins": {
+    "BTC": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 580,
+      "hold_count": 8622,
+      "trade_pct": 6.3,
+      "n_indicators": 119,
+      "processing_time": 1675.83,
+      "error": null
+    },
+    "BNB": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 780,
+      "hold_count": 8422,
+      "trade_pct": 8.48,
+      "n_indicators": 119,
+      "processing_time": 1923.13,
+      "error": null
+    },
+    "ETH": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1384,
+      "hold_count": 7818,
+      "trade_pct": 15.04,
+      "n_indicators": 119,
+      "processing_time": 2489.47,
+      "error": null
+    },
+    "ATOM": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1964,
+      "hold_count": 7238,
+      "trade_pct": 21.34,
+      "n_indicators": 119,
+      "processing_time": 3351.43,
+      "error": null
+    },
+    "ADA": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1996,
+      "hold_count": 7206,
+      "trade_pct": 21.69,
+      "n_indicators": 119,
+      "processing_time": 3494.14,
+      "error": null
+    },
+    "LINK": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2136,
+      "hold_count": 7066,
+      "trade_pct": 23.21,
+      "n_indicators": 119,
+      "processing_time": 3568.13,
+      "error": null
+    },
+    "DOGE": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2024,
+      "hold_count": 7178,
+      "trade_pct": 22.0,
+      "n_indicators": 119,
+      "processing_time": 3621.22,
+      "error": null
+    },
+    "AVAX": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2148,
+      "hold_count": 7054,
+      "trade_pct": 23.34,
+      "n_indicators": 119,
+      "processing_time": 3721.02,
+      "error": null
+    },
+    "ICP": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2180,
+      "hold_count": 7022,
+      "trade_pct": 23.69,
+      "n_indicators": 119,
+      "processing_time": 3736.09,
+      "error": null
+    },
+    "NEAR": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2500,
+      "hold_count": 6702,
+      "trade_pct": 27.17,
+      "n_indicators": 119,
+      "processing_time": 3905.69,
+      "error": null
+    },
+    "OP": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2484,
+      "hold_count": 6718,
+      "trade_pct": 26.99,
+      "n_indicators": 119,
+      "processing_time": 3286.6,
+      "error": null
+    },
+    "SHIB": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1772,
+      "hold_count": 7430,
+      "trade_pct": 19.26,
+      "n_indicators": 119,
+      "processing_time": 2513.24,
+      "error": null
+    },
+    "PEPE": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 2476,
+      "hold_count": 6726,
+      "trade_pct": 26.91,
+      "n_indicators": 119,
+      "processing_time": 3181.32,
+      "error": null
+    },
+    "XRP": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1660,
+      "hold_count": 7542,
+      "trade_pct": 18.04,
+      "n_indicators": 119,
+      "processing_time": 1948.28,
+      "error": null
+    },
+    "SOL": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1896,
+      "hold_count": 7306,
+      "trade_pct": 20.6,
+      "n_indicators": 119,
+      "processing_time": 2228.7,
+      "error": null
+    },
+    "XLM": {
+      "success": true,
+      "shape": [
+        9202,
+        124
+      ],
+      "trade_count": 1848,
+      "hold_count": 7354,
+      "trade_pct": 20.08,
+      "n_indicators": 119,
+      "processing_time": 2121.15,
+      "error": null
+    }
+  }
+}
