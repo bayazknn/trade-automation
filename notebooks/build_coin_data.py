@@ -36,11 +36,16 @@ from crypto_analysis.indicator_optimizer.dataset_builder import DatasetBuilder
 DATA_DIR = Path(__file__).parent.parent / "data" / "binance"
 OUTPUT_DIR = Path(__file__).parent / "coin_csvs"
 
-# Available symbols (actual files in data directory)
+# Available symbols (from config.json pair_whitelist)
 AVAILABLE_SYMBOLS = [
-    "ADA", "ATOM", "AVAX", "BNB", "BTC", "DOGE", "ETH", "ICP",
-    "LINK", "NEAR", "OP", "PEPE", "SHIB", "SOL", "XLM", "XRP"
+    "BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOT", "LINK",
+    "AVAX", "MATIC", "ATOM", "NEAR", "LTC", "ARB", "OP", "LRC",
+    "TRX", "XLM", "DOGE", "VET", "ALGO", "HBAR", "FIL", "EOS",
+    "CHZ", "IOTA", "CRO", "ZIL", "ONE", "LDO", "ICP"
 ]
+
+# Set to True to only process coins without existing CSV files (incremental mode)
+INCREMENTAL_MODE = True
 
 # DatasetBuilder parameters
 DATASET_CONFIG = {
@@ -83,6 +88,28 @@ def get_available_symbols(data_dir: Path, requested_symbols: List[str]) -> List[
     return available
 
 
+def filter_symbols_without_csv(symbols: List[str], output_dir: Path) -> Tuple[List[str], List[str]]:
+    """
+    Filter symbols to only those without existing CSV files (for incremental updates).
+
+    Returns
+    -------
+    Tuple[List[str], List[str]]
+        (symbols_to_process, symbols_already_done)
+    """
+    to_process = []
+    already_done = []
+
+    for symbol in symbols:
+        csv_path = output_dir / f"{symbol.lower()}_binary.csv"
+        if csv_path.exists():
+            already_done.append(symbol)
+        else:
+            to_process.append(symbol)
+
+    return to_process, already_done
+
+
 def build_single_coin(
     symbol: str,
     data_dir: Path,
@@ -119,7 +146,7 @@ def build_single_coin(
             period_hours=config["period_hours"],
             signal_shift=config["signal_shift"],
             output_mode='binary',
-            n_workers=10
+            n_workers=1
         )
 
         # Build dataframe with grid search
@@ -238,32 +265,42 @@ def build_all_coins_parallel(
     return results
 
 
-def save_optimization_params(results: List[CoinResult], output_dir: Path) -> Path:
-    """Save optimization parameters for all coins to JSON."""
+def save_optimization_params(results: List[CoinResult], output_dir: Path, merge: bool = True) -> Path:
+    """Save optimization parameters for all coins to JSON (merges with existing if merge=True)."""
+    output_path = output_dir / "optimization_params.json"
+
+    # Load existing params if merging
     params_dict = {}
+    if merge and output_path.exists():
+        with open(output_path, 'r') as f:
+            params_dict = json.load(f)
+
+    # Add/update with new results
     for result in results:
         if result.success and result.optimization_results:
             params_dict[result.symbol] = result.optimization_results
 
-    output_path = output_dir / "optimization_params.json"
     with open(output_path, 'w') as f:
         json.dump(params_dict, f, indent=2)
 
     return output_path
 
 
-def save_data_summary(results: List[CoinResult], output_dir: Path) -> Path:
-    """Save data summary for all coins to JSON."""
-    summary = {
-        "total_coins": len(results),
-        "successful": sum(1 for r in results if r.success),
-        "failed": sum(1 for r in results if not r.success),
-        "total_processing_time": sum(r.processing_time for r in results),
-        "coins": {}
-    }
+def save_data_summary(results: List[CoinResult], output_dir: Path, merge: bool = True) -> Path:
+    """Save data summary for all coins to JSON (merges with existing if merge=True)."""
+    output_path = output_dir / "data_summary.json"
 
+    # Load existing summary if merging
+    existing_coins = {}
+    if merge and output_path.exists():
+        with open(output_path, 'r') as f:
+            existing = json.load(f)
+            existing_coins = existing.get("coins", {})
+
+    # Merge existing coins with new results
+    all_coins = existing_coins.copy()
     for result in results:
-        summary["coins"][result.symbol] = {
+        all_coins[result.symbol] = {
             "success": result.success,
             "shape": list(result.shape) if result.shape else None,
             "trade_count": result.trade_count,
@@ -274,7 +311,16 @@ def save_data_summary(results: List[CoinResult], output_dir: Path) -> Path:
             "error": result.error
         }
 
-    output_path = output_dir / "data_summary.json"
+    # Recalculate totals based on all coins
+    successful_coins = [c for c in all_coins.values() if c["success"]]
+    summary = {
+        "total_coins": len(all_coins),
+        "successful": len(successful_coins),
+        "failed": len(all_coins) - len(successful_coins),
+        "total_processing_time": sum(c["processing_time"] for c in all_coins.values()),
+        "coins": all_coins
+    }
+
     with open(output_path, 'w') as f:
         json.dump(summary, f, indent=2)
 
@@ -333,13 +379,24 @@ def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
     (OUTPUT_DIR / "checkpoints").mkdir(exist_ok=True)
 
-    # Get available symbols
+    # Get available symbols (those with data files)
     symbols = get_available_symbols(DATA_DIR, AVAILABLE_SYMBOLS)
     print(f"\nAvailable symbols ({len(symbols)}): {symbols}")
 
     if not symbols:
         print("ERROR: No data files found!")
         return 1
+
+    # Incremental mode: skip symbols that already have CSV files
+    if INCREMENTAL_MODE:
+        symbols_to_process, already_done = filter_symbols_without_csv(symbols, OUTPUT_DIR)
+        if already_done:
+            print(f"\nSkipping {len(already_done)} coins with existing CSVs: {already_done}")
+        if not symbols_to_process:
+            print("\nAll coins already processed! Set INCREMENTAL_MODE=False to rebuild.")
+            return 0
+        symbols = symbols_to_process
+        print(f"Processing {len(symbols)} new coins: {symbols}")
 
     # Build all coins in parallel
     start_time = time.time()
@@ -351,12 +408,12 @@ def main():
     )
     total_time = time.time() - start_time
 
-    # Save optimization params
-    params_path = save_optimization_params(results, OUTPUT_DIR)
+    # Save optimization params (merge with existing in incremental mode)
+    params_path = save_optimization_params(results, OUTPUT_DIR, merge=INCREMENTAL_MODE)
     print(f"\nSaved optimization params: {params_path}")
 
-    # Save data summary
-    summary_path = save_data_summary(results, OUTPUT_DIR)
+    # Save data summary (merge with existing in incremental mode)
+    summary_path = save_data_summary(results, OUTPUT_DIR, merge=INCREMENTAL_MODE)
     print(f"Saved data summary: {summary_path}")
 
     # Print summary
