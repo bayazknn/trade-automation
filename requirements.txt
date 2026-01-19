@@ -10,3 +10,4 @@ seaborn
 pyright
 mlflow
 ipywidgets
+matplotlib
