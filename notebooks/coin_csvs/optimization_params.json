@@ -1,0 +1,7268 @@
+{
+  "TRX": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 14.0,
+      "best_params": {
+        "timeperiod": 10
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 41.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 41.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 31.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 31.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 36.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 15.0,
+      "best_params": {
+        "signalperiod": 14
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 36.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 86.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 41.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 156.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 41.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 120.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 66.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 5,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 171.0,
+      "best_params": {
+        "timeperiod": 7,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 129.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 117.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 71.4
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 113.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 143.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 54.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 71.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 61.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 130.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 45.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 161.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 61.4
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 41.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 20.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 64.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 60.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 32.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 65.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 68.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 50.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 143.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 146.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 83.0,
+      "best_params": {
+        "timeperiod": 17,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 200.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 154.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 100.0,
+      "best_params": {
+        "timeperiod": 24,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 165.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 143.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 4,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 131.0,
+      "best_params": {
+        "timeperiod": 23,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 132.0,
+      "best_params": {
+        "timeperiod": 25,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 143.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -25.8
+      }
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 100.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 5.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 143.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 164.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 25.0,
+        "exit_constant": 85.0
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 146.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 195.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 121.0,
+      "best_params": {
+        "entry_constant": -1.7,
+        "exit_constant": 0.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 175.0,
+      "best_params": {
+        "entry_constant": 38.8,
+        "exit_constant": 20.0
+      }
+    }
+  },
+  "LTC": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 62.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 156.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 237.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 237.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 156.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 140.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 140.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 92.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 376.0,
+      "best_params": {
+        "timeperiod": 8
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 160.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 628.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 237.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 290.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 719.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 456.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 464.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 227.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 133.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 505.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 225.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 638.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 361.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 314.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 216.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 434.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 541.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 118.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 305.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 291.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 318.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 346.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 225.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 638.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 273.0,
+      "best_params": {
+        "timeperiod": 28,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 658.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 661.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 61.4
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 826.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 393.0,
+      "best_params": {
+        "timeperiod": 19,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 557.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 613.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 467.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 554.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -71.5,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 747.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 532.0,
+      "best_params": {
+        "timeperiod": 17,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 529.0,
+      "best_params": {
+        "timeperiod": 11,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 598.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 582.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 22.8
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 702.0,
+      "best_params": {
+        "timeperiod": 13,
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 706.0,
+      "best_params": {
+        "entry_constant": 38.3,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 483.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 816.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "CHZ": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 66.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 177.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 248.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 248.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 177.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 201.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 201.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 111.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 432.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 208.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 747.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 248.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 311.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 817.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 517.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 32.8
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 550.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 278.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 583.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 146.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 272.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 749.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 435.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 379.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 245.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 658.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 519.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 71.4
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 131.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 343.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 339.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 3.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.11,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.11,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.2
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 387.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 398.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 284.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 749.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 353.0,
+      "best_params": {
+        "timeperiod": 24,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 762.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 771.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 957.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 467.0,
+      "best_params": {
+        "timeperiod": 24,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 662.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 717.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 517.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 662.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 842.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 620.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 607.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 704.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 691.0,
+      "best_params": {
+        "timeperiod": 10,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 815.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 75.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 797.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 562.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 940.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 38.2,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "DOT": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 61.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 197.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 261.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 261.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 197.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 199.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 199.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 114.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 432.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 194.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 743.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 261.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 319.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 836.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 539.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 557.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 293.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 147.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 598.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 267.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 744.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 444.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 394.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 237.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 515.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 71.4
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 658.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 140.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 349.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 327.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 379.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 388.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 263.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 744.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 328.0,
+      "best_params": {
+        "timeperiod": 27,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 774.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 788.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 973.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 477.0,
+      "best_params": {
+        "timeperiod": 27,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 687.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 730.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 535.0,
+      "best_params": {
+        "timeperiod": 6,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 687.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 848.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 629.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 632.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 728.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 706.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 829.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 75.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 815.0,
+      "best_params": {
+        "entry_constant": 38.3,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 564.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 960.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "LRC": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 83.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 204.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 273.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 273.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 204.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 205.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 205.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 131.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 443.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 205.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 799.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 273.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 333.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 572.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 875.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 588.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 290.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 647.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 792.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 295.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 494.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 425.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 150.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 284.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 689.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 548.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 71.4
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 160.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 394.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 359.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 409.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 426.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 792.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 278.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 352.0,
+      "best_params": {
+        "timeperiod": 28,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 851.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 840.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1031.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 487.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 731.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 3,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 780.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 559.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 731.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 935.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 660.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 767.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 667.0,
+      "best_params": {
+        "timeperiod": 10,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 757.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 23.9
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 889.0,
+      "best_params": {
+        "timeperiod": 9,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 602.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 861.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1021.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "FIL": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 76.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 184.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 184.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 189.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 189.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 107.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 434.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 179.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 771.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 338.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 891.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 566.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 567.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 289.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 614.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 158.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 276.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 769.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 439.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 367.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 255.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 669.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 565.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 124.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 363.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 328.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 393.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 412.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 284.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 769.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 316.0,
+      "best_params": {
+        "timeperiod": 20,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 830.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 830.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1022.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 480.0,
+      "best_params": {
+        "timeperiod": 16,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 702.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 4,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 757.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 60.7
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 565.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 702.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 921.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 657.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 749.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 659.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 738.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 868.0,
+      "best_params": {
+        "timeperiod": 21,
+        "fastk_period": 3,
+        "fastd_period": 3,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 603.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 841.0,
+      "best_params": {
+        "entry_constant": 37.7,
+        "exit_constant": 20.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1018.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "VET": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 70.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 191.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 281.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 281.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 191.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 202.0,
+      "best_params": {
+        "fastperiod": 18,
+        "slowperiod": 19
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 202.0,
+      "best_params": {
+        "fastperiod": 18,
+        "slowperiod": 19
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 118.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 497.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 200.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 17,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 797.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 281.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 346.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 917.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 584.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 634.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 282.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 652.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 811.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 303.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 492.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 166.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 422.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 556.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 711.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 145.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 390.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 351.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 1.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.11,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.11,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.2
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 411.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 414.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 281.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 345.0,
+      "best_params": {
+        "timeperiod": 27,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 811.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 847.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 871.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1068.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 504.0,
+      "best_params": {
+        "timeperiod": 11,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 757.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 4,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 813.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 593.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 756.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 967.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 683.0,
+      "best_params": {
+        "timeperiod": 16,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 691.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 799.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 762.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 913.0,
+      "best_params": {
+        "timeperiod": 13,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 75.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 886.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 621.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1056.0,
+      "best_params": {
+        "timeperiod": 26,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "HBAR": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 82.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 189.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 283.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 283.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 189.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 208.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 208.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 117.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 487.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 207.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 853.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 283.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 371.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 961.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 622.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 653.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 298.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 691.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 853.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 315.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 169.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 497.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 440.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 277.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 603.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 745.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 154.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 411.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 384.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 460.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 456.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 301.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 853.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 387.0,
+      "best_params": {
+        "timeperiod": 26,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 885.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 910.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1121.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 518.0,
+      "best_params": {
+        "timeperiod": 10,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 786.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 830.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 614.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 786.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1002.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 722.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 735.0,
+      "best_params": {
+        "timeperiod": 14,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 834.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 802.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 966.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 960.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 644.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1110.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 38.2,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "ALGO": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 89.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 198.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 300.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 300.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 198.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 244.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 244.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 126.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 489.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 229.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 853.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 300.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 342.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 5
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 965.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 637.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 651.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 35,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 338.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 697.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 864.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 339.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 169.0,
+      "best_params": {
+        "fast_period": 3,
+        "slow_period": 10
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 449.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 522.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 287.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 752.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 589.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 71.4
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 152.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 432.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 412.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 435.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 451.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 307.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 864.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 391.0,
+      "best_params": {
+        "timeperiod": 26,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 913.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 936.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1133.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 526.0,
+      "best_params": {
+        "timeperiod": 15,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 797.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 844.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 625.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 797.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1012.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 721.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 727.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 839.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 810.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 969.0,
+      "best_params": {
+        "timeperiod": 9,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 938.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 670.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 1.6
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1118.0,
+      "best_params": {
+        "timeperiod": 26,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "ARB": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 98.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 233.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 301.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 301.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 233.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 242.0,
+      "best_params": {
+        "fastperiod": 17,
+        "slowperiod": 18
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 242.0,
+      "best_params": {
+        "fastperiod": 17,
+        "slowperiod": 18
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 151.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 544.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 238.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 941.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 301.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 418.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 1032.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 664.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 693.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 349.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 752.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 190.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 334.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 938.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 540.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 470.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 301.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 816.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 663.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 154.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 431.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 410.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 460.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 473.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 328.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 938.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 372.0,
+      "best_params": {
+        "timeperiod": 26,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 954.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 986.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1214.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 587.0,
+      "best_params": {
+        "timeperiod": 27,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 843.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 905.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 659.0,
+      "best_params": {
+        "timeperiod": 26,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 843.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1102.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 806.0,
+      "best_params": {
+        "timeperiod": 17,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 788.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 895.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 868.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 1046.0,
+      "best_params": {
+        "timeperiod": 9,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 1023.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 696.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1206.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "IOTA": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 94.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 239.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 336.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 336.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 239.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 230.0,
+      "best_params": {
+        "fastperiod": 18,
+        "slowperiod": 19
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 230.0,
+      "best_params": {
+        "fastperiod": 18,
+        "slowperiod": 19
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 150.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 534.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 235.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 900.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 336.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 399.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 1025.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 629.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 687.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 311.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 724.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 905.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 354.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 549.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 177.0,
+      "best_params": {
+        "fast_period": 3,
+        "slow_period": 10
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 481.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 319.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 780.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 632.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 168.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 439.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 411.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 460.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 466.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 304.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 905.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 416.0,
+      "best_params": {
+        "timeperiod": 26,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 958.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 966.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1179.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 557.0,
+      "best_params": {
+        "timeperiod": 26,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 819.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 882.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 60.7
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 681.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 819.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1059.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 772.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 895.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 767.0,
+      "best_params": {
+        "timeperiod": 11,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 853.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 1039.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 977.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 677.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1166.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "ZIL": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 76.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 176.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 250.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 250.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 176.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 197.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 197.0,
+      "best_params": {
+        "fastperiod": 15,
+        "slowperiod": 16
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 118.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 426.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 177.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 721.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 250.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 336.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 819.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 524.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 563.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 24,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 268.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 587.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 739.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 275.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 418.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 163.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 370.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 255.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 647.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 513.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 28.5,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 141.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 349.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 316.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 1.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.11,
+        "accelerationmaxshort": 0.4
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 365.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 372.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 245.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 739.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 335.0,
+      "best_params": {
+        "timeperiod": 26,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 788.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 778.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 61.4
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 958.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 468.0,
+      "best_params": {
+        "timeperiod": 24,
+        "entry_constant": 5.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 671.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 4,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 521.0,
+      "best_params": {
+        "timeperiod": 10,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 719.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 664.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -71.5,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 865.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 611.0,
+      "best_params": {
+        "timeperiod": 10,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 610.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 711.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 694.0,
+      "best_params": {
+        "timeperiod": 8,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 559.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 783.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 826.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 2,
+        "entry_constant": 30.0,
+        "exit_constant": 75.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 950.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "ONE": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 101.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 271.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 388.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 388.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 271.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 262.0,
+      "best_params": {
+        "fastperiod": 16,
+        "slowperiod": 17
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 153.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 615.0,
+      "best_params": {
+        "timeperiod": 6
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 261.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 16,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 993.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 388.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 462.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 1117.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 702.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 32.8
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 756.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 14,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 392.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 793.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 192.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 1007.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 370.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 503.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 583.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 327.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 864.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 694.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 186.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 475.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 448.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 476.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 491.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 1007.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 344.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 431.0,
+      "best_params": {
+        "timeperiod": 13,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 1068.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 1064.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1306.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 646.0,
+      "best_params": {
+        "timeperiod": 15,
+        "entry_constant": 1.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 921.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 991.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 745.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 921.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1182.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 851.0,
+      "best_params": {
+        "timeperiod": 13,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 967.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 830.0,
+      "best_params": {
+        "timeperiod": 16,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 938.0,
+      "best_params": {
+        "timeperiod": 6,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 1125.0,
+      "best_params": {
+        "timeperiod": 17,
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 765.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 1083.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1300.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  },
+  "LDO": {
+    "TRIX_gs": {
+      "indicator_name": "TRIX",
+      "optimization_type": "grid_search",
+      "score": 104.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "BOP_gs": {
+      "indicator_name": "BOP",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "AROON_gs": {
+      "indicator_name": "AROON",
+      "optimization_type": "grid_search",
+      "score": 242.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROC_gs": {
+      "indicator_name": "ROC",
+      "optimization_type": "grid_search",
+      "score": 363.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MOM_gs": {
+      "indicator_name": "MOM",
+      "optimization_type": "grid_search",
+      "score": 363.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "AROONOSC_gs": {
+      "indicator_name": "AROONOSC",
+      "optimization_type": "grid_search",
+      "score": 242.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "APO_gs": {
+      "indicator_name": "APO",
+      "optimization_type": "grid_search",
+      "score": 266.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "PPO_gs": {
+      "indicator_name": "PPO",
+      "optimization_type": "grid_search",
+      "score": 266.0,
+      "best_params": {
+        "fastperiod": 14,
+        "slowperiod": 15
+      }
+    },
+    "MACDFIX_gs": {
+      "indicator_name": "MACDFIX",
+      "optimization_type": "grid_search",
+      "score": 163.0,
+      "best_params": {
+        "signalperiod": 5
+      }
+    },
+    "MINUS_DM_gs": {
+      "indicator_name": "MINUS_DM",
+      "optimization_type": "grid_search",
+      "score": 569.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACD_gs": {
+      "indicator_name": "MACD",
+      "optimization_type": "grid_search",
+      "score": 250.0,
+      "best_params": {
+        "fastperiod": 5,
+        "slowperiod": 15,
+        "signalperiod": 5
+      }
+    },
+    "PLUS_DM_gs": {
+      "indicator_name": "PLUS_DM",
+      "optimization_type": "grid_search",
+      "score": 1012.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "ROCP_gs": {
+      "indicator_name": "ROCP",
+      "optimization_type": "grid_search",
+      "score": 363.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MACDEXT_gs": {
+      "indicator_name": "MACDEXT",
+      "optimization_type": "grid_search",
+      "score": 419.0,
+      "best_params": {
+        "fastperiod": 10,
+        "slowperiod": 15,
+        "signalperiod": 5,
+        "fastmatype": 0,
+        "slowmatype": 2,
+        "signalmatype": 2
+      }
+    },
+    "ROCR_gs": {
+      "indicator_name": "ROCR",
+      "optimization_type": "grid_search",
+      "score": 1133.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 1.0,
+        "exit_constant": 1.05
+      }
+    },
+    "ULTOSC_gs": {
+      "indicator_name": "ULTOSC",
+      "optimization_type": "grid_search",
+      "score": 729.0,
+      "best_params": {
+        "timeperiod1": 3,
+        "timeperiod2": 7,
+        "timeperiod3": 45,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "CMO_gs": {
+      "indicator_name": "CMO",
+      "optimization_type": "grid_search",
+      "score": 723.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -30.0,
+        "exit_constant": 30.0
+      }
+    },
+    "SMA_gs": {
+      "indicator_name": "SMA",
+      "optimization_type": "grid_search",
+      "score": 397.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "EMA_gs": {
+      "indicator_name": "EMA",
+      "optimization_type": "grid_search",
+      "score": 183.0,
+      "best_params": {
+        "fast_period": 11,
+        "slow_period": 10
+      }
+    },
+    "DEMA_gs": {
+      "indicator_name": "DEMA",
+      "optimization_type": "grid_search",
+      "score": 817.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "KAMA_gs": {
+      "indicator_name": "KAMA",
+      "optimization_type": "grid_search",
+      "score": 358.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TEMA_gs": {
+      "indicator_name": "TEMA",
+      "optimization_type": "grid_search",
+      "score": 1022.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "TRIMA_gs": {
+      "indicator_name": "TRIMA",
+      "optimization_type": "grid_search",
+      "score": 539.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "WMA_gs": {
+      "indicator_name": "WMA",
+      "optimization_type": "grid_search",
+      "score": 617.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAR_gs": {
+      "indicator_name": "SAR",
+      "optimization_type": "grid_search",
+      "score": 329.0,
+      "best_params": {
+        "acceleration": 0.11,
+        "maximum": 0.4
+      }
+    },
+    "T3_gs": {
+      "indicator_name": "T3",
+      "optimization_type": "grid_search",
+      "score": 881.0,
+      "best_params": {
+        "timeperiod": 3,
+        "vfactor": 1.0
+      }
+    },
+    "HT_TRENDLINE_gs": {
+      "indicator_name": "HT_TRENDLINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "MFI_gs": {
+      "indicator_name": "MFI",
+      "optimization_type": "grid_search",
+      "score": 686.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "MAMA_gs": {
+      "indicator_name": "MAMA",
+      "optimization_type": "grid_search",
+      "score": 177.0,
+      "best_params": {
+        "fastlimit": 0.9,
+        "slowlimit": 0.21
+      }
+    },
+    "MIDPOINT_gs": {
+      "indicator_name": "MIDPOINT",
+      "optimization_type": "grid_search",
+      "score": 486.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "MIDPRICE_gs": {
+      "indicator_name": "MIDPRICE",
+      "optimization_type": "grid_search",
+      "score": 442.0,
+      "best_params": {
+        "timeperiod": 5
+      }
+    },
+    "SAREXT_gs": {
+      "indicator_name": "SAREXT",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {
+        "startvalue": 0.0,
+        "offsetonreverse": 0.0,
+        "accelerationinitlong": 0.01,
+        "accelerationlong": 0.01,
+        "accelerationmaxlong": 0.1,
+        "accelerationinitshort": 0.01,
+        "accelerationshort": 0.01,
+        "accelerationmaxshort": 0.1
+      }
+    },
+    "MA_gs": {
+      "indicator_name": "MA",
+      "optimization_type": "grid_search",
+      "score": 1022.0,
+      "best_params": {
+        "timeperiod": 5,
+        "matype": 4
+      }
+    },
+    "OBV_gs": {
+      "indicator_name": "OBV",
+      "optimization_type": "grid_search",
+      "score": 505.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "AD_gs": {
+      "indicator_name": "AD",
+      "optimization_type": "grid_search",
+      "score": 546.0,
+      "best_params": {
+        "sma_period": 5
+      }
+    },
+    "ADOSC_gs": {
+      "indicator_name": "ADOSC",
+      "optimization_type": "grid_search",
+      "score": 370.0,
+      "best_params": {
+        "fastperiod": 2,
+        "slowperiod": 5
+      }
+    },
+    "ATR_gs": {
+      "indicator_name": "ATR",
+      "optimization_type": "grid_search",
+      "score": 413.0,
+      "best_params": {
+        "timeperiod": 21,
+        "stop_loss_multiplier": 1.5
+      }
+    },
+    "TRANGE_gs": {
+      "indicator_name": "TRANGE",
+      "optimization_type": "grid_search",
+      "score": 1043.0,
+      "best_params": {
+        "entry_multiplier": 1.0,
+        "exit_multiplier": 1.0
+      }
+    },
+    "RSI_gs": {
+      "indicator_name": "RSI",
+      "optimization_type": "grid_search",
+      "score": 1085.0,
+      "best_params": {
+        "timeperiod": 2,
+        "entry_constant": 40.0,
+        "exit_constant": 60.0
+      }
+    },
+    "BBANDS_gs": {
+      "indicator_name": "BBANDS",
+      "optimization_type": "grid_search",
+      "score": 1315.0,
+      "best_params": {
+        "timeperiod": 10,
+        "nbdevup": 1.0,
+        "nbdevdn": 1.0,
+        "entry_factor": 1.1,
+        "exit_factor": 0.95
+      }
+    },
+    "HT_PHASOR_gs": {
+      "indicator_name": "HT_PHASOR",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_SINE_gs": {
+      "indicator_name": "HT_SINE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "HT_TRENDMODE_gs": {
+      "indicator_name": "HT_TRENDMODE",
+      "optimization_type": "grid_search",
+      "score": 0.0,
+      "best_params": {}
+    },
+    "NATR_gs": {
+      "indicator_name": "NATR",
+      "optimization_type": "grid_search",
+      "score": 644.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 1.0
+      }
+    },
+    "STOCH_gs": {
+      "indicator_name": "STOCH",
+      "optimization_type": "grid_search",
+      "score": 904.0,
+      "best_params": {
+        "fastk_period": 5,
+        "slowk_period": 1,
+        "slowd_period": 3,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "CCI_gs": {
+      "indicator_name": "CCI",
+      "optimization_type": "grid_search",
+      "score": 981.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -50.0,
+        "exit_constant": 50.0
+      }
+    },
+    "WILLR_gs": {
+      "indicator_name": "WILLR",
+      "optimization_type": "grid_search",
+      "score": 904.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": -70.0,
+        "exit_constant": -30.0
+      }
+    },
+    "ROCR100_gs": {
+      "indicator_name": "ROCR100",
+      "optimization_type": "grid_search",
+      "score": 758.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 100.0,
+        "exit_constant": 100.0
+      }
+    },
+    "STOCHF_gs": {
+      "indicator_name": "STOCHF",
+      "optimization_type": "grid_search",
+      "score": 971.0,
+      "best_params": {
+        "fastk_period": 3,
+        "fastd_period": 1,
+        "entry_constant": 30.0,
+        "exit_constant": 70.0
+      }
+    },
+    "PLUS_DI_gs": {
+      "indicator_name": "PLUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1203.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 15.0,
+        "exit_constant": 30.0
+      }
+    },
+    "ADXR_gs": {
+      "indicator_name": "ADXR",
+      "optimization_type": "grid_search",
+      "score": 845.0,
+      "best_params": {
+        "timeperiod": 28,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "ADX_gs": {
+      "indicator_name": "ADX",
+      "optimization_type": "grid_search",
+      "score": 832.0,
+      "best_params": {
+        "timeperiod": 16,
+        "entry_constant": 20.0,
+        "exit_constant": 25.1
+      }
+    },
+    "DX_gs": {
+      "indicator_name": "DX",
+      "optimization_type": "grid_search",
+      "score": 947.0,
+      "best_params": {
+        "timeperiod": 5,
+        "entry_constant": 20.0,
+        "exit_constant": 25.0
+      }
+    },
+    "STOCHRSI_gs": {
+      "indicator_name": "STOCHRSI",
+      "optimization_type": "grid_search",
+      "score": 1154.0,
+      "best_params": {
+        "timeperiod": 5,
+        "fastk_period": 3,
+        "fastd_period": 3,
+        "entry_constant": 30.0,
+        "exit_constant": 75.0
+      }
+    },
+    "HT_DCPERIOD_gs": {
+      "indicator_name": "HT_DCPERIOD",
+      "optimization_type": "grid_search",
+      "score": 1104.0,
+      "best_params": {
+        "entry_constant": 40.0,
+        "exit_constant": 20.0
+      }
+    },
+    "HT_DCPHASE_gs": {
+      "indicator_name": "HT_DCPHASE",
+      "optimization_type": "grid_search",
+      "score": 765.0,
+      "best_params": {
+        "entry_constant": -0.0,
+        "exit_constant": 0.0
+      }
+    },
+    "MINUS_DI_gs": {
+      "indicator_name": "MINUS_DI",
+      "optimization_type": "grid_search",
+      "score": 1304.0,
+      "best_params": {
+        "timeperiod": 30,
+        "entry_constant": 40.0,
+        "exit_constant": 10.0
+      }
+    }
+  }
+}

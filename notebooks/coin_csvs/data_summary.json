@@ -1,0 +1,190 @@
+{
+  "total_coins": 14,
+  "successful": 14,
+  "failed": 0,
+  "total_processing_time": 44330.1,
+  "coins": {
+    "TRX": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 400,
+      "hold_count": 8808,
+      "trade_pct": 4.34,
+      "n_indicators": 119,
+      "processing_time": 1297.92,
+      "error": null
+    },
+    "LTC": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 1668,
+      "hold_count": 7540,
+      "trade_pct": 18.11,
+      "n_indicators": 119,
+      "processing_time": 2830.82,
+      "error": null
+    },
+    "CHZ": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 1920,
+      "hold_count": 7288,
+      "trade_pct": 20.85,
+      "n_indicators": 119,
+      "processing_time": 3181.73,
+      "error": null
+    },
+    "DOT": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 1952,
+      "hold_count": 7256,
+      "trade_pct": 21.2,
+      "n_indicators": 119,
+      "processing_time": 3188.77,
+      "error": null
+    },
+    "LRC": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2080,
+      "hold_count": 7128,
+      "trade_pct": 22.59,
+      "n_indicators": 119,
+      "processing_time": 3327.56,
+      "error": null
+    },
+    "FIL": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2076,
+      "hold_count": 7132,
+      "trade_pct": 22.55,
+      "n_indicators": 119,
+      "processing_time": 3368.55,
+      "error": null
+    },
+    "VET": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2144,
+      "hold_count": 7064,
+      "trade_pct": 23.28,
+      "n_indicators": 119,
+      "processing_time": 3396.91,
+      "error": null
+    },
+    "HBAR": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2260,
+      "hold_count": 6948,
+      "trade_pct": 24.54,
+      "n_indicators": 119,
+      "processing_time": 3454.92,
+      "error": null
+    },
+    "ALGO": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2280,
+      "hold_count": 6928,
+      "trade_pct": 24.76,
+      "n_indicators": 119,
+      "processing_time": 3485.29,
+      "error": null
+    },
+    "ARB": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2452,
+      "hold_count": 6756,
+      "trade_pct": 26.63,
+      "n_indicators": 119,
+      "processing_time": 3569.37,
+      "error": null
+    },
+    "IOTA": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2376,
+      "hold_count": 6832,
+      "trade_pct": 25.8,
+      "n_indicators": 119,
+      "processing_time": 3518.88,
+      "error": null
+    },
+    "ZIL": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 1920,
+      "hold_count": 7288,
+      "trade_pct": 20.85,
+      "n_indicators": 119,
+      "processing_time": 2863.39,
+      "error": null
+    },
+    "ONE": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2628,
+      "hold_count": 6580,
+      "trade_pct": 28.54,
+      "n_indicators": 119,
+      "processing_time": 3408.61,
+      "error": null
+    },
+    "LDO": {
+      "success": true,
+      "shape": [
+        9208,
+        124
+      ],
+      "trade_count": 2660,
+      "hold_count": 6548,
+      "trade_pct": 28.89,
+      "n_indicators": 119,
+      "processing_time": 3437.38,
+      "error": null
+    }
+  }
+}
