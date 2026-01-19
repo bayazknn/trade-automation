@@ -146,7 +146,7 @@ def build_single_coin(
             period_hours=config["period_hours"],
             signal_shift=config["signal_shift"],
             output_mode='binary',
-            n_workers=1
+            n_workers=15
         )
 
         # Build dataframe with grid search

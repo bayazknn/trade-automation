@@ -1,13 +1,7 @@
 pandas
 numpy
 ta-lib
-optuna
-torch
-scikit-learn
-scipy
 matplotlib
 seaborn
-pyright
 mlflow
 ipywidgets
-matplotlib
