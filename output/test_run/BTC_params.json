@@ -1,0 +1,36 @@
+{
+  "RSI": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 29.91598170339633,
+      "exit_constant": 63.02485602473086
+    },
+    "score": 0.6741227808892538,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.6741227808892538,
+      "num_trades": 14,
+      "win_rate": 0.7857142857142857,
+      "sharpe_ratio": 2.1480014347971084,
+      "max_drawdown": -0.17219360468075373
+    }
+  },
+  "MACD": {
+    "best_params": {
+      "fastperiod": 15,
+      "slowperiod": 15,
+      "signalperiod": 13
+    },
+    "score": 0.0,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "sharpe_ratio": Infinity,
+      "max_drawdown": 0.0
+    }
+  }
+}

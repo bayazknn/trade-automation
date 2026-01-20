@@ -327,6 +327,78 @@ class SignalPopulator:
         df = self.load_data(symbol)
         return self.generate_signals(df, threshold_pct)
 
+    def generate_tradeable_by_range(
+        self,
+        df: pd.DataFrame,
+        threshold_pct: float
+    ) -> pd.DataFrame:
+        """
+        Generate tradeable labels based on price range within future periods.
+
+        For each row, looks at the next period_hours rows and checks if the
+        close price range (max - min) exceeds the threshold percentage.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            OHLCV DataFrame with columns: date, open, high, low, close, volume
+        threshold_pct : float
+            Minimum percentage range to label as "trade"
+            e.g., 2.0 means the range must be at least 2% of the min close
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with 'tradeable' column ("trade" or "hold")
+            Last period_hours rows are dropped (no future data)
+        """
+        df = df.copy()
+        df["tradeable"] = None
+
+        # Process each row, looking at next period_hours
+        for i in range(len(df) - self.period_hours):
+            # Get close prices for next period_hours rows (not including current)
+            future_closes = df.loc[i + 1:i + self.period_hours, "close"]
+
+            min_close = future_closes.min()
+            max_close = future_closes.max()
+
+            # Calculate range as percentage of min close
+            range_pct = ((max_close - min_close) / min_close) * 100
+
+            if range_pct >= threshold_pct:
+                df.loc[i, "tradeable"] = "trade"
+            else:
+                df.loc[i, "tradeable"] = "hold"
+
+        # Drop last period_hours rows (no future data)
+        df = df.iloc[:-self.period_hours].reset_index(drop=True)
+
+        return df
+
+    def populate_tradeable_by_range(
+        self,
+        symbol: str,
+        threshold_pct: float
+    ) -> pd.DataFrame:
+        """
+        Load data and generate tradeable labels by range for a symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            Cryptocurrency symbol (e.g., "BTC", "ETH")
+        threshold_pct : float
+            Minimum percentage range to label as "trade"
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with OHLCV data and tradeable column
+        """
+        df = self.load_data(symbol)
+        return self.generate_tradeable_by_range(df, threshold_pct)
+
     def get_signals_only(
         self,
         df: pd.DataFrame

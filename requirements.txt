@@ -5,3 +5,5 @@ matplotlib
 seaborn
 mlflow
 ipywidgets
+vectorbt
+optuna
