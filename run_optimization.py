@@ -56,8 +56,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="notebooks/csv",
-        help="Output directory for CSV files (default: notebooks/csv)",
+        default="notebooks/csvs",
+        help="Output directory for CSV files (default: notebooks/csvs)",
     )
     parser.add_argument(
         "--data-dir",
@@ -68,8 +68,8 @@ def main():
     parser.add_argument(
         "--threshold-pct",
         type=float,
-        default=2.0,
-        help="Threshold percentage for tradeable labeling (default: 2.0)",
+        default=1.5,
+        help="Threshold percentage for tradeable labeling (default: 1.5)",
     )
     args = parser.parse_args()
 
