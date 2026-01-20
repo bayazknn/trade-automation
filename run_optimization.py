@@ -120,7 +120,7 @@ def main():
             n_processes=args.n_processes,
             n_jobs_optuna=args.n_jobs_optuna,
             threshold_pct=args.threshold_pct,
-            period_hours=24,
+            period_hours=6,
             export_csv=True,
             export_params_json=False,
         )

@@ -38,7 +38,7 @@ class RunConfig:
 
     # Tradeable column settings
     threshold_pct: float = 2.0        # Threshold for tradeable labeling
-    period_hours: int = 24            # Look-ahead period for tradeable
+    period_hours: int = 6            # Look-ahead period for tradeable
 
     # Parallelization
     n_processes: int = 4              # ProcessPoolExecutor workers
