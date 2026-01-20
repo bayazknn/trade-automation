@@ -263,6 +263,7 @@ class CNNLSTMSignalPredictor(nn.Module):
         self.projection = nn.Sequential(
             nn.Linear(config.input_size, self.projection_size),
             nn.GELU(),
+            nn.Dropout(config.dropout),
             nn.Linear(self.projection_size, config.hidden_size),
             nn.GELU(),
             nn.Dropout(config.dropout),
