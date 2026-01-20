@@ -422,7 +422,7 @@ class Trainer:
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
-            shuffle=True,
+            shuffle=False,
             collate_fn=SignalDataset.collate_fn,
             drop_last=False
         )
