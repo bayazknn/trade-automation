@@ -35,6 +35,7 @@ from .config import (
     RunConfig,
 )
 from .data_loader import DataLoader, load_feather, list_available_symbols, load_whitelist
+from .data_preprocessor import VectorBTDataPreprocessor
 from .fitness import VectorbtFitness, calculate_fitness
 from .optimizer import OptunaOptimizer, optimize_indicator_params
 from .output_builder import OutputBuilder, export_optimization_results
@@ -55,6 +56,7 @@ __all__ = [
     "OptunaOptimizer",
     "OutputBuilder",
     "MultiCryptoRunner",
+    "VectorBTDataPreprocessor",
     # Utility functions
     "load_feather",
     "list_available_symbols",
