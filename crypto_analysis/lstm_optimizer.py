@@ -197,7 +197,7 @@ class LSTMMetaheuristicOptimizer:
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 256, 256, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 512, 512, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
         HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
@@ -214,7 +214,7 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
         HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
         HyperparamConfig('dropout', 0.05, 0.25, 'float', 'dropout'),  # Used for cnn/lstm/classifier dropout
-        HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('classifier_hidden_size', 8, 32, 'int', 'classifier_hidden_size'),
         HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
         # CNN-specific params (kernel_size maps to odd values: 1->3, 2->5, 3->7, etc.)
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
@@ -222,7 +222,7 @@ class LSTMMetaheuristicOptimizer:
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 256, 256, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 512, 512, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
         HyperparamConfig('class_weight_power', 0.2, 0.7, 'float', 'class_weight_power'),
@@ -265,6 +265,7 @@ class LSTMMetaheuristicOptimizer:
         mlflow_run_name: Optional[str] = None,
         mlflow_tracking_uri: Optional[str] = None,
         preprocessor_type: str = 'vectorbt',
+        normalize_by_close: bool = False,
     ):
         # Determine dataframe mode based on inputs
         if df is not None:
@@ -299,6 +300,7 @@ class LSTMMetaheuristicOptimizer:
         self.run_id: Optional[str] = None  # Generated when optimize() starts
         self.use_feat_select = use_feat_select
         self.preprocessor_type = preprocessor_type
+        self.normalize_by_close = normalize_by_close
 
         # MLflow tracking configuration
         self.enable_mlflow = enable_mlflow and MLFLOW_AVAILABLE
@@ -354,6 +356,7 @@ class LSTMMetaheuristicOptimizer:
             print(f"LSTMMetaheuristicOptimizer (APO) initialized:")
             print(f"  - Model type: {self.model_type}")
             print(f"  - Preprocessor type: {self.preprocessor_type}")
+            print(f"  - Normalize by close: {self.normalize_by_close}")
             print(f"  - DataFrame mode: {self.dataframe_mode}")
             print(f"  - Feature columns: {self.n_features}")
             print(f"  - Hyperparameters: {self.n_params}")
@@ -1040,6 +1043,7 @@ class LSTMMetaheuristicOptimizer:
                     target_column='tradeable',
                     ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
                     columns_to_drop=['date'],
+                    normalize_by_close=self.normalize_by_close,
                 )
 
                 # Fit and create sequences
@@ -1718,6 +1722,7 @@ class LSTMMetaheuristicOptimizer:
             print("=" * 60)
             print(f"Model type: {model_type}")
             print(f"Preprocessor type: {self.preprocessor_type}")
+            print(f"Normalize by close: {self.normalize_by_close}")
             print(f"Seed: {result.seed}")
             print(f"Selected features: {len(selected_features)}")
             print(f"Parameters: {params}")
@@ -1741,6 +1746,7 @@ class LSTMMetaheuristicOptimizer:
                 target_column='tradeable',
                 ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
                 columns_to_drop=['date'],
+                normalize_by_close=self.normalize_by_close,
             )
 
             # Fit and create sequences
@@ -1835,6 +1841,7 @@ class LSTMMetaheuristicOptimizer:
             f"LSTMMetaheuristicOptimizer("
             f"model_type='{self.model_type}', "
             f"preprocessor_type='{self.preprocessor_type}', "
+            f"normalize_by_close={self.normalize_by_close}, "
             f"n_features={self.n_features}, "
             f"n_params={self.n_params}, "
             f"pop_size={self.pop_size}, "

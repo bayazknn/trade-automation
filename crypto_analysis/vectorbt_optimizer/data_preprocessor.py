@@ -88,6 +88,7 @@ class VectorBTDataPreprocessor:
         target_encoding: Optional[Dict[str, int]] = None,
         ohlcv_columns: Optional[List[str]] = None,
         columns_to_drop: Optional[List[str]] = None,
+        normalize_by_close: bool = False,
     ):
         """
         Initialize preprocessor.
@@ -116,6 +117,11 @@ class VectorBTDataPreprocessor:
         columns_to_drop : list, optional
             Columns to always remove from features.
             Default: ['date']
+        normalize_by_close : bool, default=False
+            If True, divide all raw technical indicator columns by the close price
+            after cleaning data but before fit/transform. This normalizes indicators
+            relative to price level, making them more comparable across different
+            price ranges. Only affects non-binary columns (not _entry/_exit signals).
         """
         self.remove_raw_indicators = remove_raw_indicators
         self.target_shift = target_shift
@@ -126,6 +132,7 @@ class VectorBTDataPreprocessor:
         self.target_encoding = target_encoding or self.DEFAULT_TARGET_ENCODING.copy()
         self.ohlcv_columns = ohlcv_columns or self.DEFAULT_OHLCV_COLUMNS.copy()
         self.columns_to_drop = columns_to_drop or self.DEFAULT_COLUMNS_TO_DROP.copy()
+        self.normalize_by_close = normalize_by_close
 
         # Fitted state
         self.scaler: Optional[Union[StandardScaler, MinMaxScaler]] = None
@@ -257,6 +264,57 @@ class VectorBTDataPreprocessor:
         for col in feature_cols:
             if (df[col] == 0).all():
                 df = df.drop(columns=[col])
+
+        # Normalize technical indicators by close price if enabled
+        if self.normalize_by_close:
+            df = self._apply_normalize_by_close(df)
+
+        return df
+
+    def _apply_normalize_by_close(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Divide raw technical indicator columns by close price.
+
+        This normalizes indicators relative to price level, making them more
+        comparable across different price ranges. Binary columns (_entry/_exit)
+        and volume are not normalized.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Input DataFrame with 'close' column
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with normalized indicator columns
+        """
+        if 'close' not in df.columns:
+            return df
+
+        close = np.asarray(df['close'].values, dtype=np.float64)
+
+        # Avoid division by zero
+        close = np.where(close == 0, 1e-10, close)
+
+        # Columns to skip normalization
+        skip_cols = set(self.columns_to_drop) | {self.target_column, 'volume'}
+
+        for col in df.columns:
+            # Skip metadata and target columns
+            if col in skip_cols:
+                continue
+
+            # Skip binary signal columns (_entry/_exit)
+            if col.endswith('_entry') or col.endswith('_exit'):
+                continue
+
+            # Skip OHLCV columns (they will be scaled separately)
+            if col in self.ohlcv_columns:
+                continue
+
+            # Normalize this column by dividing by close price
+            df[col] = df[col].values / close
 
         return df
 
@@ -580,6 +638,7 @@ class VectorBTDataPreprocessor:
             'target_encoding': self.target_encoding,
             'ohlcv_columns': self.ohlcv_columns,
             'columns_to_drop': self.columns_to_drop,
+            'normalize_by_close': self.normalize_by_close,
             'scaler': self.scaler,
             'feature_columns': self.feature_columns,
             '_ohlcv_indices': self._ohlcv_indices,
@@ -621,6 +680,7 @@ class VectorBTDataPreprocessor:
             target_encoding=state['target_encoding'],
             ohlcv_columns=state['ohlcv_columns'],
             columns_to_drop=state['columns_to_drop'],
+            normalize_by_close=state.get('normalize_by_close', False),
         )
         preprocessor.scaler = state['scaler']
         preprocessor.feature_columns = state['feature_columns']
@@ -638,6 +698,7 @@ class VectorBTDataPreprocessor:
                 f"target_shift={self.target_shift}, "
                 f"stride={self.stride}, "
                 f"remove_raw_indicators={self.remove_raw_indicators}, "
+                f"normalize_by_close={self.normalize_by_close}, "
                 f"n_features={len(self.feature_columns)}, "
                 f"n_ohlcv={len(self._ohlcv_indices)}, "
                 f"n_signals={len(self._signal_indices)}, "
@@ -650,6 +711,7 @@ class VectorBTDataPreprocessor:
                 f"target_shift={self.target_shift}, "
                 f"stride={self.stride}, "
                 f"remove_raw_indicators={self.remove_raw_indicators}, "
+                f"normalize_by_close={self.normalize_by_close}, "
                 f"scaler_type='{self.scaler_type}', "
                 f"status=unfitted)"
             )
