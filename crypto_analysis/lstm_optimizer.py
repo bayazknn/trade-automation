@@ -1637,7 +1637,7 @@ class LSTMMetaheuristicOptimizer:
                 self.save_checkpoint(iteration=iter_num + 1)
 
         # Final best solution
-        best_idx = np.argmin(self.fitness_pop)
+        best_idx = int(np.argmin(self.fitness_pop))
         best_fitness = -self.fitness_pop[best_idx]  # Convert back to positive
         best_individual = self.population[best_idx]
         selected_features, best_params = self._decode_individual(best_individual)
