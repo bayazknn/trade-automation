@@ -1,0 +1,24 @@
+channels:
+- conda-forge
+dependencies:
+- python=3.13.11
+- pip<=25.3
+- pip:
+  - mlflow==3.8.1
+  - cloudpickle==3.1.2
+  - defusedxml==0.7.1
+  - dill==0.4.1
+  - ipywidgets==8.1.8
+  - matplotlib==3.10.8
+  - mlxtend==0.24.0
+  - numpy==2.3.0
+  - optuna==4.6.0
+  - pandas==2.3.3
+  - psutil==7.2.0
+  - pyarrow==22.0.0
+  - scikit-learn==1.8.0
+  - scipy==1.16.3
+  - seaborn==0.13.2
+  - ta-lib==0.6.8
+  - torch==2.9.1
+name: mlflow-env
