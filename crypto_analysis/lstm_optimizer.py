@@ -185,42 +185,49 @@ class LSTMMetaheuristicOptimizer:
 
     # LSTM model hyperparameter configurations
     # For binary classification (hold=0, trade=1)
+    # Model params align with ModelConfig: hidden_size, num_layers, dropout,
+    # classifier_hidden_size, input_seq_length
     LSTM_HYPERPARAM_CONFIGS = [
-        # Class imbalance handling
-        HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
-        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
-        # Training parameters
-        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
-        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'dropout'),
+        # === Model architecture params (ModelConfig) ===
         HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
         HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
-        HyperparamConfig('classifier_hidden_size', 8, 32, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
-        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
-        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
-        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'),
+        HyperparamConfig('dropout', 0.05, 0.25, 'float', 'dropout'),
+        HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
+        # === Training params (TrainingConfig) ===
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
+        HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
+        # === Class imbalance handling (TrainingConfig) ===
+        HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
+        HyperparamConfig('focal_gamma', 1.0, 3.0, 'float', 'focal_gamma'),
+        HyperparamConfig('label_smoothing', 0.01, 0.15, 'float', 'label_smoothing'),
     ]
 
     # CNN-LSTM model hyperparameter configurations
+    # Model params align with ModelConfig: hidden_size, num_layers, classifier_hidden_size,
+    # input_seq_length, kernel_size, cnn_num_layers
+    # Note: Single 'dropout' param is used for cnn_dropout, lstm_dropout, classifier_dropout
     CNN_LSTM_HYPERPARAM_CONFIGS = [
-        # Class imbalance handling
-        HyperparamConfig('class_weight_power', 0.15, 0.35, 'float', 'class_weight_power'),
-        HyperparamConfig('focal_gamma', 1.0, 2.5, 'float', 'focal_gamma'),
-        # Training parameters
-        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        # === Model architecture params (ModelConfig) ===
         HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
         HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
-        HyperparamConfig('classifier_hidden_size', 8, 32, 'int', 'classifier_hidden_size'),
-        HyperparamConfig('weight_decay', 0.0005, 0.02, 'float', 'weight_decay'),
-        HyperparamConfig('label_smoothing', 0.01, 0.08, 'float', 'label_smoothing'),
-        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
-        HyperparamConfig('scheduler_patience', 10, 10, 'int', 'scheduler_patience'),
-        HyperparamConfig('input_seq_length', 24, 24, 'int', 'input_seq_length'),
-        # CNN parameters - kernel_size maps to odd values: 1->3, 2->5, 3->7
+        HyperparamConfig('dropout', 0.05, 0.25, 'float', 'dropout'),  # Used for cnn/lstm/classifier dropout
+        HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
+        HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
+        # CNN-specific params (kernel_size maps to odd values: 1->3, 2->5, 3->7, etc.)
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
-        HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
-        HyperparamConfig('dropout', 0.05, 0.15, 'float', 'dropout'),
+        HyperparamConfig('cnn_num_layers', 2, 5, 'int', 'cnn_num_layers'),
+        # === Training params (TrainingConfig) ===
+        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
+        HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
+        # === Class imbalance handling (TrainingConfig) ===
+        HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
+        HyperparamConfig('focal_gamma', 1.0, 3.0, 'float', 'focal_gamma'),
+        HyperparamConfig('label_smoothing', 0.01, 0.15, 'float', 'label_smoothing'),
     ]
 
     # Default config uses LSTM (for backward compatibility)
