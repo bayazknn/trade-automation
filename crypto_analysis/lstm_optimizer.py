@@ -197,7 +197,7 @@ class LSTMMetaheuristicOptimizer:
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 256, 256, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
         HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
@@ -222,7 +222,7 @@ class LSTMMetaheuristicOptimizer:
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 256, 256, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
         HyperparamConfig('class_weight_power', 0.2, 0.7, 'float', 'class_weight_power'),
