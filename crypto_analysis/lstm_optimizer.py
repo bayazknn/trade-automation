@@ -218,7 +218,7 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
         # CNN-specific params (kernel_size maps to odd values: 1->3, 2->5, 3->7, etc.)
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
-        HyperparamConfig('cnn_num_layers', 1, 5, 'int', 'cnn_num_layers'),
+        HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
@@ -1089,7 +1089,7 @@ class LSTMMetaheuristicOptimizer:
                 focal_gamma=config_params['focal_gamma'],
                 label_smoothing=config_params['label_smoothing'],
                 scheduler_patience=config_params['scheduler_patience'],
-                patience=30,
+                patience=50,
                 verbose=False,
                 device='cuda',
             )

@@ -150,7 +150,7 @@ class SignalDataset(Dataset):
         device : torch.device, optional
             Device to store tensors on (default: CPU)
         """
-        self.device = device or torch.device('cpu')
+        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         # Convert to tensors
         self.features = torch.tensor(
