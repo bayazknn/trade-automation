@@ -1124,8 +1124,16 @@ class LSTMMetaheuristicOptimizer:
             trainer = Trainer(model, training_config, preprocessor=preprocessor)
             trainer.train(dataset)
 
-            # Evaluate on TEST set only
-            metrics = trainer.evaluate(trainer.test_dataset, verbose=False)
+            # Evaluate on all datasets to get accuracy metrics
+            train_metrics = trainer.evaluate(trainer.train_dataset, verbose=False)
+            val_metrics = trainer.evaluate(trainer.val_dataset, verbose=False)
+            test_metrics = trainer.evaluate(trainer.test_dataset, verbose=False)
+
+            # Use test metrics as primary, add train/val accuracy
+            metrics = test_metrics
+            metrics['train_accuracy'] = train_metrics.get('accuracy', 0)
+            metrics['val_accuracy'] = val_metrics.get('accuracy', 0)
+            metrics['test_accuracy'] = test_metrics.get('accuracy', 0)
 
             # Compute fitness for binary classification (hold=0, trade=1)
             trade_precision = metrics.get('trade_precision', 0)
@@ -1196,8 +1204,12 @@ class LSTMMetaheuristicOptimizer:
 
                     if self.verbose:
                         if fitness != float('inf'):
+                            tr_acc = metrics.get('train_accuracy', 0)
+                            va_acc = metrics.get('val_accuracy', 0)
+                            te_acc = metrics.get('test_accuracy', 0)
                             print(f"iter:{iteration} indv:{idx} fitness:{-fitness:.4f} "
-                                  f"features:{len(cols)}")
+                                  f"features:{len(cols)} "
+                                  f"acc[tr:{tr_acc:.3f} va:{va_acc:.3f} te:{te_acc:.3f}]")
                         else:
                             print(f"iter:{iteration} indv:{idx} fitness:invalid")
 
