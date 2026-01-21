@@ -1084,7 +1084,7 @@ class LSTMMetaheuristicOptimizer:
                 num_layers=config_params['num_layers'],
                 dropout=dropout_val,
                 weight_decay=config_params.get('weight_decay', 0.001),
-                auto_class_weights=True,
+                auto_class_weights=False,
                 class_weight_power=config_params['class_weight_power'],
                 focal_loss=False,
                 focal_gamma=config_params['focal_gamma'],
