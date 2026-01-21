@@ -9,11 +9,20 @@ Supported model architectures:
 - 'lstm': Standard LSTM with input projection (LSTMSignalPredictor)
 - 'cnn_lstm': CNN feature extractor + LSTM encoder (CNNLSTMSignalPredictor)
 
+Supported preprocessor types:
+- 'vectorbt': VectorBTDataPreprocessor (target_shift=1, no alignment)
+- 'legacy': DataPreprocessor (target_shift=4, period alignment)
+
 Objective: Maximize trade_F1 * hold_F1 on test dataset (binary classification)
 
 For binary classification (hold=0, trade=1):
-- Input: 16 timesteps of features
+- Input: configurable timesteps of features (default: 24)
 - Output: Single prediction per sequence (0=hold, 1=trade)
+
+MLflow Integration:
+- Optional MLflow tracking for experiments
+- Logs hyperparameters, metrics, and artifacts per iteration
+- Tracks best individual fitness and metrics over time
 
 Based on: Wang, X., et al. (2024). "Artificial Protozoa Optimizer (APO):
 A novel bio-inspired metaheuristic algorithm for engineering optimization"
@@ -28,13 +37,20 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import torch
 from scipy import stats
 from sklearn.metrics import matthews_corrcoef
+
+# Optional MLflow import
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
 
 
 def set_seed(seed: int) -> None:
@@ -147,6 +163,15 @@ class LSTMMetaheuristicOptimizer:
     log_dir : str
         Directory for saving log CSV files (default: 'optimization_logs').
         Each run creates a file: run_{run_id}.csv
+    enable_mlflow : bool
+        Enable MLflow tracking for optimization (default: False).
+        Tracks hyperparameters, metrics, and artifacts for each run.
+    mlflow_experiment_name : str
+        MLflow experiment name (default: 'lstm_optimization').
+    mlflow_run_name : str, optional
+        MLflow run name. If None, generates a unique name.
+    mlflow_tracking_uri : str, optional
+        MLflow tracking server URI. If None, uses default local tracking.
 
     Examples
     --------
@@ -228,6 +253,11 @@ class LSTMMetaheuristicOptimizer:
         seed: int = 42,
         model_type: str = 'lstm',
         use_feat_select: bool = True,
+        enable_mlflow: bool = False,
+        mlflow_experiment_name: str = 'lstm_optimization',
+        mlflow_run_name: Optional[str] = None,
+        mlflow_tracking_uri: Optional[str] = None,
+        preprocessor_type: str = 'vectorbt',
     ):
         # Determine dataframe mode based on inputs
         if df is not None:
@@ -261,6 +291,17 @@ class LSTMMetaheuristicOptimizer:
         self.seed = seed
         self.run_id: Optional[str] = None  # Generated when optimize() starts
         self.use_feat_select = use_feat_select
+        self.preprocessor_type = preprocessor_type
+
+        # MLflow tracking configuration
+        self.enable_mlflow = enable_mlflow and MLFLOW_AVAILABLE
+        self.mlflow_experiment_name = mlflow_experiment_name
+        self.mlflow_run_name = mlflow_run_name
+        self.mlflow_tracking_uri = mlflow_tracking_uri
+        self._mlflow_run_id: Optional[str] = None
+
+        if enable_mlflow and not MLFLOW_AVAILABLE:
+            print("Warning: MLflow requested but not installed. Install with: pip install mlflow")
 
         # Model type selection
         if model_type not in ('lstm', 'cnn_lstm'):
@@ -305,6 +346,7 @@ class LSTMMetaheuristicOptimizer:
         if self.verbose:
             print(f"LSTMMetaheuristicOptimizer (APO) initialized:")
             print(f"  - Model type: {self.model_type}")
+            print(f"  - Preprocessor type: {self.preprocessor_type}")
             print(f"  - DataFrame mode: {self.dataframe_mode}")
             print(f"  - Feature columns: {self.n_features}")
             print(f"  - Hyperparameters: {self.n_params}")
@@ -321,6 +363,9 @@ class LSTMMetaheuristicOptimizer:
                 corr_stats = self.correlation_vector
                 print(f"  - Correlation vector: min={corr_stats.min():.4f}, "
                       f"max={corr_stats.max():.4f}, mean={corr_stats.mean():.4f}")
+            print(f"  - MLflow tracking: {self.enable_mlflow}")
+            if self.enable_mlflow:
+                print(f"  - MLflow experiment: {self.mlflow_experiment_name}")
 
     def _build_bounds(self):
         """Build lower and upper bound arrays for the search space."""
@@ -641,6 +686,200 @@ class LSTMMetaheuristicOptimizer:
                 )
                 writer.writerow(row)
 
+    def _setup_mlflow(self) -> None:
+        """
+        Set up MLflow tracking for the optimization run.
+
+        Initializes MLflow experiment and starts a new run.
+        """
+        if not self.enable_mlflow:
+            return
+
+        # Set tracking URI if specified
+        if self.mlflow_tracking_uri:
+            mlflow.set_tracking_uri(self.mlflow_tracking_uri)
+
+        # Set or create experiment
+        mlflow.set_experiment(self.mlflow_experiment_name)
+
+        # Generate run name if not specified
+        run_name = self.mlflow_run_name or f"apo_run_{self.run_id}"
+
+        # Start MLflow run
+        mlflow.start_run(run_name=run_name)
+        self._mlflow_run_id = mlflow.active_run().info.run_id
+
+        # Log optimizer parameters
+        mlflow.log_params({
+            'pop_size': self.pop_size,
+            'iterations': self.iterations,
+            'n_workers': self.n_workers,
+            'min_features': self.min_features,
+            'epochs_per_eval': self.epochs_per_eval,
+            'np_neighbors': self.np_neighbors,
+            'pf_max': self.pf_max,
+            'elitist_selection': self.elitist_selection,
+            'elitist_constant': self.elitist_constant,
+            'model_type': self.model_type,
+            'preprocessor_type': self.preprocessor_type,
+            'use_feat_select': self.use_feat_select,
+            'seed': self.seed,
+            'n_features': self.n_features,
+            'n_params': self.n_params,
+        })
+
+        # Log hyperparameter bounds
+        for cfg in self.hyperparam_configs:
+            mlflow.log_params({
+                f'bound_{cfg.name}_min': cfg.min_val,
+                f'bound_{cfg.name}_max': cfg.max_val,
+            })
+
+        if self.verbose:
+            print(f"MLflow run started: {self._mlflow_run_id}")
+
+    def _log_mlflow_iteration(
+        self,
+        iteration: int,
+        fitness_values: np.ndarray,
+        metrics_dict: Dict[int, Dict],
+        population: np.ndarray,
+    ) -> None:
+        """
+        Log iteration metrics to MLflow.
+
+        Parameters
+        ----------
+        iteration : int
+            Current iteration number
+        fitness_values : np.ndarray
+            Fitness values for all individuals
+        metrics_dict : dict
+            Metrics dictionary keyed by individual index
+        population : np.ndarray
+            Current population array
+        """
+        if not self.enable_mlflow:
+            return
+
+        # Find best individual in this iteration
+        best_idx = int(np.argmin(fitness_values))
+        best_fitness = -fitness_values[best_idx] if fitness_values[best_idx] != float('inf') else 0
+
+        # Log iteration-level metrics
+        step = iteration + 1  # MLflow uses 1-based steps
+        mlflow.log_metrics({
+            'best_fitness': best_fitness,
+            'mean_fitness': float(-np.mean(fitness_values[fitness_values != float('inf')])) if np.any(fitness_values != float('inf')) else 0,
+            'valid_individuals': int(np.sum(fitness_values != float('inf'))),
+        }, step=step)
+
+        # Log best individual's metrics
+        if best_idx in metrics_dict and metrics_dict[best_idx]:
+            metrics = metrics_dict[best_idx]
+            mlflow.log_metrics({
+                'best_trade_precision': metrics.get('trade_precision', 0),
+                'best_trade_recall': metrics.get('trade_recall', 0),
+                'best_trade_f1': metrics.get('trade_f1', 0),
+                'best_hold_f1': metrics.get('hold_f1', 0),
+                'best_hold_precision': metrics.get('hold_precision', 0),
+                'best_hold_recall': metrics.get('hold_recall', 0),
+            }, step=step)
+
+        # Log best individual's hyperparameters as metrics (for tracking over iterations)
+        _, best_params = self._decode_individual(population[best_idx])
+        for param_name, param_value in best_params.items():
+            if isinstance(param_value, (int, float)):
+                mlflow.log_metric(f'best_{param_name}', param_value, step=step)
+
+    def _log_mlflow_individual(
+        self,
+        iteration: int,
+        idx: int,
+        fitness: float,
+        metrics: Dict,
+        config_params: Dict[str, Any],
+        selected_features: List[str],
+    ) -> None:
+        """
+        Log individual evaluation to MLflow as a nested run.
+
+        Parameters
+        ----------
+        iteration : int
+            Current iteration number
+        idx : int
+            Individual index
+        fitness : float
+            Fitness value (negative, will be converted)
+        metrics : dict
+            Evaluation metrics
+        config_params : dict
+            Hyperparameter values
+        selected_features : list
+            Selected feature names
+        """
+        if not self.enable_mlflow:
+            return
+
+        # Log as a metric with compound step (iteration * pop_size + idx)
+        compound_step = iteration * self.pop_size + idx
+
+        if fitness != float('inf'):
+            mlflow.log_metrics({
+                f'ind_fitness': -fitness,
+                f'ind_n_features': len(selected_features),
+            }, step=compound_step)
+
+            if metrics:
+                mlflow.log_metrics({
+                    f'ind_trade_f1': metrics.get('trade_f1', 0),
+                    f'ind_hold_f1': metrics.get('hold_f1', 0),
+                    f'ind_trade_recall': metrics.get('trade_recall', 0),
+                }, step=compound_step)
+
+    def _finalize_mlflow(self, result: 'LSTMOptimizationResult') -> None:
+        """
+        Finalize MLflow run with final results.
+
+        Parameters
+        ----------
+        result : LSTMOptimizationResult
+            Optimization result
+        """
+        if not self.enable_mlflow:
+            return
+
+        # Log final metrics
+        mlflow.log_metrics({
+            'final_best_fitness': result.best_fitness,
+            'final_n_features': result.n_features_selected,
+        })
+
+        # Log final test metrics
+        for key, value in result.test_metrics.items():
+            if isinstance(value, (int, float)):
+                mlflow.log_metric(f'final_{key}', value)
+
+        # Log best parameters as final params
+        for param_name, param_value in result.best_params.items():
+            if isinstance(param_value, (int, float)):
+                mlflow.log_param(f'final_{param_name}', param_value)
+
+        # Log selected features as artifact
+        features_str = '\n'.join(result.selected_features)
+        mlflow.log_text(features_str, 'selected_features.txt')
+
+        # Log fitness history as artifact
+        history_str = '\n'.join([str(f) for f in result.history])
+        mlflow.log_text(history_str, 'fitness_history.txt')
+
+        # End run
+        mlflow.end_run()
+
+        if self.verbose:
+            print(f"MLflow run completed: {self._mlflow_run_id}")
+
     def _decode_individual(self, individual: np.ndarray) -> Tuple[List[str], Dict[str, Any]]:
         """
         Decode individual vector into selected features and hyperparameters.
@@ -760,7 +999,6 @@ class LSTMMetaheuristicOptimizer:
         """
         # Import LSTM modules inside worker to avoid threading issues
         from .lstm import (
-            DataPreprocessor, create_sequences,
             SignalDataset, TrainingConfig, ModelConfig,
             LSTMSignalPredictor, CNNLSTMSignalPredictor, Trainer
         )
@@ -781,35 +1019,54 @@ class LSTMMetaheuristicOptimizer:
             # Build selected DataFrame (keep tradeable + selected features)
             df_selected = self.df[['tradeable'] + selected_features].copy()
 
-            # 1. Align DataFrame for period-consistent sequences
-            df_selected = DataPreprocessor.align_dataframe(
-                df_selected, period_size=4, verbose=False
-            )
+            # Use VectorBT preprocessor (target_shift=1, no alignment needed)
+            if self.preprocessor_type == 'vectorbt':
+                from .vectorbt_optimizer.data_preprocessor import VectorBTDataPreprocessor
 
-            # 2. Preprocess (uses 'tradeable' column for binary classification)
-            preprocessor = DataPreprocessor(target_shift=4)
-            features, targets = preprocessor.fit_transform(df_selected)
+                input_seq_length = config_params['input_seq_length']
+                preprocessor = VectorBTDataPreprocessor(
+                    remove_raw_indicators=False,  # Keep all selected features
+                    target_shift=1,
+                    sequence_length=input_seq_length,
+                    stride=1,
+                    scaler_type='standard',
+                    target_column='tradeable',
+                    ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
+                    columns_to_drop=['date'],
+                )
 
-            # 2. Create sequences (use input_seq_length from params)
-            # output_seq_length=1 for binary classification
-            # stride=4 for period-aligned sequences
-            input_seq_length = config_params['input_seq_length']
-            feat_seqs, tgt_seqs = create_sequences(
-                features, targets,
-                input_seq_length=input_seq_length,
-                output_seq_length=1,
-                stride=4
-            )
+                # Fit and create sequences
+                preprocessor.fit(df_selected)
+                feat_seqs, tgt_seqs = preprocessor.create_sequences_from_multiple([df_selected])
+
+            else:
+                # Legacy DataPreprocessor path
+                from .lstm import DataPreprocessor, create_sequences
+
+                # Align DataFrame for period-consistent sequences (legacy)
+                df_selected = DataPreprocessor.align_dataframe(
+                    df_selected, period_size=4, verbose=False
+                )
+
+                preprocessor = DataPreprocessor(target_shift=4)
+                features, targets = preprocessor.fit_transform(df_selected)
+
+                input_seq_length = config_params['input_seq_length']
+                feat_seqs, tgt_seqs = create_sequences(
+                    features, targets,
+                    input_seq_length=input_seq_length,
+                    output_seq_length=1,
+                    stride=4
+                )
 
             # Check we have enough sequences
             if len(feat_seqs) < 100:
                 return float('inf'), selected_features, {}
 
-            # 3. Create dataset (no sequence validation needed for binary)
+            # Create dataset (no sequence validation needed for binary)
             dataset = SignalDataset(feat_seqs, tgt_seqs)
 
-            # 4. Build configs - force CPU for thread safety
-            # Use dropout from config if available, otherwise use lstm_dropout for CNN_LSTM model
+            # Build configs - use CUDA for GPU acceleration
             dropout_val = config_params.get('dropout', config_params.get('lstm_dropout', 0.1))
             training_config = TrainingConfig(
                 epochs=self.epochs_per_eval,
@@ -827,11 +1084,10 @@ class LSTMMetaheuristicOptimizer:
                 scheduler_patience=config_params['scheduler_patience'],
                 patience=10,
                 verbose=False,
-                device='cuda',  # Force CPU for thread safety
-                # bidirectional=True, # Experimentally commented out
+                device='cuda',
             )
 
-            # 5. Create model based on model_type
+            # Create model based on model_type
             if self.model_type == 'cnn_lstm':
                 dropout = config_params.get('dropout', 0.1)
                 model_config = ModelConfig(
@@ -860,11 +1116,10 @@ class LSTMMetaheuristicOptimizer:
             trainer = Trainer(model, training_config, preprocessor=preprocessor)
             trainer.train(dataset)
 
-            # 6. Evaluate on TEST set only
+            # Evaluate on TEST set only
             metrics = trainer.evaluate(trainer.test_dataset, verbose=False)
 
-            # 7. Compute fitness for binary classification (hold=0, trade=1)
-            # Optimize for trade class detection while maintaining hold accuracy
+            # Compute fitness for binary classification (hold=0, trade=1)
             trade_precision = metrics.get('trade_precision', 0)
             trade_recall = metrics.get('trade_recall', 0)
             trade_f1 = metrics.get('trade_f1', 0)
@@ -873,7 +1128,6 @@ class LSTMMetaheuristicOptimizer:
             eps = 1e-10
 
             # Recall-biased geometric mean for trade class
-            # β > 1 emphasizes recall (catching trade opportunities) over precision
             beta = 2.0
             p_exp = 1.0 / (1.0 + beta)  # 0.333
             r_exp = beta / (1.0 + beta)  # 0.667
@@ -881,7 +1135,6 @@ class LSTMMetaheuristicOptimizer:
             trade_score = ((trade_precision + eps) ** p_exp) * ((trade_recall + eps) ** r_exp)
 
             # Recall floor penalty: penalize if trade recall < min_recall
-            # Prevents models that rarely predict "trade"
             min_recall = 0.30
             trade_recall_factor = min(trade_recall / min_recall, 1.0) if min_recall > 0 else 1.0
 
@@ -1112,15 +1365,18 @@ class LSTMMetaheuristicOptimizer:
             Optimization result with best solution and history
         """
         # Generate run_id for logging
-        if self.enable_logging:
+        if self.enable_logging or self.enable_mlflow:
             self.run_id = uuid.uuid4().hex[:8]  # Short 8-char UUID
 
         if self.verbose:
             print("\n" + "=" * 60)
             print("Starting APO Metaheuristic Optimization")
-            if self.enable_logging:
+            if self.enable_logging or self.enable_mlflow:
                 print(f"Run ID: {self.run_id}")
             print("=" * 60)
+
+        # Setup MLflow tracking
+        self._setup_mlflow()
 
         ps = self.pop_size
         dim = self.dimension
@@ -1151,8 +1407,13 @@ class LSTMMetaheuristicOptimizer:
             # Print best metrics for initial population
             self._print_best_metrics(self.fitness_pop, self.metrics_dict, iteration=-1)
 
-            # Log initial population
+            # Log initial population (CSV)
             self._log_iteration(-1, self.population, self.fitness_pop)
+
+            # Log initial population (MLflow) - use iteration 0 for initial
+            self._log_mlflow_iteration(
+                -1, self.fitness_pop, self.metrics_dict, self.population
+            )
 
         # Pre-allocate arrays for APO
         new_population = np.zeros((ps, dim))
@@ -1339,8 +1600,13 @@ class LSTMMetaheuristicOptimizer:
             # Print best metrics for this iteration
             self._print_best_metrics(self.fitness_pop, self.metrics_dict, iteration=iter_num)
 
-            # Log iteration
+            # Log iteration (CSV)
             self._log_iteration(iter_num, self.population, self.fitness_pop)
+
+            # Log iteration (MLflow)
+            self._log_mlflow_iteration(
+                iter_num, self.fitness_pop, self.metrics_dict, self.population
+            )
 
             # Save checkpoint periodically
             if (iter_num + 1) % self.checkpoint_interval == 0:
@@ -1368,7 +1634,7 @@ class LSTMMetaheuristicOptimizer:
         # Calculate the seed used for the best individual
         best_individual_seed = self.seed + best_idx
 
-        return LSTMOptimizationResult(
+        result = LSTMOptimizationResult(
             best_fitness=best_fitness,
             best_individual=best_individual,
             selected_features=self.cols_dict.get(best_idx, selected_features),
@@ -1379,6 +1645,11 @@ class LSTMMetaheuristicOptimizer:
             seed=best_individual_seed,
             model_type=self.model_type,
         )
+
+        # Finalize MLflow tracking
+        self._finalize_mlflow(result)
+
+        return result
 
     def train_from_result(
         self,
@@ -1409,7 +1680,6 @@ class LSTMMetaheuristicOptimizer:
             Trained Trainer object with model, preprocessor, and datasets
         """
         from .lstm import (
-            DataPreprocessor, create_sequences,
             SignalDataset, TrainingConfig, ModelConfig,
             LSTMSignalPredictor, CNNLSTMSignalPredictor, Trainer
         )
@@ -1427,6 +1697,7 @@ class LSTMMetaheuristicOptimizer:
             print("Training Model from Optimization Result (Binary Classification)")
             print("=" * 60)
             print(f"Model type: {model_type}")
+            print(f"Preprocessor type: {self.preprocessor_type}")
             print(f"Seed: {result.seed}")
             print(f"Selected features: {len(selected_features)}")
             print(f"Parameters: {params}")
@@ -1435,31 +1706,51 @@ class LSTMMetaheuristicOptimizer:
         # Build selected DataFrame (use tradeable for binary classification)
         df_selected = self.df[['tradeable'] + selected_features].copy()
 
-        # 1. Align DataFrame for period-consistent sequences
-        df_selected = DataPreprocessor.align_dataframe(
-            df_selected, period_size=4, verbose=verbose
-        )
+        input_seq_length = params.get('input_seq_length', 24)
 
-        # 2. Preprocess (uses 'tradeable' column)
-        preprocessor = DataPreprocessor(target_shift=4)
-        features, targets = preprocessor.fit_transform(df_selected)
+        # Use VectorBT preprocessor (target_shift=1, no alignment needed)
+        if self.preprocessor_type == 'vectorbt':
+            from .vectorbt_optimizer.data_preprocessor import VectorBTDataPreprocessor
 
-        # 2. Create sequences (output_seq_length=1 for binary classification)
-        # stride=4 for period-aligned sequences
-        input_seq_length = params.get('input_seq_length', 12)
-        feat_seqs, tgt_seqs = create_sequences(
-            features, targets,
-            input_seq_length=input_seq_length,
-            output_seq_length=1,
-            stride=4
-        )
+            preprocessor = VectorBTDataPreprocessor(
+                remove_raw_indicators=False,  # Keep all selected features
+                target_shift=1,
+                sequence_length=input_seq_length,
+                stride=1,
+                scaler_type='standard',
+                target_column='tradeable',
+                ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
+                columns_to_drop=['date'],
+            )
 
-        # 3. Create dataset (no sequence validation for binary)
+            # Fit and create sequences
+            preprocessor.fit(df_selected)
+            feat_seqs, tgt_seqs = preprocessor.create_sequences_from_multiple([df_selected])
+
+        else:
+            # Legacy DataPreprocessor path
+            from .lstm import DataPreprocessor, create_sequences
+
+            # Align DataFrame for period-consistent sequences (legacy)
+            df_selected = DataPreprocessor.align_dataframe(
+                df_selected, period_size=4, verbose=verbose
+            )
+
+            preprocessor = DataPreprocessor(target_shift=4)
+            features, targets = preprocessor.fit_transform(df_selected)
+
+            feat_seqs, tgt_seqs = create_sequences(
+                features, targets,
+                input_seq_length=input_seq_length,
+                output_seq_length=1,
+                stride=4
+            )
+
+        # Create dataset (no sequence validation for binary)
         dataset = SignalDataset(feat_seqs, tgt_seqs)
 
-        # 4. Build training config
+        # Build training config
         training_epochs = epochs if epochs is not None else self.epochs_per_eval
-        # Use dropout from params if available, otherwise use lstm_dropout for CNN_LSTM model
         dropout_val = params.get('dropout', params.get('lstm_dropout', 0.1))
         config = TrainingConfig(
             epochs=training_epochs,
@@ -1481,7 +1772,7 @@ class LSTMMetaheuristicOptimizer:
             bidirectional=True,
         )
 
-        # 5. Build model config and create model based on model_type
+        # Build model config and create model based on model_type
         if model_type == 'cnn_lstm':
             dropout = params.get('dropout', 0.1)
             model_config = ModelConfig(
@@ -1510,7 +1801,7 @@ class LSTMMetaheuristicOptimizer:
         trainer = Trainer(model, config, preprocessor=preprocessor)
         trainer.train(dataset)
 
-        # 7. Evaluate and print report
+        # Evaluate and print report
         if verbose:
             metrics = trainer.evaluate_all()
             trainer.print_evaluation_report(metrics)
@@ -1521,8 +1812,10 @@ class LSTMMetaheuristicOptimizer:
         return (
             f"LSTMMetaheuristicOptimizer("
             f"model_type='{self.model_type}', "
+            f"preprocessor_type='{self.preprocessor_type}', "
             f"n_features={self.n_features}, "
             f"n_params={self.n_params}, "
             f"pop_size={self.pop_size}, "
-            f"iterations={self.iterations})"
+            f"iterations={self.iterations}, "
+            f"mlflow={self.enable_mlflow})"
         )
