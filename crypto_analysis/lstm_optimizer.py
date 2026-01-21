@@ -197,7 +197,7 @@ class LSTMMetaheuristicOptimizer:
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
         HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
@@ -212,20 +212,20 @@ class LSTMMetaheuristicOptimizer:
     CNN_LSTM_HYPERPARAM_CONFIGS = [
         # === Model architecture params (ModelConfig) ===
         HyperparamConfig('hidden_size', 64, 256, 'int', 'hidden_size'),
-        HyperparamConfig('num_layers', 1, 4, 'int', 'num_layers'),
+        HyperparamConfig('num_layers', 1, 3, 'int', 'num_layers'),
         HyperparamConfig('dropout', 0.05, 0.25, 'float', 'dropout'),  # Used for cnn/lstm/classifier dropout
         HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
         HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
         # CNN-specific params (kernel_size maps to odd values: 1->3, 2->5, 3->7, etc.)
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
-        HyperparamConfig('cnn_num_layers', 2, 5, 'int', 'cnn_num_layers'),
+        HyperparamConfig('cnn_num_layers', 1, 5, 'int', 'cnn_num_layers'),
         # === Training params (TrainingConfig) ===
         HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
         HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
-        HyperparamConfig('batch_size', 32, 64, 'int', 'batch_size'),
+        HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
-        HyperparamConfig('class_weight_power', 0.3, 0.7, 'float', 'class_weight_power'),
+        HyperparamConfig('class_weight_power', 0.2, 0.7, 'float', 'class_weight_power'),
         HyperparamConfig('focal_gamma', 1.0, 3.0, 'float', 'focal_gamma'),
         HyperparamConfig('label_smoothing', 0.01, 0.15, 'float', 'label_smoothing'),
     ]
@@ -1089,7 +1089,7 @@ class LSTMMetaheuristicOptimizer:
                 focal_gamma=config_params['focal_gamma'],
                 label_smoothing=config_params['label_smoothing'],
                 scheduler_patience=config_params['scheduler_patience'],
-                patience=10,
+                patience=30,
                 verbose=False,
                 device='cuda',
             )

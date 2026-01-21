@@ -50,7 +50,7 @@ class TrainingConfig:
     # Learning rate scheduler
     scheduler: str = 'plateau'  # 'plateau', 'cosine', or 'none'
     scheduler_patience: int = 10
-    scheduler_factor: float = 0.5
+    scheduler_factor: float = 0.8
 
     # Class imbalance handling
     auto_class_weights: bool = True  # Automatically compute class weights from data
