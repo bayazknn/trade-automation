@@ -1070,8 +1070,9 @@ class LSTMMetaheuristicOptimizer:
             if len(feat_seqs) < 100:
                 return float('inf'), selected_features, {}
 
-            # Create dataset (no sequence validation needed for binary)
-            dataset = SignalDataset(feat_seqs, tgt_seqs)
+            # Create dataset on CUDA for GPU acceleration
+            cuda_device = torch.device('cuda')
+            dataset = SignalDataset(feat_seqs, tgt_seqs, device=cuda_device)
 
             # Build configs - use CUDA for GPU acceleration
             dropout_val = config_params.get('dropout', config_params.get('lstm_dropout', 0.1))
@@ -1753,8 +1754,9 @@ class LSTMMetaheuristicOptimizer:
                 stride=4
             )
 
-        # Create dataset (no sequence validation for binary)
-        dataset = SignalDataset(feat_seqs, tgt_seqs)
+        # Create dataset on CUDA for GPU acceleration
+        cuda_device = torch.device('cuda')
+        dataset = SignalDataset(feat_seqs, tgt_seqs, device=cuda_device)
 
         # Build training config
         training_epochs = epochs if epochs is not None else self.epochs_per_eval

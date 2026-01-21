@@ -148,11 +148,15 @@ class SignalDataset(Dataset):
         targets : np.ndarray
             Target values, shape (n_samples,) - 0=hold, 1=trade
         device : torch.device, optional
-            Device to store tensors on (default: CPU)
+            Device to store tensors on. If None, auto-detects CUDA/CPU.
         """
-        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        # Use provided device or auto-detect
+        if device is not None:
+            self.device = device
+        else:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        # Convert to tensors
+        # Convert to tensors on the specified device
         self.features = torch.tensor(
             features,
             dtype=torch.float32,
