@@ -195,8 +195,8 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('classifier_hidden_size', 16, 64, 'int', 'classifier_hidden_size'),
         HyperparamConfig('input_seq_length', 12, 24, 'int', 'input_seq_length'),
         # === Training params (TrainingConfig) ===
-        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
-        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
         HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
@@ -220,8 +220,8 @@ class LSTMMetaheuristicOptimizer:
         HyperparamConfig('kernel_size', 1, 4, 'int', 'kernel_size'),
         HyperparamConfig('cnn_num_layers', 1, 4, 'int', 'cnn_num_layers'),
         # === Training params (TrainingConfig) ===
-        HyperparamConfig('learning_rate', 0.0001, 0.01, 'float', 'learning_rate'),
-        HyperparamConfig('weight_decay', 0.0001, 0.01, 'float', 'weight_decay'),
+        HyperparamConfig('learning_rate', 0.001, 0.01, 'float', 'learning_rate'),
+        HyperparamConfig('weight_decay', 0.0001, 0.001, 'float', 'weight_decay'),
         HyperparamConfig('batch_size', 32, 32, 'int', 'batch_size'),
         HyperparamConfig('scheduler_patience', 10, 25, 'int', 'scheduler_patience'),
         # === Class imbalance handling (TrainingConfig) ===
@@ -1043,7 +1043,7 @@ class LSTMMetaheuristicOptimizer:
                 )
 
                 # Fit and create sequences
-                preprocessor.fit(df_selected)
+                preprocessor.fit_transform(df_selected)
                 feat_seqs, tgt_seqs = preprocessor.create_sequences_from_multiple([df_selected])
 
             else:
@@ -1090,7 +1090,7 @@ class LSTMMetaheuristicOptimizer:
                 focal_gamma=config_params['focal_gamma'],
                 label_smoothing=config_params['label_smoothing'],
                 scheduler_patience=config_params['scheduler_patience'],
-                patience=50,
+                patience=40,
                 verbose=False,
                 device='cuda',
             )
@@ -1769,13 +1769,13 @@ class LSTMMetaheuristicOptimizer:
             num_layers=params['num_layers'],
             dropout=dropout_val,
             weight_decay=params['weight_decay'],
-            auto_class_weights=True,
+            auto_class_weights=False,
             class_weight_power=params['class_weight_power'],
-            focal_loss=True,
+            focal_loss=False,
             focal_gamma=params['focal_gamma'],
             label_smoothing=params['label_smoothing'],
             scheduler_patience=params['scheduler_patience'],
-            patience=10,
+            patience=30,
             checkpoint_dir=checkpoint_dir,
             verbose=verbose,
             bidirectional=True,
