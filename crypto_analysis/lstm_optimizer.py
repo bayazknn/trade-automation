@@ -1777,6 +1777,7 @@ class LSTMMetaheuristicOptimizer:
             checkpoint_dir=checkpoint_dir,
             verbose=verbose,
             bidirectional=True,
+            device='cuda',
         )
 
         # Build model config and create model based on model_type
