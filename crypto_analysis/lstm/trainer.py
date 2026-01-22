@@ -80,6 +80,19 @@ class TrainingConfig:
     log_interval: int = 10  # Log every N batches
     verbose: bool = True
 
+    # Progressive dataset expansion (partition-based)
+    # Training starts with first partition of train data.
+    # When train accuracy exceeds threshold for consecutive epochs:
+    # - Next partition is appended to training data (val stays same)
+    # - When all partitions used and expansion triggered again:
+    #   last partition becomes val, original test becomes val
+    progressive_expansion: bool = False  # Enable progressive dataset expansion
+    expansion_partition_count: int = 3  # Number of partitions to divide train data into
+    expansion_max_partitions: int = 0  # Max partitions in train (0=unlimited, drops oldest when exceeded)
+    expansion_shuffle_on_add: bool = False  # Shuffle train dataset when partition is added
+    expansion_accuracy_threshold: float = 0.95  # Train accuracy threshold to trigger expansion
+    expansion_consecutive_epochs: int = 10  # Consecutive epochs above threshold to trigger
+
 
 @dataclass
 class TrainingHistory:
@@ -243,6 +256,20 @@ class Trainer:
         else:
             self.checkpoint_dir = None
 
+        # Progressive expansion state (partition-based)
+        self._expansion_consecutive_count = 0
+        self._expansion_completed = False  # True when no more expansions possible
+        self._train_partitions: List[Subset] = []  # All partitions of original train data
+        self._current_partition_index = 0  # Current partition being used (0 = first partition only)
+        self._start_partition_index = 0  # First partition included in train (for max_partitions limit)
+        self._original_val_dataset = None  # Original validation dataset
+        self._original_test_dataset = None  # Original test dataset for final expansion
+        # Phase 2 validation expansion state
+        self._in_phase2 = False  # True when in Phase 2 (validation expansion)
+        self._val_partitions: List[Subset] = []  # Partitions from test dataset for validation
+        self._current_val_partition_index = -1  # Current val partition (-1 = only last train partition)
+        self._start_val_partition_index = 0  # First val partition included (for max_partitions limit)
+
     def _get_device(self, device_str: str) -> torch.device:
         """Get the appropriate device."""
         if device_str == 'auto':
@@ -355,6 +382,7 @@ class Trainer:
         self,
         train_dataset: SignalDataset,
         val_dataset: Optional[SignalDataset] = None,
+        test_dataset: Optional[SignalDataset] = None,
         callbacks: Optional[List[Callable]] = None
     ) -> TrainingHistory:
         """
@@ -366,6 +394,9 @@ class Trainer:
             Training dataset
         val_dataset : SignalDataset, optional
             Validation dataset. If None, splits from train_dataset.
+        test_dataset : SignalDataset, optional
+            Test dataset. Required for progressive_expansion when providing
+            val_dataset manually. If None and val_dataset is None, splits from train_dataset.
         callbacks : list, optional
             Callback functions called after each epoch with (epoch, history)
 
@@ -378,6 +409,20 @@ class Trainer:
         self.history = TrainingHistory()
         if self.early_stopping:
             self.early_stopping.reset()
+
+        # Reset progressive expansion state (partition-based)
+        self._expansion_consecutive_count = 0
+        self._expansion_completed = False
+        self._train_partitions = []
+        self._current_partition_index = 0
+        self._start_partition_index = 0
+        self._original_val_dataset = None
+        self._original_test_dataset = None
+        # Phase 2 validation expansion state
+        self._in_phase2 = False
+        self._val_partitions = []
+        self._current_val_partition_index = -1
+        self._start_val_partition_index = 0
 
         # Create scheduler
         self.scheduler = self._create_scheduler()
@@ -398,7 +443,38 @@ class Trainer:
             # Use provided datasets
             self.train_dataset = train_dataset
             self.val_dataset = val_dataset
-            self.test_dataset = None
+            self.test_dataset = test_dataset  # Use provided test_dataset for progressive expansion
+
+        # Warn if progressive expansion enabled but no test dataset
+        if (self.config.progressive_expansion and
+            self.test_dataset is None and
+            self.config.verbose):
+            print("Warning: progressive_expansion enabled but no test_dataset provided.")
+            print("         Progressive expansion requires test_dataset for final phase.")
+            print("         Either provide test_dataset or let Trainer split the data automatically.")
+
+        # Setup partition-based progressive expansion
+        if self.config.progressive_expansion:
+            # Store original datasets for later phases
+            self._original_val_dataset = self.val_dataset
+            self._original_test_dataset = self.test_dataset
+
+            # Partition train dataset
+            self._train_partitions = self._partition_dataset(
+                self.train_dataset,
+                self.config.expansion_partition_count
+            )
+
+            # Start training with only the first partition
+            self.train_dataset = self._train_partitions[0]
+            self._current_partition_index = 0
+
+            if self.config.verbose:
+                print(f"Progressive expansion: divided train data into "
+                      f"{len(self._train_partitions)} partitions")
+                for i, p in enumerate(self._train_partitions):
+                    print(f"  Partition {i + 1}: {len(p)} samples")
+                print(f"Starting with partition 1 ({len(self.train_dataset)} samples)")
 
         # Compute class weights from training data
         if self.config.auto_class_weights:
@@ -467,6 +543,27 @@ class Trainer:
                 print(f"  Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
                 print(f"  LR: {self.optimizer.param_groups[0]['lr']:.2e}")
 
+            # Progressive dataset expansion check (partition-based)
+            if (self.config.progressive_expansion and
+                not self._expansion_completed):
+
+                if train_acc >= self.config.expansion_accuracy_threshold:
+                    self._expansion_consecutive_count += 1
+                    if self.config.verbose:
+                        print(f"  Expansion count: {self._expansion_consecutive_count}/"
+                              f"{self.config.expansion_consecutive_epochs}")
+                else:
+                    self._expansion_consecutive_count = 0
+
+                # Trigger expansion when threshold is met
+                if self._expansion_consecutive_count >= self.config.expansion_consecutive_epochs:
+                    train_loader, val_loader = self._expand_datasets()
+                    self._expansion_consecutive_count = 0
+
+                    if self.config.verbose:
+                        print(f"      New train: {len(self.train_dataset)} samples")
+                        print(f"      New val: {len(self.val_dataset)} samples\n")
+
             # Update scheduler
             if self.scheduler:
                 if isinstance(self.scheduler, ReduceLROnPlateau):
@@ -503,6 +600,169 @@ class Trainer:
                     callback(epoch, self.history)
 
         return self.history
+
+    def _expand_datasets(self) -> Tuple[DataLoader, DataLoader]:
+        """
+        Expand training dataset using partition-based approach.
+
+        Phase 1: Append next partition to train, val stays same
+        Phase 2: Last train partition becomes base of val, then add test partitions
+                 one by one to validation (same partition count as Phase 1)
+
+        If expansion_max_partitions > 0, drops oldest partition when limit exceeded
+        (applies to both train in Phase 1 and val in Phase 2).
+
+        Returns
+        -------
+        tuple
+            (new_train_loader, new_val_loader)
+        """
+        from torch.utils.data import ConcatDataset
+
+        num_train_partitions = len(self._train_partitions)
+        max_parts = self.config.expansion_max_partitions
+
+        # Phase 2: Validation expansion (adding test partitions to validation)
+        if self._in_phase2:
+            num_val_partitions = len(self._val_partitions)
+
+            if self._current_val_partition_index < num_val_partitions - 1:
+                # Add next test partition to validation
+                self._current_val_partition_index += 1
+
+                if self.config.verbose:
+                    print(f"\n  >>> Phase 2: adding validation partition "
+                          f"{self._current_val_partition_index + 1}/{num_val_partitions}")
+
+                # Check if we need to drop oldest val partition (max_partitions limit)
+                # +1 for the last train partition that's always in validation
+                current_val_count = self._current_val_partition_index - self._start_val_partition_index + 2
+                if max_parts > 0 and current_val_count > max_parts:
+                    self._start_val_partition_index += 1
+                    if self.config.verbose:
+                        print(f"      Dropping oldest val partition {self._start_val_partition_index} "
+                              f"(max_partitions={max_parts})")
+
+                # Build validation: last train partition + test partitions from start to current
+                val_parts = [self._train_partitions[-1]]
+                val_parts.extend(self._val_partitions[self._start_val_partition_index:self._current_val_partition_index + 1])
+                self.val_dataset = ConcatDataset(val_parts)
+
+                # Shuffle train dataset if enabled
+                if self.config.expansion_shuffle_on_add:
+                    self.train_dataset = self._shuffle_dataset(self.train_dataset)
+                    if self.config.verbose:
+                        print(f"      Shuffled train dataset")
+
+            else:
+                # All validation partitions used, expansion complete
+                if self.config.verbose:
+                    print(f"\n  >>> Progressive expansion complete (all validation partitions added)")
+                self._expansion_completed = True
+
+        # Phase 1: Training expansion (adding train partitions)
+        elif self._current_partition_index < num_train_partitions - 1:
+            # Add next partition to training
+            self._current_partition_index += 1
+
+            if self.config.verbose:
+                print(f"\n  >>> Phase 1: adding train partition "
+                      f"{self._current_partition_index + 1}/{num_train_partitions}")
+
+            # Check if we need to drop oldest partition (max_partitions limit)
+            current_count = self._current_partition_index - self._start_partition_index + 1
+            if max_parts > 0 and current_count > max_parts:
+                self._start_partition_index += 1
+                if self.config.verbose:
+                    print(f"      Dropping oldest train partition {self._start_partition_index} "
+                          f"(max_partitions={max_parts})")
+
+            # Concatenate partitions from start_index to current_index
+            partitions_to_use = self._train_partitions[self._start_partition_index:self._current_partition_index + 1]
+            if len(partitions_to_use) == 1:
+                self.train_dataset = partitions_to_use[0]
+            else:
+                self.train_dataset = ConcatDataset(partitions_to_use)
+
+            # Shuffle train dataset if enabled
+            if self.config.expansion_shuffle_on_add:
+                self.train_dataset = self._shuffle_dataset(self.train_dataset)
+                if self.config.verbose:
+                    print(f"      Shuffled train dataset")
+
+            # Validation stays the same (original val)
+            self.val_dataset = self._original_val_dataset
+
+        else:
+            # Transition to Phase 2: All train partitions used
+            if self._original_test_dataset is None:
+                # No test dataset, expansion complete
+                if self.config.verbose:
+                    print(f"\n  >>> Progressive expansion complete (no test dataset for Phase 2)")
+                self._expansion_completed = True
+            else:
+                # Enter Phase 2
+                self._in_phase2 = True
+
+                # Partition the test dataset (same partition count as train)
+                self._val_partitions = self._partition_dataset(
+                    self._original_test_dataset,
+                    self.config.expansion_partition_count
+                )
+                self._current_val_partition_index = 0
+                self._start_val_partition_index = 0
+
+                if self.config.verbose:
+                    print(f"\n  >>> Entering Phase 2: validation expansion")
+                    print(f"      Divided test data into {len(self._val_partitions)} partitions")
+                    for i, p in enumerate(self._val_partitions):
+                        print(f"        Val partition {i + 1}: {len(p)} samples")
+                    print(f"      Last train partition ({len(self._train_partitions[-1])} samples) "
+                          f"becomes base of validation")
+
+                # Use partitions from start_index to second-to-last for training
+                last_train_idx = num_train_partitions - 2  # Exclude last partition (becomes val base)
+                if last_train_idx >= self._start_partition_index:
+                    partitions_for_train = self._train_partitions[self._start_partition_index:last_train_idx + 1]
+                    if len(partitions_for_train) == 1:
+                        self.train_dataset = partitions_for_train[0]
+                    else:
+                        self.train_dataset = ConcatDataset(partitions_for_train)
+                else:
+                    # Only one partition available, keep it as train
+                    self.train_dataset = self._train_partitions[self._start_partition_index]
+
+                # Shuffle train dataset if enabled
+                if self.config.expansion_shuffle_on_add:
+                    self.train_dataset = self._shuffle_dataset(self.train_dataset)
+                    if self.config.verbose:
+                        print(f"      Shuffled train dataset")
+
+                # Validation: last train partition + first test partition
+                self.val_dataset = ConcatDataset([
+                    self._train_partitions[-1],
+                    self._val_partitions[0]
+                ])
+
+                self.test_dataset = None
+
+        # Create new data loaders
+        new_train_loader = DataLoader(
+            self.train_dataset,
+            batch_size=self.config.batch_size,
+            shuffle=False,
+            collate_fn=SignalDataset.collate_fn,
+            drop_last=False
+        )
+
+        new_val_loader = DataLoader(
+            self.val_dataset,
+            batch_size=self.config.batch_size,
+            shuffle=False,
+            collate_fn=SignalDataset.collate_fn
+        ) if self.val_dataset is not None else None
+
+        return new_train_loader, new_val_loader
 
     def _split_dataset(
         self,
@@ -549,6 +809,75 @@ class Trainer:
             test_subset = None
 
         return train_subset, val_subset, test_subset
+
+    def _shuffle_dataset(
+        self,
+        dataset: Union[SignalDataset, Subset, 'ConcatDataset']
+    ) -> Subset:
+        """
+        Shuffle a dataset by creating a Subset with randomized indices.
+
+        Parameters
+        ----------
+        dataset : SignalDataset, Subset, or ConcatDataset
+            Dataset to shuffle
+
+        Returns
+        -------
+        Subset
+            A new Subset with shuffled access to the original data
+        """
+        from torch.utils.data import ConcatDataset
+
+        n = len(dataset)
+        shuffled_indices = np.random.permutation(n).tolist()
+
+        # For ConcatDataset or Subset, wrap with another Subset using shuffled indices
+        return Subset(dataset, shuffled_indices)
+
+    def _partition_dataset(
+        self,
+        dataset: Union[SignalDataset, Subset],
+        num_partitions: int
+    ) -> List[Subset]:
+        """
+        Divide a dataset into sequential partitions for progressive expansion.
+
+        Parameters
+        ----------
+        dataset : SignalDataset or Subset
+            Dataset to partition
+        num_partitions : int
+            Number of partitions to create
+
+        Returns
+        -------
+        list
+            List of Subset objects, one per partition
+        """
+        n = len(dataset)
+        partition_size = n // num_partitions
+        remainder = n % num_partitions
+
+        partitions = []
+        start_idx = 0
+
+        for i in range(num_partitions):
+            # Distribute remainder across first partitions
+            end_idx = start_idx + partition_size + (1 if i < remainder else 0)
+
+            if isinstance(dataset, Subset):
+                # dataset is already a Subset, need to map indices
+                partition_indices = [dataset.indices[j] for j in range(start_idx, end_idx)]
+                partitions.append(Subset(dataset.dataset, partition_indices))
+            else:
+                # dataset is a SignalDataset
+                partition_indices = list(range(start_idx, end_idx))
+                partitions.append(Subset(dataset, partition_indices))
+
+            start_idx = end_idx
+
+        return partitions
 
     def _train_epoch(
         self,

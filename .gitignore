@@ -30,3 +30,6 @@ Thumbs.db
 # plot/
 notebooks/dual_cnn_checkpoints/
 notebooks/mlruns/
+mlartifacts/
+*.db
+*.pt

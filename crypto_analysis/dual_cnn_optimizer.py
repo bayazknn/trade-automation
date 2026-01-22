@@ -230,6 +230,11 @@ class DualCNNMetaheuristicOptimizer:
         np_neighbors: int = 2,
         pf_max: float = 0.18,
         seed: int = 42,
+        # Progressive dataset expansion (partition-based)
+        progressive_expansion: bool = True,
+        expansion_partition_count: int = 3,
+        expansion_accuracy_threshold: float = 0.95,
+        expansion_consecutive_epochs: int = 10,
     ):
         # Validate model_type
         valid_model_types = ['dual_cnn_gru', 'dual_tcn', 'dual_lstm']
@@ -254,6 +259,12 @@ class DualCNNMetaheuristicOptimizer:
         self.pf_max = pf_max
         self.seed = seed
         self.run_id: Optional[str] = None
+
+        # Progressive dataset expansion settings (partition-based)
+        self.progressive_expansion = progressive_expansion
+        self.expansion_partition_count = expansion_partition_count
+        self.expansion_accuracy_threshold = expansion_accuracy_threshold
+        self.expansion_consecutive_epochs = expansion_consecutive_epochs
 
         # Select hyperparameter config based on model type
         if model_type == 'dual_tcn':
@@ -467,9 +478,29 @@ class DualCNNMetaheuristicOptimizer:
             val_indices = list(range(train_size, train_size + val_size))
             test_indices = list(range(train_size + val_size, n))
 
-            train_dataset = Subset(dataset, train_indices)
+            # Partition train_indices for progressive expansion
+            train_partitions = []
+            if self.progressive_expansion and self.expansion_partition_count > 1:
+                partition_size = len(train_indices) // self.expansion_partition_count
+                remainder = len(train_indices) % self.expansion_partition_count
+                start_idx = 0
+                for i in range(self.expansion_partition_count):
+                    end_idx = start_idx + partition_size + (1 if i < remainder else 0)
+                    train_partitions.append(train_indices[start_idx:end_idx])
+                    start_idx = end_idx
+                # Start with only first partition
+                current_train_indices = train_partitions[0]
+            else:
+                train_partitions = [train_indices]
+                current_train_indices = train_indices
+
+            train_dataset = Subset(dataset, current_train_indices)
             val_dataset = Subset(dataset, val_indices)
             test_dataset = Subset(dataset, test_indices)
+
+            # Store original datasets for expansion
+            original_val_dataset = val_dataset
+            original_test_dataset = test_dataset
 
             # Create model
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -564,7 +595,7 @@ class DualCNNMetaheuristicOptimizer:
 
             # Get targets from training subset
             train_targets = []
-            for idx in train_indices:
+            for idx in current_train_indices:
                 train_targets.append(dataset.targets[idx].item())
             train_targets = torch.tensor(train_targets)
 
@@ -598,9 +629,16 @@ class DualCNNMetaheuristicOptimizer:
             patience_counter = 0
             patience = 15  # Increased from 10 to allow more time to learn minority class
 
+            # Progressive expansion state (partition-based)
+            expansion_consecutive_count = 0
+            expansion_completed = False
+            current_partition_index = 0
+
             for epoch in range(self.epochs_per_eval):
                 # Train
                 model.train()
+                train_correct = 0
+                train_total = 0
                 for batch in train_loader:
                     binary_feat_batch = batch['binary_features'].to(device)
                     technical_feat_batch = batch['technical_features'].to(device)
@@ -612,6 +650,13 @@ class DualCNNMetaheuristicOptimizer:
                     loss.backward()
                     # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                     optimizer.step()
+
+                    # Track train accuracy
+                    predictions = torch.argmax(logits, dim=-1)
+                    train_correct += (predictions == targets_batch).sum().item()
+                    train_total += targets_batch.numel()
+
+                train_acc = train_correct / train_total if train_total > 0 else 0
 
                 # Validate
                 model.eval()
@@ -628,6 +673,88 @@ class DualCNNMetaheuristicOptimizer:
 
                 val_loss /= len(val_dataset)
                 scheduler.step(val_loss)
+
+                # Progressive dataset expansion check (partition-based)
+                if (self.progressive_expansion and not expansion_completed):
+
+                    if train_acc >= self.expansion_accuracy_threshold:
+                        expansion_consecutive_count += 1
+                    else:
+                        expansion_consecutive_count = 0
+
+                    # Trigger expansion when threshold is met
+                    if expansion_consecutive_count >= self.expansion_consecutive_epochs:
+                        from torch.utils.data import ConcatDataset
+
+                        num_partitions = len(train_partitions)
+
+                        # Check if we have more partitions to add
+                        if current_partition_index < num_partitions - 1:
+                            # Phase 1: Add next partition to training
+                            current_partition_index += 1
+
+                            # Combine all partitions up to current index
+                            current_train_indices = []
+                            for i in range(current_partition_index + 1):
+                                current_train_indices.extend(train_partitions[i])
+
+                            train_dataset = Subset(dataset, current_train_indices)
+                            # Validation stays the same (original val)
+                            val_dataset = original_val_dataset
+
+                        else:
+                            # Phase 2 (final): All partitions used
+                            # Last partition becomes val, original test becomes val
+                            if original_test_dataset is not None:
+                                # Use all partitions except last for training
+                                if num_partitions > 1:
+                                    current_train_indices = []
+                                    for i in range(num_partitions - 1):
+                                        current_train_indices.extend(train_partitions[i])
+                                    train_dataset = Subset(dataset, current_train_indices)
+                                # else: keep current train_dataset (only 1 partition)
+
+                                # Last partition + original test become validation
+                                last_partition_dataset = Subset(dataset, train_partitions[-1])
+                                val_dataset = ConcatDataset([last_partition_dataset, original_test_dataset])
+                                test_dataset = None
+
+                            expansion_completed = True
+
+                        # Recreate data loaders with new train dataset
+                        new_train_targets = []
+                        for i in range(len(train_dataset)):
+                            sample = train_dataset[i]
+                            new_train_targets.append(sample['targets'].item())
+                        new_train_targets = torch.tensor(new_train_targets)
+
+                        new_class_counts = torch.bincount(new_train_targets, minlength=2).float()
+                        new_class_counts = torch.clamp(new_class_counts, min=1.0)
+                        new_sample_weights = 1.0 / new_class_counts[new_train_targets]
+
+                        sampler = WeightedRandomSampler(
+                            weights=new_sample_weights,
+                            num_samples=len(new_train_targets),
+                            replacement=True
+                        )
+
+                        train_loader = DataLoader(
+                            train_dataset,
+                            batch_size=config_params['batch_size'],
+                            sampler=sampler,
+                            collate_fn=DualSignalDataset.collate_fn
+                        )
+                        val_loader = DataLoader(
+                            val_dataset,
+                            batch_size=config_params['batch_size'],
+                            shuffle=False,
+                            collate_fn=DualSignalDataset.collate_fn
+                        )
+
+                        expansion_consecutive_count = 0
+                        # Reset early stopping after expansion
+                        patience_counter = 0
+                        best_val_loss = float('inf')
 
                 # Early stopping
                 if val_loss < best_val_loss - 1e-4:
@@ -1276,8 +1403,17 @@ class DualCNNMetaheuristicOptimizer:
         patience_counter = 0
         patience = 25  # Increased from 10 to allow more time to learn minority class
 
+        # Progressive expansion state
+        expansion_consecutive_count = 0
+        expansion_triggered = False
+
+        # Keep reference to test_dataset for expansion
+        test_dataset_ref = None  # We don't have test_dataset in save_artifacts
+
         for epoch in range(self.epochs_per_eval):
             model.train()
+            train_correct = 0
+            train_total = 0
             for batch in train_loader:
                 binary_feat_batch = batch['binary_features'].to(device)
                 technical_feat_batch = batch['technical_features'].to(device)
@@ -1289,6 +1425,13 @@ class DualCNNMetaheuristicOptimizer:
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
+
+                # Track train accuracy
+                predictions = torch.argmax(logits, dim=-1)
+                train_correct += (predictions == targets_batch).sum().item()
+                train_total += targets_batch.numel()
+
+            train_acc = train_correct / train_total if train_total > 0 else 0
 
             model.eval()
             val_loss = 0.0
@@ -1304,6 +1447,21 @@ class DualCNNMetaheuristicOptimizer:
 
             val_loss /= len(val_dataset)
             scheduler.step(val_loss)
+
+            # Progressive dataset expansion check (only if we have test data)
+            # Note: In save_artifacts, we can use val as "test" for expansion
+            if (self.progressive_expansion and
+                not expansion_triggered and
+                self.verbose):
+
+                if train_acc >= self.expansion_accuracy_threshold:
+                    expansion_consecutive_count += 1
+                    if expansion_consecutive_count >= self.expansion_consecutive_epochs:
+                        print(f"  Expansion triggered at epoch {epoch + 1} "
+                              f"(train_acc: {train_acc:.4f})")
+                        expansion_triggered = True
+                else:
+                    expansion_consecutive_count = 0
 
             if val_loss < best_val_loss - 1e-4:
                 best_val_loss = val_loss

@@ -1097,6 +1097,11 @@ class LSTMMetaheuristicOptimizer:
                 patience=40,
                 verbose=False,
                 device='cuda',
+                # Progressive dataset expansion (partition-based)
+                progressive_expansion=True,
+                expansion_partition_count=3,
+                expansion_accuracy_threshold=0.95,
+                expansion_consecutive_epochs=10,
             )
 
             # Create model based on model_type
@@ -1798,6 +1803,11 @@ class LSTMMetaheuristicOptimizer:
             verbose=verbose,
             bidirectional=True,
             device='cuda',
+            # Progressive dataset expansion (partition-based)
+            progressive_expansion=True,
+            expansion_partition_count=3,
+            expansion_accuracy_threshold=0.95,
+            expansion_consecutive_epochs=10,
         )
 
         # Build model config and create model based on model_type

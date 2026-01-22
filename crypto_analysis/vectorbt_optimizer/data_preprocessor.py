@@ -34,7 +34,8 @@ class VectorBTDataPreprocessor:
 
     Key features:
     - Column filtering: Keep OHLCV + entry/exit signals, optionally raw indicators
-    - Scaling: Only OHLCV columns are scaled (entry/exit are already 0/1)
+    - Scaling: All non-binary columns are scaled (OHLCV + raw indicators).
+      Entry/exit signals are already 0/1 and are not scaled.
     - Target shifting: Features at t predict target at t+shift
     - Sequence creation: Sliding windows for LSTM input
     - Multi-file support: Sequences don't span across different files
@@ -355,14 +356,16 @@ class VectorBTDataPreprocessor:
         first_df = self._clean_data(dfs[0])
         self.feature_columns = self._filter_columns(first_df)
 
-        # Identify OHLCV vs signal column indices
-        self._ohlcv_indices = []
-        self._signal_indices = []
+        # Identify columns to scale vs binary signal columns
+        # Scale all non-binary columns (OHLCV + raw indicator values)
+        # Binary signals (_entry/_exit) are already 0/1 and don't need scaling
+        self._ohlcv_indices = []  # Now holds indices of ALL columns to scale
+        self._signal_indices = []  # Binary signal columns (not scaled)
         for i, col in enumerate(self.feature_columns):
-            if col in self.ohlcv_columns:
-                self._ohlcv_indices.append(i)
-            else:
+            if col.endswith('_entry') or col.endswith('_exit'):
                 self._signal_indices.append(i)
+            else:
+                self._ohlcv_indices.append(i)
 
         # Initialize scaler
         if self.scaler_type == 'standard':
@@ -372,16 +375,16 @@ class VectorBTDataPreprocessor:
         else:
             raise ValueError(f"Unknown scaler_type: {self.scaler_type}")
 
-        # Collect OHLCV data from all DataFrames for fitting
-        ohlcv_cols = [self.feature_columns[i] for i in self._ohlcv_indices]
-        if ohlcv_cols:
-            all_ohlcv = []
+        # Collect data from all scalable columns (OHLCV + raw indicators) for fitting
+        scale_cols = [self.feature_columns[i] for i in self._ohlcv_indices]
+        if scale_cols:
+            all_scale_data = []
             for df in dfs:
                 df_clean = self._clean_data(df)
-                all_ohlcv.append(df_clean[ohlcv_cols].values)
+                all_scale_data.append(df_clean[scale_cols].values)
 
-            combined_ohlcv = np.vstack(all_ohlcv)
-            self.scaler.fit(combined_ohlcv)
+            combined_scale_data = np.vstack(all_scale_data)
+            self.scaler.fit(combined_scale_data)
 
         self._is_fitted = True
         return self
@@ -393,7 +396,7 @@ class VectorBTDataPreprocessor:
         """
         Transform a DataFrame to features and targets.
 
-        Applies column filtering, scaling (OHLCV only), and target shifting.
+        Applies column filtering, scaling (all non-binary columns), and target shifting.
 
         Parameters
         ----------
@@ -429,12 +432,12 @@ class VectorBTDataPreprocessor:
         # Extract features
         features = df[self.feature_columns].values.astype(np.float32)
 
-        # Scale OHLCV columns only
+        # Scale all non-binary columns (OHLCV + raw indicator values)
         if self._ohlcv_indices and self.scaler is not None:
-            ohlcv_cols = [self.feature_columns[i] for i in self._ohlcv_indices]
-            scaled_ohlcv = self.scaler.transform(df[ohlcv_cols].values)
+            scale_cols = [self.feature_columns[i] for i in self._ohlcv_indices]
+            scaled_data = self.scaler.transform(df[scale_cols].values)
             for new_idx, orig_idx in enumerate(self._ohlcv_indices):
-                features[:, orig_idx] = scaled_ohlcv[:, new_idx]
+                features[:, orig_idx] = scaled_data[:, new_idx]
 
         # Encode targets
         df_target = df[self.target_column].fillna('hold')
@@ -700,8 +703,8 @@ class VectorBTDataPreprocessor:
                 f"remove_raw_indicators={self.remove_raw_indicators}, "
                 f"normalize_by_close={self.normalize_by_close}, "
                 f"n_features={len(self.feature_columns)}, "
-                f"n_ohlcv={len(self._ohlcv_indices)}, "
-                f"n_signals={len(self._signal_indices)}, "
+                f"n_scaled={len(self._ohlcv_indices)}, "
+                f"n_binary={len(self._signal_indices)}, "
                 f"scaler_type='{self.scaler_type}')"
             )
         else:
