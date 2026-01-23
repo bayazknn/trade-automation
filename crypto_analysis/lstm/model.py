@@ -274,8 +274,10 @@ class CNNLSTMSignalPredictor(nn.Module):
         conv_blocks = []
         in_channels = config.hidden_size
 
+
         for _ in range(config.cnn_num_layers):
             out_channels = config.hidden_size
+
             # Calculate padding to maintain sequence length: padding = (kernel_size - 1) // 2
             padding = (config.kernel_size - 1) // 2
             conv_blocks.extend([

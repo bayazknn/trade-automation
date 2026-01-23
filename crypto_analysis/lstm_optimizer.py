@@ -1044,6 +1044,11 @@ class LSTMMetaheuristicOptimizer:
                     ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
                     columns_to_drop=['date'],
                     normalize_by_close=self.normalize_by_close,
+                    # Feature engineering
+                    extract_time_features=True,
+                    enable_dataframe_clustering=True,
+                    enable_signal_clustering=True,
+                    keep_original_signals=False,
                 )
 
                 # Fit and create sequences
@@ -1752,6 +1757,11 @@ class LSTMMetaheuristicOptimizer:
                 ohlcv_columns=['open', 'high', 'low', 'close', 'volume'],
                 columns_to_drop=['date'],
                 normalize_by_close=self.normalize_by_close,
+                # Feature engineering
+                extract_time_features=True,
+                enable_dataframe_clustering=True,
+                enable_signal_clustering=True,
+                keep_original_signals=False,
             )
 
             # Fit and create sequences
