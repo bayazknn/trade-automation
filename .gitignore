@@ -32,4 +32,4 @@ notebooks/dual_cnn_checkpoints/
 notebooks/mlruns/
 mlartifacts/
 *.db
-*.ptmlflow.db
+*.pt
