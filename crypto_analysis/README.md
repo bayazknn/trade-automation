@@ -6,19 +6,21 @@ A Python package for cryptocurrency data analysis and signal generation, designe
 
 - **Signal Population**: Generate entry/exit signals based on price percentage changes
 - **Indicator Optimization**: Optimize technical indicator parameters using grid search and hyperopt
+- **VectorBT Optimization**: High-performance indicator optimization using vectorbt backtesting and Optuna Bayesian optimization
 - **LSTM Signal Prediction**: PyTorch LSTM model for predicting entry/hold/exit signals
+- **LSTM Data Preprocessing**: Feature engineering with signal/DataFrame clustering, scaling, and sequence creation
 - **LSTM Hyperparameter Optimization**: APO (Artificial Protozoa Optimizer) for joint feature selection and hyperparameter tuning
 - **Optimization Log Analysis**: Analyze optimization runs to extract insights and recommend configurations
 - **57 Technical Indicators**: RSI, MACD, STOCH, BBANDS, EMA, SMA, Hilbert Transform, and more
 - **Parallel Processing**: Multi-threaded optimization with configurable worker count
-- **High Performance**: NumPy-vectorized operations for fast backtesting
+- **High Performance**: NumPy-vectorized and vectorbt operations for fast backtesting
 
 ## Installation
 
 The package is part of the Freqtrade user_data directory. Ensure dependencies are installed:
 
 ```bash
-pip install pandas numpy ta-lib optuna torch scikit-learn scipy matplotlib seaborn
+pip install pandas numpy ta-lib optuna torch scikit-learn scipy matplotlib seaborn vectorbt
 ```
 
 ## Quick Start
@@ -502,6 +504,164 @@ analyzer.export_config_code(recommendations, "recommended_config.py")
 | `plot_fitness_evolution()` | Fitness progression over iterations |
 | `plot_parameter_convergence()` | Parameter convergence scores |
 | `plot_elite_analysis()` | Multi-panel elite analysis visualization |
+
+### VectorBT Optimizer
+
+High-performance indicator optimization using vectorbt for backtesting and Optuna for Bayesian hyperparameter optimization. Optimizes technical indicator parameters across multiple cryptocurrencies in parallel.
+
+#### Single Indicator Optimization
+
+```python
+from crypto_analysis.vectorbt_optimizer import optimize_indicator
+
+result = optimize_indicator(
+    indicator_name="RSI",
+    symbol="BTC",
+    data_dir="data/binance",
+    max_grid_combinations=500,
+    max_tpe_trials=1000,
+    n_jobs=4
+)
+
+print(f"Best params: {result.best_params}")
+print(f"Score: {result.score}")
+print(f"Sampler: {result.sampler_type}")  # 'grid' or 'tpe'
+```
+
+#### Batch Multi-Crypto Optimization
+
+```python
+from crypto_analysis.vectorbt_optimizer import optimize_all
+
+results = optimize_all(
+    symbols="whitelist",     # or "all" or ["BTC", "ETH", "SOL"]
+    indicators="all",        # or ["RSI", "MACD"]
+    data_dir="data/binance",
+    output_dir="output",
+    n_processes=8,           # Parallel crypto processing
+    n_jobs_optuna=4,         # Optuna parallel jobs
+    export_csv=True,
+    export_params_json=True
+)
+# Returns: Dict[symbol -> DataFrame] with signals and indicators
+```
+
+#### Configuration
+
+```python
+from crypto_analysis.vectorbt_optimizer import OptimizationConfig, RunConfig
+
+# Core optimization settings
+opt_config = OptimizationConfig(
+    max_grid_combinations=500,  # Grid vs TPE sampler threshold
+    max_tpe_trials=1000,        # Max TPE iterations
+    n_jobs=4,                   # Optuna parallel jobs
+    init_cash=100.0,            # Initial capital for backtesting
+    fees=0.001                  # Trading fee rate
+)
+
+# Batch run settings
+run_config = RunConfig(
+    data_dir="data/binance",
+    output_dir="output",
+    symbols="whitelist",
+    indicators="all",
+    n_processes=8,
+    n_jobs_optuna=4,
+    export_csv=True,
+    export_params_json=True
+)
+```
+
+#### VectorBTDataPreprocessor
+
+Comprehensive preprocessing for LSTM training from optimization output.
+
+```python
+from crypto_analysis.vectorbt_optimizer import VectorBTDataPreprocessor
+
+# Create preprocessor with feature engineering
+prep = VectorBTDataPreprocessor(
+    remove_raw_indicators=True,     # Keep only OHLCV + signals
+    sequence_length=24,             # LSTM input sequence length
+    target_shift=1,                 # Predict t+1 target
+    scaler_type='minmax',           # or 'standard'
+    # Signal clustering
+    enable_signal_clustering=True,
+    n_entry_clusters=5,
+    n_exit_clusters=5,
+    # DataFrame clustering
+    enable_dataframe_clustering=True,
+    df_cluster_columns='indicators',  # 'all', 'indicators', 'signals', 'indicators_signals'
+    cluster_k=10,
+    # Other options
+    normalize_by_close=True,        # Normalize indicators by close price
+    extract_time_features=True,     # Add cyclical time features
+    enable_resampling=True,         # Enable train set resampling
+    train_ratio=0.7,
+    val_ratio=0.15
+)
+
+# Fit and transform in one step (efficient)
+transformed_df = prep.fit_transform_dataframe(
+    data,
+    apply_resampling=True,   # Split into train/val/test with resampling
+    apply_scaling=True       # Apply fitted scaler
+)
+
+# Create PyTorch datasets from transformed data
+train_ds, val_ds, test_ds = VectorBTDataPreprocessor.create_sequences_by_split(
+    transformed_df,
+    sequence_length=24,
+    target_column='tradeable',
+    device='cuda'  # or 'cpu', auto-detects if None
+)
+
+# Ready for DataLoader
+from torch.utils.data import DataLoader
+train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
+
+# Access dataset info
+print(train_ds)  # n_samples, seq_length, n_features, class distribution
+print(train_ds.get_class_weights())  # For imbalanced data handling
+```
+
+#### Feature Engineering Options
+
+| Feature | Description |
+|---------|-------------|
+| Signal Clustering | KMeans clustering on entry/exit signal patterns |
+| DataFrame Clustering | KMeans clustering on selected features (one-hot encoded) |
+| Normalize by Close | Normalize OHLCV and indicators by close price |
+| Time Features | Cyclical encoding (day_sin, day_cos, hour_sin, hour_cos) |
+| Resampling | Balance train set cluster distribution to match val+test |
+
+#### DataFrame Clustering Column Options (`df_cluster_columns`)
+
+| Option | Columns Used |
+|--------|--------------|
+| `'all'` | All DataFrame columns (except target, date, existing cluster columns) |
+| `'indicators'` | Raw technical indicators + OHLCV (default) |
+| `'signals'` | Entry/exit signal columns + OHLCV |
+| `'indicators_signals'` | Raw indicators + entry/exit signals + OHLCV |
+
+#### Preprocessor Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `fit(data)` | Fit scaler and clustering models |
+| `transform(df)` | Transform to (features, targets) arrays |
+| `fit_transform_dataframe()` | Efficient fit+transform returning DataFrame |
+| `create_sequences()` | Convert arrays to 3D LSTM sequences |
+| `create_sequences_by_split()` | Static method returning SignalDataset instances |
+| `save(path)` / `load(path)` | Pickle serialization |
+
+#### Output Result Classes
+
+| Class | Description |
+|-------|-------------|
+| `OptimizationResult` | best_params, score, sampler_type, n_trials, fitness_details |
+| `FitnessResult` | total_return, num_trades, win_rate, sharpe_ratio, max_drawdown |
 
 ## Available Indicators
 

@@ -23,7 +23,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from crypto_analysis.lstm.dataset import create_sequences
+from crypto_analysis.lstm.dataset import create_sequences, SignalDataset
 
 
 class VectorBTDataPreprocessor:
@@ -95,6 +95,7 @@ class VectorBTDataPreprocessor:
         extract_time_features: bool = False,
         # DataFrame clustering
         enable_dataframe_clustering: bool = False,
+        df_cluster_columns: str = 'indicators',
         cluster_k_range: Tuple[int, int] = (2, 10),
         cluster_k: Optional[int] = None,
         # Signal clustering
@@ -146,6 +147,12 @@ class VectorBTDataPreprocessor:
         enable_dataframe_clustering : bool, default=False
             If True, apply KMeans clustering to the entire DataFrame features and add
             one-hot encoded cluster columns.
+        df_cluster_columns : str, default='indicators'
+            Controls which columns are used for DataFrame clustering:
+            - 'all': All DataFrame columns (except target and date)
+            - 'indicators': Only raw technical indicators + OHLCV columns
+            - 'signals': Entry/exit signal columns + OHLCV columns
+            - 'indicators_signals': Raw indicators + entry/exit signals + OHLCV columns
         cluster_k_range : tuple, default=(2, 10)
             Range of k values to search for optimal number of clusters using elbow method.
         cluster_k : int, optional
@@ -182,8 +189,17 @@ class VectorBTDataPreprocessor:
         # Feature engineering parameters
         self.extract_time_features = extract_time_features
         self.enable_dataframe_clustering = enable_dataframe_clustering
+        self.df_cluster_columns = df_cluster_columns
         self.cluster_k_range = cluster_k_range
         self.cluster_k = cluster_k
+
+        # Validate df_cluster_columns
+        valid_df_cluster_options = {'all', 'indicators', 'signals', 'indicators_signals'}
+        if df_cluster_columns not in valid_df_cluster_options:
+            raise ValueError(
+                f"df_cluster_columns must be one of {valid_df_cluster_options}, "
+                f"got '{df_cluster_columns}'"
+            )
         self.enable_signal_clustering = enable_signal_clustering
         self.signal_cluster_k_range = signal_cluster_k_range
         self.signal_cluster_k = signal_cluster_k
@@ -210,6 +226,7 @@ class VectorBTDataPreprocessor:
         self._dataframe_cluster_model: Optional[KMeans] = None
         self._dataframe_cluster_k: int = 0
         self._dataframe_cluster_columns: List[str] = []
+        self._df_cluster_fit_columns: List[str] = []  # Columns used during fit
 
         # Signal clustering state
         self._entry_cluster_model: Optional[KMeans] = None
@@ -571,6 +588,72 @@ class VectorBTDataPreprocessor:
 
         return optimal_k
 
+    def _get_df_cluster_columns(self, df: pd.DataFrame) -> List[str]:
+        """
+        Get columns to use for DataFrame clustering based on df_cluster_columns setting.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Input DataFrame
+
+        Returns
+        -------
+        List[str]
+            List of column names to use for clustering
+        """
+        # Always exclude target and date
+        cols_to_exclude = {self.target_column, 'date', 'split'}
+
+        # Also exclude cluster columns that might already exist
+        cols_to_exclude.update(c for c in df.columns if c.startswith('df_cluster_'))
+        cols_to_exclude.update(c for c in df.columns if c.startswith('entry_cluster_'))
+        cols_to_exclude.update(c for c in df.columns if c.startswith('exit_cluster_'))
+
+        if self.df_cluster_columns == 'all':
+            # All columns except excluded
+            return [c for c in df.columns if c not in cols_to_exclude]
+
+        elif self.df_cluster_columns == 'indicators':
+            # Only raw technical indicators + OHLCV
+            # Raw indicators are columns that don't end with _entry or _exit
+            cluster_cols = []
+            for c in df.columns:
+                if c in cols_to_exclude:
+                    continue
+                # Include OHLCV columns
+                if c in self.ohlcv_columns:
+                    cluster_cols.append(c)
+                # Include raw indicators (not entry/exit signals)
+                elif not c.endswith('_entry') and not c.endswith('_exit'):
+                    cluster_cols.append(c)
+            return cluster_cols
+
+        elif self.df_cluster_columns == 'signals':
+            # Entry/exit signal columns + OHLCV
+            cluster_cols = []
+            for c in df.columns:
+                if c in cols_to_exclude:
+                    continue
+                # Include OHLCV columns
+                if c in self.ohlcv_columns:
+                    cluster_cols.append(c)
+                # Include entry/exit signals
+                elif c.endswith('_entry') or c.endswith('_exit'):
+                    cluster_cols.append(c)
+            return cluster_cols
+
+        elif self.df_cluster_columns == 'indicators_signals':
+            # Raw indicators + entry/exit signals + OHLCV (everything except excluded)
+            return [c for c in df.columns if c not in cols_to_exclude]
+
+        else:
+            # Fallback to indicators (shouldn't reach here due to validation)
+            return [c for c in df.columns
+                    if c not in cols_to_exclude
+                    and (c in self.ohlcv_columns or
+                         (not c.endswith('_entry') and not c.endswith('_exit')))]
+
     def _fit_dataframe_cluster(
         self,
         dfs: List[pd.DataFrame]
@@ -586,12 +669,14 @@ class VectorBTDataPreprocessor:
         # Concatenate all DataFrames
         combined = pd.concat(dfs, ignore_index=True)
 
-        # Drop target and date columns for clustering
-        cols_to_drop = [self.target_column, 'date']
-        cluster_cols = [c for c in combined.columns if c not in cols_to_drop]
+        # Get columns to use based on df_cluster_columns setting
+        cluster_cols = self._get_df_cluster_columns(combined)
 
         if not cluster_cols:
             return
+
+        # Store the columns used for clustering (needed for transform)
+        self._df_cluster_fit_columns = cluster_cols
 
         cluster_data = combined[cluster_cols].values
 
@@ -638,9 +723,12 @@ class VectorBTDataPreprocessor:
 
         df = df.copy()
 
-        # Prepare data for prediction (same columns as during fit)
-        cols_to_drop = [self.target_column, 'date']
-        cluster_cols = [c for c in df.columns if c not in cols_to_drop]
+        # Use the same columns that were used during fit
+        cluster_cols = [c for c in self._df_cluster_fit_columns if c in df.columns]
+
+        if not cluster_cols:
+            return df
+
         cluster_data = df[cluster_cols].values
         cluster_data = np.nan_to_num(cluster_data, nan=0.0)
 
@@ -802,152 +890,267 @@ class VectorBTDataPreprocessor:
 
         return train_df, val_df, test_df
 
-    def _calculate_joint_cluster_ratios(
-        self,
-        df: pd.DataFrame
-    ) -> np.ndarray:
+    def _get_all_cluster_columns(self, df: pd.DataFrame) -> List[str]:
         """
-        Calculate joint distribution of (entry_cluster, exit_cluster) pairs.
+        Get all cluster columns from DataFrame.
 
-        For each row, computes normalized entry and exit cluster values,
-        then calculates the joint probability distribution.
+        Returns columns matching: entry_cluster_*, exit_cluster_*, df_cluster_*
 
         Parameters
         ----------
         df : pd.DataFrame
-            DataFrame with entry_cluster_* and exit_cluster_* columns
+            Input DataFrame
 
         Returns
         -------
-        np.ndarray
-            2D array of shape (n_entry_clusters, n_exit_clusters) with joint ratios
-            that sum to 1.0
+        List[str]
+            Sorted list of cluster column names
         """
-        # Get cluster columns
-        entry_cols = sorted([c for c in df.columns if c.startswith('entry_cluster_')])
-        exit_cols = sorted([c for c in df.columns if c.startswith('exit_cluster_')])
+        cluster_cols = []
+        for col in df.columns:
+            if (col.startswith('entry_cluster_') or
+                col.startswith('exit_cluster_')):
+                # col.startswith('df_cluster_')):
+                cluster_cols.append(col)
+        return sorted(cluster_cols)
 
-        if not entry_cols or not exit_cols:
-            return np.array([[1.0]])  # Fallback if no clusters
+    def _calculate_cluster_distribution(
+        self,
+        df: pd.DataFrame,
+        cluster_cols: Optional[List[str]] = None
+    ) -> Optional[np.ndarray]:
+        """
+        Calculate probability distribution over all cluster columns.
 
-        n_entry = len(entry_cols)
-        n_exit = len(exit_cols)
+        For each row, normalizes cluster values and averages across rows
+        to get the overall distribution.
 
-        # Extract values
-        entry_values = df[entry_cols].values.astype(np.float64)
-        exit_values = df[exit_cols].values.astype(np.float64)
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame with cluster columns
+        cluster_cols : List[str], optional
+            Specific cluster columns to use. If None, auto-detects all cluster columns.
+
+        Returns
+        -------
+        np.ndarray or None
+            1D array with probability distribution over cluster columns,
+            or None if no cluster columns found
+        """
+        if cluster_cols is None:
+            cluster_cols = self._get_all_cluster_columns(df)
+
+        if not cluster_cols:
+            return None
+
+        # Extract cluster values
+        cluster_data = df[cluster_cols].values.astype(np.float64)
 
         # Normalize per row (avoid division by zero)
-        entry_sums = entry_values.sum(axis=1, keepdims=True)
-        entry_sums = np.where(entry_sums == 0, 1.0, entry_sums)
-        entry_norm = entry_values / entry_sums
+        row_sums = cluster_data.sum(axis=1, keepdims=True)
+        row_sums = np.where(row_sums == 0, 1.0, row_sums)
+        normalized = cluster_data / row_sums
 
-        exit_sums = exit_values.sum(axis=1, keepdims=True)
-        exit_sums = np.where(exit_sums == 0, 1.0, exit_sums)
-        exit_norm = exit_values / exit_sums
-
-        # Calculate joint distribution per row and average
-        # joint[i,j] = mean over rows of (entry_norm[row,i] * exit_norm[row,j])
-        joint_ratios = np.zeros((n_entry, n_exit))
-        for row_idx in range(len(df)):
-            # Outer product for this row
-            joint_ratios += np.outer(entry_norm[row_idx], exit_norm[row_idx])
+        # Average across rows to get distribution
+        distribution = normalized.mean(axis=0)
 
         # Normalize to sum to 1
-        total = joint_ratios.sum()
-        if total > 0:
-            joint_ratios /= total
+        dist_sum = distribution.sum()
+        if dist_sum > 0:
+            distribution = distribution / dist_sum
 
-        return joint_ratios
+        return distribution
+
+    def _resample_by_distribution(
+        self,
+        df: pd.DataFrame,
+        target_distribution: np.ndarray,
+        cluster_cols: List[str],
+        target_size: int,
+        n_partitions: int = 168
+    ) -> pd.DataFrame:
+        """
+        Resample DataFrame to match target cluster distribution using partitioned sampling.
+
+        Divides the DataFrame into n_partitions chronological partitions, samples from
+        each partition proportionally to its size, then concatenates the results.
+        This ensures temporal diversity in the resampled data.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to resample
+        target_distribution : np.ndarray
+            Target probability distribution over cluster columns (1D array)
+        cluster_cols : List[str]
+            List of cluster column names
+        target_size : int
+            Total number of rows to sample across all partitions
+        n_partitions : int, default=168
+            Number of partitions to divide the data into (e.g., 168 = 24 hours * 7 days)
+
+        Returns
+        -------
+        pd.DataFrame
+            Resampled DataFrame with rows sampled from each partition
+        """
+        if len(df) == 0 or target_size == 0:
+            return df.iloc[:0]  # Return empty DataFrame with same columns
+
+        # Adjust n_partitions if larger than DataFrame length
+        n_partitions = min(n_partitions, len(df))
+
+        # Calculate partition boundaries
+        partition_indices = np.array_split(np.arange(len(df)), n_partitions)
+
+        # Calculate samples per partition (proportional to partition size)
+        partition_sizes = np.array([len(p) for p in partition_indices])
+        samples_per_partition = np.round(
+            partition_sizes / partition_sizes.sum() * target_size
+        ).astype(int)
+
+        # Adjust to ensure total equals target_size
+        diff = target_size - samples_per_partition.sum()
+        if diff != 0:
+            # Add/remove from largest partitions
+            sorted_idx = np.argsort(partition_sizes)[::-1]
+            for i in range(abs(diff)):
+                idx = sorted_idx[i % len(sorted_idx)]
+                samples_per_partition[idx] += 1 if diff > 0 else -1
+
+        rng = np.random.RandomState(self.resample_random_state)
+        resampled_partitions = []
+
+        for partition_idx, (indices, n_samples) in enumerate(zip(partition_indices, samples_per_partition)):
+            if len(indices) == 0 or n_samples <= 0:
+                continue
+
+            partition_df = df.iloc[indices]
+
+            # Extract and normalize cluster values for this partition
+            cluster_data = partition_df[cluster_cols].values.astype(np.float64)
+            row_sums = cluster_data.sum(axis=1, keepdims=True)
+            row_sums = np.where(row_sums == 0, 1.0, row_sums)
+            normalized = cluster_data / row_sums
+
+            # Calculate current distribution in this partition
+            current_distribution = normalized.mean(axis=0)
+            current_sum = current_distribution.sum()
+            if current_sum > 0:
+                current_distribution = current_distribution / current_sum
+
+            # Compute weight for each row in partition
+            # Weight = sum over clusters of (row's contribution * target/current ratio)
+            weights = np.zeros(len(partition_df))
+            for row_idx in range(len(partition_df)):
+                row_weight = 0.0
+                for col_idx in range(len(cluster_cols)):
+                    contrib = normalized[row_idx, col_idx]
+                    if contrib > 0:
+                        current_ratio = current_distribution[col_idx] if current_distribution[col_idx] > 0 else 1e-10
+                        row_weight += contrib * (target_distribution[col_idx] / current_ratio)
+                weights[row_idx] = row_weight
+
+            # Normalize weights to probabilities
+            weight_sum = weights.sum()
+            if weight_sum > 0:
+                weights /= weight_sum
+            else:
+                # Fallback to uniform sampling
+                weights = np.ones(len(partition_df)) / len(partition_df)
+
+            # Sample from this partition with replacement based on weights
+            # Use different seed per partition for variety while maintaining reproducibility
+            partition_rng = np.random.RandomState(self.resample_random_state + partition_idx)
+            local_indices = partition_rng.choice(len(partition_df), size=n_samples, replace=True, p=weights)
+
+            # Get original DataFrame indices
+            sampled_df = partition_df.iloc[local_indices]
+            resampled_partitions.append(sampled_df)
+
+        if not resampled_partitions:
+            return df.iloc[:0]
+
+        return pd.concat(resampled_partitions, ignore_index=True)
 
     def _resample_train_data(
         self,
         train_df: pd.DataFrame,
-        target_joint_ratios: np.ndarray,
-        target_size: Optional[int] = None
+        val_test_df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Resample train DataFrame using weighted sampling based on joint cluster distribution.
+        Resample training data to match val+test class ratio AND cluster distribution per class.
 
-        Computes a weight for each row based on how well it aligns with the target
-        joint distribution, then samples rows proportionally to these weights.
+        For each class (hold, trade):
+        1. Calculate class ratio from val_test_df
+        2. Determine target count for each class in train
+        3. Calculate cluster distribution from val_test_df for this class
+        4. Resample train rows of that class to match target count and cluster distribution
 
         Parameters
         ----------
         train_df : pd.DataFrame
             Training DataFrame to resample
-        target_joint_ratios : np.ndarray
-            Target joint distribution of shape (n_entry_clusters, n_exit_clusters)
-        target_size : int, optional
-            Number of rows to sample. If None, uses original train size.
+        val_test_df : pd.DataFrame
+            Combined validation + test DataFrame to calculate target distributions from
 
         Returns
         -------
         pd.DataFrame
-            Resampled training DataFrame
+            Resampled training DataFrame with class ratio matching val+test
         """
-        if target_size is None:
-            target_size = len(train_df)
-
-        if len(train_df) == 0:
+        cluster_cols = self._get_all_cluster_columns(train_df)
+        if not cluster_cols:
             return train_df
 
-        # Get cluster columns
-        entry_cols = sorted([c for c in train_df.columns if c.startswith('entry_cluster_')])
-        exit_cols = sorted([c for c in train_df.columns if c.startswith('exit_cluster_')])
+        # Calculate class distribution from val+test
+        val_test_class_counts = val_test_df[self.target_column].value_counts()
+        val_test_total = len(val_test_df)
 
-        if not entry_cols or not exit_cols:
-            return train_df  # No clusters, return as-is
+        if val_test_total == 0:
+            return train_df
 
-        # Extract and normalize values
-        entry_values = train_df[entry_cols].values.astype(np.float64)
-        exit_values = train_df[exit_cols].values.astype(np.float64)
+        # Determine target counts for train based on val+test class ratio
+        train_total = len(train_df)
+        target_counts = {}
+        for class_value in ['hold', 'trade']:
+            if class_value in val_test_class_counts.index:
+                ratio = val_test_class_counts[class_value] / val_test_total
+                target_counts[class_value] = int(train_total * ratio)
+            else:
+                target_counts[class_value] = 0
 
-        entry_sums = entry_values.sum(axis=1, keepdims=True)
-        entry_sums = np.where(entry_sums == 0, 1.0, entry_sums)
-        entry_norm = entry_values / entry_sums
+        resampled_dfs = []
 
-        exit_sums = exit_values.sum(axis=1, keepdims=True)
-        exit_sums = np.where(exit_sums == 0, 1.0, exit_sums)
-        exit_norm = exit_values / exit_sums
+        for class_value in ['hold', 'trade']:
+            # Filter by class
+            train_class = train_df[train_df[self.target_column] == class_value]
+            val_test_class = val_test_df[val_test_df[self.target_column] == class_value]
+            target_count = target_counts.get(class_value, 0)
 
-        # Calculate current distribution in train data
-        train_joint = np.zeros_like(target_joint_ratios)
-        for row_idx in range(len(train_df)):
-            train_joint += np.outer(entry_norm[row_idx], exit_norm[row_idx])
-        train_total = train_joint.sum()
-        if train_total > 0:
-            train_joint /= train_total
+            if len(train_class) == 0 or len(val_test_class) == 0 or target_count == 0:
+                continue
 
-        # Compute weight for each row
-        # Weight is based on ratio of target to current distribution
-        # Higher weight for under-represented cluster combinations
-        weights = np.zeros(len(train_df))
-        for row_idx in range(len(train_df)):
-            row_weight = 0.0
-            for i in range(len(entry_cols)):
-                for j in range(len(exit_cols)):
-                    # Contribution of this row to cluster (i,j)
-                    contrib = entry_norm[row_idx, i] * exit_norm[row_idx, j]
-                    if contrib > 0:
-                        # Weight by target ratio, inverse of current ratio
-                        current_ratio = train_joint[i, j] if train_joint[i, j] > 0 else 1e-10
-                        row_weight += contrib * (target_joint_ratios[i, j] / current_ratio)
-            weights[row_idx] = row_weight
+            # Calculate target cluster distribution for this class
+            target_dist = self._calculate_cluster_distribution(val_test_class, cluster_cols)
 
-        # Normalize weights to probabilities
-        weight_sum = weights.sum()
-        if weight_sum > 0:
-            weights /= weight_sum
-        else:
-            # Fallback to uniform sampling
-            weights = np.ones(len(train_df)) / len(train_df)
+            if target_dist is None:
+                # No cluster columns, just sample uniformly
+                rng = np.random.RandomState(self.resample_random_state)
+                indices = rng.choice(len(train_class), size=target_count, replace=True)
+                resampled_dfs.append(train_class.iloc[indices].reset_index(drop=True))
+            else:
+                # Resample train data for this class to match cluster distribution
+                resampled = self._resample_by_distribution(
+                    train_class, target_dist, cluster_cols, target_count
+                )
+                resampled_dfs.append(resampled)
 
-        # Sample with replacement based on weights
-        rng = np.random.RandomState(self.resample_random_state)
-        indices = rng.choice(len(train_df), size=target_size, replace=True, p=weights)
+        if not resampled_dfs:
+            return train_df
 
-        return train_df.iloc[indices].reset_index(drop=True)
+        return pd.concat(resampled_dfs, ignore_index=True)
 
     def resample(
         self,
@@ -978,21 +1181,22 @@ class VectorBTDataPreprocessor:
         if not self._is_fitted:
             raise RuntimeError("Preprocessor must be fitted before resample. Call fit() first.")
 
-        if not self.enable_signal_clustering:
-            raise RuntimeError("Resampling requires enable_signal_clustering=True")
-
         # Apply all transforms to get cluster columns
         transformed_df = self.transform_dataframe(df)
+
+        # Check if any cluster columns exist
+        cluster_cols = self._get_all_cluster_columns(transformed_df)
+        if not cluster_cols:
+            raise RuntimeError("Resampling requires cluster columns (enable_signal_clustering or enable_dataframe_clustering)")
 
         # Split chronologically
         train_df, val_df, test_df = self._split_data(transformed_df)
 
-        # Calculate target ratios from val+test combined
+        # Combine val+test for distribution calculation
         val_test_combined = pd.concat([val_df, test_df], ignore_index=True)
-        target_ratios = self._calculate_joint_cluster_ratios(val_test_combined)
 
-        # Resample train data to match target distribution
-        resampled_train = self._resample_train_data(train_df, target_ratios)
+        # Resample train data to match val+test class ratio and cluster distribution
+        resampled_train = self._resample_train_data(train_df, val_test_combined)
 
         # Sort resampled train by date to restore chronological order
         if 'date' in resampled_train.columns:
@@ -1246,6 +1450,173 @@ class VectorBTDataPreprocessor:
 
         return np.vstack(all_features), np.concatenate(all_targets)
 
+    def fit_transform_dataframe(
+        self,
+        data: Union[pd.DataFrame, Dict[str, pd.DataFrame], List[pd.DataFrame]],
+        apply_resampling: bool = False,
+        apply_scaling: bool = False
+    ) -> pd.DataFrame:
+        """
+        Fit and transform to DataFrame in one efficient step.
+
+        Combines fit() and transform_dataframe() without redundant processing.
+        All feature engineering (cleaning, time features, clustering, normalization)
+        is done once during fitting, and the transformed data is returned directly.
+
+        Parameters
+        ----------
+        data : DataFrame, Dict[str, DataFrame], or List[DataFrame]
+            Input data. If multiple DataFrames, they are concatenated.
+        apply_resampling : bool, default=False
+            If True and enable_resampling is enabled, split data into train/val/test,
+            resample train data to match cluster distribution in val+test, and return
+            concatenated DataFrame with a 'split' column.
+        apply_scaling : bool, default=False
+            If True, apply the fitted scaler to continuous columns.
+
+        Returns
+        -------
+        pd.DataFrame
+            Transformed DataFrame with feature engineering columns added:
+            - Time features (day_sin, day_cos, hour_sin, hour_cos) if enabled
+            - Signal cluster aggregates (entry_cluster_*, exit_cluster_*) if enabled
+            - DataFrame cluster one-hot columns (df_cluster_*) if enabled
+            If apply_resampling=True, includes a 'split' column ('train', 'val', 'test').
+            If apply_scaling=True, continuous columns are scaled.
+
+        Examples
+        --------
+        >>> prep = VectorBTDataPreprocessor(
+        ...     enable_signal_clustering=True,
+        ...     enable_resampling=True
+        ... )
+        >>> transformed = prep.fit_transform_dataframe(df, apply_resampling=True, apply_scaling=True)
+        >>> (X_train, y_train), (X_val, y_val), (X_test, y_test) = prep.create_sequences_by_split(transformed)
+        """
+        # Normalize input to list of DataFrames
+        if isinstance(data, pd.DataFrame):
+            dfs = [data]
+        elif isinstance(data, dict):
+            dfs = list(data.values())
+        else:
+            dfs = list(data)
+
+        if not dfs:
+            raise ValueError("No data provided for fitting")
+
+        # Step 1: Clean all DataFrames
+        cleaned_dfs = [self._clean_data(df) for df in dfs]
+
+        # Step 2: Extract time features if enabled
+        if self.extract_time_features:
+            cleaned_dfs = [self._extract_time_features(df) for df in cleaned_dfs]
+
+        # Step 3: Fit signal clustering BEFORE any transforms (on original signal columns)
+        if self.enable_signal_clustering:
+            self._fit_signal_clusters(cleaned_dfs)
+
+        # Step 4: Apply signal clustering transform to get the new column structure
+        if self.enable_signal_clustering:
+            cleaned_dfs = [self._transform_signal_clusters(df) for df in cleaned_dfs]
+
+        # Step 5: Fit DataFrame clustering (on all features)
+        if self.enable_dataframe_clustering:
+            self._fit_dataframe_cluster(cleaned_dfs)
+
+        # Step 6: Apply DataFrame clustering transform
+        if self.enable_dataframe_clustering:
+            cleaned_dfs = [self._transform_dataframe_cluster(df) for df in cleaned_dfs]
+
+        # Step 7: Apply normalize by close if enabled (after clustering)
+        if self.normalize_by_close:
+            cleaned_dfs = [self._apply_normalize_by_close(df) for df in cleaned_dfs]
+
+        # Determine feature columns from first processed DataFrame
+        first_df = cleaned_dfs[0]
+        self.feature_columns = self._filter_columns(first_df)
+
+        # Add time feature columns if extracted
+        if self.extract_time_features:
+            time_cols = ['day_sin', 'day_cos', 'hour_sin', 'hour_cos']
+            for col in time_cols:
+                if col in first_df.columns and col not in self.feature_columns:
+                    self.feature_columns.append(col)
+
+        # Add clustering columns if enabled
+        if self.enable_signal_clustering:
+            for col in first_df.columns:
+                if col.startswith('entry_cluster_') or col.startswith('exit_cluster_'):
+                    if col not in self.feature_columns:
+                        self.feature_columns.append(col)
+
+        if self.enable_dataframe_clustering:
+            for col in self._dataframe_cluster_columns:
+                if col not in self.feature_columns:
+                    self.feature_columns.append(col)
+
+        # Identify columns to scale vs binary signal columns
+        self._ohlcv_indices = []
+        self._signal_indices = []
+        for i, col in enumerate(self.feature_columns):
+            if col.endswith('_entry') or col.endswith('_exit'):
+                self._signal_indices.append(i)
+            elif col.startswith('df_cluster_'):
+                self._signal_indices.append(i)
+            else:
+                self._ohlcv_indices.append(i)
+
+        # Initialize scaler
+        if self.scaler_type == 'standard':
+            self.scaler = StandardScaler()
+        elif self.scaler_type == 'minmax':
+            self.scaler = MinMaxScaler()
+        else:
+            raise ValueError(f"Unknown scaler_type: {self.scaler_type}")
+
+        # Collect data from all scalable columns for fitting
+        scale_cols = [self.feature_columns[i] for i in self._ohlcv_indices]
+        if scale_cols:
+            all_scale_data = []
+            for df in cleaned_dfs:
+                all_scale_data.append(df[scale_cols].values)
+
+            combined_scale_data = np.vstack(all_scale_data)
+            self.scaler.fit(combined_scale_data)
+
+        self._is_fitted = True
+
+        # Concatenate all transformed DataFrames
+        result_df = pd.concat(cleaned_dfs, ignore_index=True)
+
+        # Apply resampling if enabled
+        if apply_resampling and self.enable_resampling:
+            cluster_cols = self._get_all_cluster_columns(result_df)
+            if cluster_cols:
+                train_df, val_df, test_df = self._split_data(result_df)
+
+                val_test_combined = pd.concat([val_df, test_df], ignore_index=True)
+
+                # Resample train to match val+test class ratio and cluster distribution
+                resampled_train = self._resample_train_data(train_df, val_test_combined)
+
+                if 'date' in resampled_train.columns:
+                    resampled_train = resampled_train.sort_values('date').reset_index(drop=True)
+
+                # Add split column
+                resampled_train['split'] = 'train'
+                val_df = val_df.copy()
+                val_df['split'] = 'val'
+                test_df = test_df.copy()
+                test_df['split'] = 'test'
+
+                result_df = pd.concat([resampled_train, val_df, test_df], ignore_index=True)
+
+        # Apply scaling if enabled
+        if apply_scaling and self.scaler is not None:
+            result_df = self._apply_scaling_to_dataframe(result_df)
+
+        return result_df
+
     def create_sequences(
         self,
         features: np.ndarray,
@@ -1341,6 +1712,138 @@ class VectorBTDataPreprocessor:
 
         return np.vstack(all_X), np.concatenate(all_y)
 
+    @staticmethod
+    def create_sequences_by_split(
+        df: pd.DataFrame,
+        sequence_length: int,
+        target_column: str = 'tradeable',
+        target_encoding: Optional[Dict[str, int]] = None,
+        target_shift: int = 1,
+        stride: int = 1,
+        exclude_columns: Optional[List[str]] = None,
+        device: Optional[str] = None
+    ) -> Tuple[SignalDataset, SignalDataset, SignalDataset]:
+        """
+        Create LSTM sequences from a DataFrame with a 'split' column.
+
+        Static method that splits the DataFrame by the 'split' column into
+        train/val/test sets, then creates sequences for each set separately.
+        This ensures sequences never span across different splits.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame with a 'split' column containing 'train', 'val', 'test' values.
+            Should be the output of fit_transform_dataframe(apply_resampling=True, apply_scaling=True).
+        sequence_length : int
+            Length of each input sequence for LSTM.
+        target_column : str, default='tradeable'
+            Name of the target column.
+        target_encoding : dict, optional
+            Mapping from target string to integer. Default: {'hold': 0, 'trade': 1}
+        target_shift : int, default=1
+            Number of steps to shift target. Features at t predict target at t+shift.
+        stride : int, default=1
+            Step size between consecutive sequences.
+        exclude_columns : list, optional
+            Additional columns to exclude from features (besides 'split', 'date', target).
+        device : str, optional
+            Device for SignalDataset tensors ('cuda', 'cpu'). If None, auto-detects.
+
+        Returns
+        -------
+        tuple
+            (train_dataset, val_dataset, test_dataset)
+            Each is a SignalDataset instance ready for PyTorch DataLoader.
+
+        Raises
+        ------
+        ValueError
+            If 'split' column is missing or no valid sequences could be created
+
+        Examples
+        --------
+        >>> transformed = prep.fit_transform_dataframe(df, apply_resampling=True, apply_scaling=True)
+        >>> train_ds, val_ds, test_ds = VectorBTDataPreprocessor.create_sequences_by_split(
+        ...     transformed, sequence_length=24
+        ... )
+        >>> train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
+        """
+        import torch
+
+        if target_encoding is None:
+            target_encoding = {'hold': 0, 'trade': 1}
+
+        if 'split' not in df.columns:
+            raise ValueError("DataFrame must have a 'split' column.")
+
+        # Determine device
+        if device is not None:
+            torch_device = torch.device(device)
+        else:
+            torch_device = None  # Let SignalDataset auto-detect
+
+        # Determine columns to exclude from features
+        cols_to_exclude = {'split', target_column}
+        if 'date' in df.columns:
+            cols_to_exclude.add('date')
+        if exclude_columns:
+            cols_to_exclude.update(exclude_columns)
+
+        # Determine feature columns (all columns except excluded ones)
+        feature_columns = [c for c in df.columns if c not in cols_to_exclude]
+
+        results = {}
+
+        for split_name in ['train', 'val', 'test']:
+            # Filter rows for this split
+            split_df = df[df['split'] == split_name].copy()
+
+            if len(split_df) == 0:
+                # Empty split - create empty SignalDataset
+                n_features = len(feature_columns)
+                X = np.empty((0, sequence_length, n_features), dtype=np.float32)
+                y = np.empty((0,), dtype=np.int64)
+                results[split_name] = SignalDataset(X, y, device=torch_device)
+                continue
+
+            # Sort by date to ensure chronological order
+            if 'date' in split_df.columns:
+                split_df = split_df.sort_values('date').reset_index(drop=True)
+
+            # Extract features (exclude non-feature columns)
+            features = split_df[feature_columns].values.astype(np.float32)
+
+            # Encode targets
+            df_target = split_df[target_column].fillna('hold')
+            targets = np.asarray(df_target.map(target_encoding), dtype=np.int64)
+
+            # Shift targets: features at t predict target at t+shift
+            if target_shift > 0:
+                features = features[:-target_shift]
+                targets = targets[target_shift:]
+
+            # Check if enough data for sequences
+            min_length = sequence_length + 1
+            if len(features) < min_length:
+                n_features = len(feature_columns)
+                X = np.empty((0, sequence_length, n_features), dtype=np.float32)
+                y = np.empty((0,), dtype=np.int64)
+                results[split_name] = SignalDataset(X, y, device=torch_device)
+                continue
+
+            # Create sequences using the imported function
+            X, y = create_sequences(
+                features=features,
+                targets=targets,
+                input_seq_length=sequence_length,
+                output_seq_length=1,
+                stride=stride
+            )
+            results[split_name] = SignalDataset(X, y, device=torch_device)
+
+        return results['train'], results['val'], results['test']
+
     def get_feature_names(self) -> List[str]:
         """
         Return list of feature column names.
@@ -1395,7 +1898,8 @@ class VectorBTDataPreprocessor:
             - Time features (day_sin, day_cos, hour_sin, hour_cos) if enabled
             - Signal cluster aggregates (entry_cluster_*, exit_cluster_*) if enabled
             - DataFrame cluster one-hot columns (df_cluster_*) if enabled
-            If apply_resampling=True, returns concatenated resampled train + val + test.
+            If apply_resampling=True, returns concatenated resampled train + val + test
+            with a 'split' column indicating 'train', 'val', or 'test' for each row.
             If apply_scaling=True, continuous columns are scaled.
 
         Raises
@@ -1426,23 +1930,31 @@ class VectorBTDataPreprocessor:
             df = self._apply_normalize_by_close(df)
 
         # Step 6: Apply resampling if enabled
-        if apply_resampling and self.enable_resampling and self.enable_signal_clustering:
-            # Split the transformed data
-            train_df, val_df, test_df = self._split_data(df)
+        if apply_resampling and self.enable_resampling:
+            cluster_cols = self._get_all_cluster_columns(df)
+            if cluster_cols:
+                # Split the transformed data
+                train_df, val_df, test_df = self._split_data(df)
 
-            # Calculate target ratios from val+test
-            val_test_combined = pd.concat([val_df, test_df], ignore_index=True)
-            target_ratios = self._calculate_joint_cluster_ratios(val_test_combined)
+                # Combine val+test for distribution calculation
+                val_test_combined = pd.concat([val_df, test_df], ignore_index=True)
 
-            # Resample train data
-            resampled_train = self._resample_train_data(train_df, target_ratios)
+                # Resample train to match val+test class ratio and cluster distribution
+                resampled_train = self._resample_train_data(train_df, val_test_combined)
 
-            # Sort resampled train by date to restore chronological order
-            if 'date' in resampled_train.columns:
-                resampled_train = resampled_train.sort_values('date').reset_index(drop=True)
+                # Sort resampled train by date to restore chronological order
+                if 'date' in resampled_train.columns:
+                    resampled_train = resampled_train.sort_values('date').reset_index(drop=True)
 
-            # Concatenate
-            df = pd.concat([resampled_train, val_df, test_df], ignore_index=True)
+                # Add split column to identify train/val/test rows
+                resampled_train['split'] = 'train'
+                val_df = val_df.copy()
+                val_df['split'] = 'val'
+                test_df = test_df.copy()
+                test_df['split'] = 'test'
+
+                # Concatenate
+                df = pd.concat([resampled_train, val_df, test_df], ignore_index=True)
 
         # Step 7: Apply scaling if enabled
         if apply_scaling and self.scaler is not None:
