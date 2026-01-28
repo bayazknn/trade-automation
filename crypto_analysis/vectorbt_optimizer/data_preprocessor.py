@@ -62,6 +62,10 @@ class VectorBTDataPreprocessor:
     columns_to_drop : list
         Columns to always remove from features
 
+    Note
+    ----
+    This class is not thread-safe. Each thread should use its own instance.
+
     Examples
     --------
     >>> prep = VectorBTDataPreprocessor(
@@ -78,6 +82,32 @@ class VectorBTDataPreprocessor:
     DEFAULT_OHLCV_COLUMNS = ['open', 'high', 'low', 'close', 'volume']
     DEFAULT_COLUMNS_TO_DROP = ['date']
     DEFAULT_TARGET_ENCODING = {'hold': 0, 'trade': 1}
+
+    # Small epsilon value to avoid division by zero
+    EPSILON = 1e-10
+
+    # Default number of partitions for resampling (24 hours * 7 days)
+    DEFAULT_RESAMPLE_PARTITIONS = 168
+
+    # Bounded oscillators that are already percentage-based and should not be
+    # normalized by close price. These indicators are already in a fixed range
+    # (e.g., 0-100, -100 to 100) and are not price-dependent.
+    BOUNDED_OSCILLATORS = (
+        'RSI', 'STOCH', 'STOCHRSI', 'STOCHF',  # 0-100
+        'WILLR',  # -100 to 0
+        'ULTOSC',  # 0-100
+        'MFI',  # 0-100
+        'ADX', 'ADXR', 'PLUS_DI', 'MINUS_DI', 'DX',  # 0-100
+        'AROON', 'AROONOSC',  # 0-100 or -100 to 100
+        'CCI',  # unbounded but percentile-based
+        'CMO',  # -100 to 100
+        'ROC', 'ROCP', 'ROCR',  # percentage-based
+        'MOM',  # momentum (not price-based)
+        'PPO',  # percentage price oscillator
+        'APO',  # absolute price oscillator (but percentage-like)
+        'BOP',  # balance of power (-1 to 1)
+        'TRIX',  # rate of change
+    )
 
     def __init__(
         self,
@@ -108,6 +138,11 @@ class VectorBTDataPreprocessor:
         train_ratio: float = 0.6,
         val_ratio: float = 0.2,
         resample_random_state: int = 42,
+        # Derived feature engineering
+        enable_derived_features: bool = False,
+        enable_derived_clustering: bool = False,
+        derived_cluster_k_range: Tuple[int, int] = (2, 10),
+        derived_cluster_k: Optional[int] = None,
     ):
         """
         Initialize preprocessor.
@@ -174,6 +209,17 @@ class VectorBTDataPreprocessor:
             Ratio of data to use for validation. Test ratio = 1 - train_ratio - val_ratio.
         resample_random_state : int, default=42
             Random state for reproducible resampling.
+        enable_derived_features : bool, default=False
+            If True, create derived features from raw technical indicators.
+            Features include momentum, volatility, trend, and composite indicators.
+            All derived features use 'derived_' prefix.
+        enable_derived_clustering : bool, default=False
+            If True, cluster derived features using KMeans and add one-hot encoded
+            cluster columns (derived_cluster_0, derived_cluster_1, etc.).
+        derived_cluster_k_range : tuple, default=(2, 10)
+            Range of k values to search for optimal number of derived clusters.
+        derived_cluster_k : int, optional
+            If provided, override elbow detection and use this k for derived clustering.
         """
         self.remove_raw_indicators = remove_raw_indicators
         self.target_shift = target_shift
@@ -211,6 +257,12 @@ class VectorBTDataPreprocessor:
         self.val_ratio = val_ratio
         self.resample_random_state = resample_random_state
 
+        # Derived feature engineering parameters
+        self.enable_derived_features = enable_derived_features
+        self.enable_derived_clustering = enable_derived_clustering
+        self.derived_cluster_k_range = derived_cluster_k_range
+        self.derived_cluster_k = derived_cluster_k
+
         # Validate ratios
         if train_ratio + val_ratio > 1.0:
             raise ValueError(f"train_ratio + val_ratio must be <= 1.0, got {train_ratio + val_ratio}")
@@ -235,6 +287,13 @@ class VectorBTDataPreprocessor:
         self._exit_column_clusters: Dict[str, int] = {}
         self._entry_cluster_k: int = 0
         self._exit_cluster_k: int = 0
+
+        # Derived clustering state
+        self._derived_cluster_model: Optional[KMeans] = None
+        self._derived_cluster_scaler: Optional[StandardScaler] = None
+        self._derived_cluster_k: int = 0
+        self._derived_cluster_columns: List[str] = []
+        self._derived_cluster_fit_columns: List[str] = []
 
     @staticmethod
     def load_csv(path: Union[str, Path]) -> pd.DataFrame:
@@ -344,6 +403,11 @@ class VectorBTDataPreprocessor:
                 keep_columns.append(col)
                 continue
 
+            # Always keep derived feature columns
+            if col.startswith('derived_'):
+                keep_columns.append(col)
+                continue
+
             # Keep raw indicators only if remove_raw_indicators=False
             if not self.remove_raw_indicators:
                 keep_columns.append(col)
@@ -403,7 +467,7 @@ class VectorBTDataPreprocessor:
         close = np.asarray(df['close'].values, dtype=np.float64)
 
         # Avoid division by zero
-        close = np.where(close == 0, 1e-10, close)
+        close = np.where(close == 0, self.EPSILON, close)
 
         # Columns to skip normalization
         skip_cols = set(self.columns_to_drop) | {self.target_column, 'volume'}
@@ -430,31 +494,32 @@ class VectorBTDataPreprocessor:
                 continue
 
             # Skip bounded oscillators (already percentage-based, not price-related)
-            # These indicators are already normalized (0-100, -100 to 0, etc.)
             col_upper = col.upper()
-            bounded_oscillators = (
-                'RSI', 'STOCH', 'STOCHRSI', 'STOCHF',  # 0-100
-                'WILLR',  # -100 to 0
-                'ULTOSC',  # 0-100
-                'MFI',  # 0-100
-                'ADX', 'ADXR', 'PLUS_DI', 'MINUS_DI', 'DX',  # 0-100
-                'AROON', 'AROONOSC',  # 0-100 or -100 to 100
-                'CCI',  # unbounded but percentile-based
-                'CMO',  # -100 to 100
-                'ROC', 'ROCP', 'ROCR',  # percentage-based
-                'MOM',  # momentum (not price-based)
-                'PPO',  # percentage price oscillator
-                'APO',  # absolute price oscillator (but percentage-like)
-                'BOP',  # balance of power (-1 to 1)
-                'TRIX',  # rate of change
-            )
-            if any(osc in col_upper for osc in bounded_oscillators):
+            if any(osc in col_upper for osc in self.BOUNDED_OSCILLATORS):
                 continue
 
             # Normalize this column by dividing by close price
             df[col] = df[col].values / close
 
         return df
+
+    def _has_columns(self, df: pd.DataFrame, *cols) -> bool:
+        """
+        Check if DataFrame has all specified columns.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame to check
+        *cols : str
+            Column names to check for
+
+        Returns
+        -------
+        bool
+            True if all columns exist, False otherwise
+        """
+        return all(col in df.columns for col in cols)
 
     def _apply_scaling_to_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -861,6 +926,688 @@ class VectorBTDataPreprocessor:
 
         return df
 
+    def _create_derived_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Create derived features from existing indicator columns.
+
+        All derived features are prefixed with 'derived_' for easy identification.
+        Only creates features for indicators that exist in the DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Input DataFrame with indicator columns
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with derived feature columns added
+        """
+        if not self.enable_derived_features:
+            return df
+
+        df = df.copy()
+
+        # Require close price for many calculations
+        if 'close' not in df.columns:
+            return df
+
+        close = df['close'].values.astype(np.float64)
+        # Avoid division by zero
+        close_safe = np.where(close == 0, self.EPSILON, close)
+
+        # Auto-detect and create features for each indicator category
+        df = self._create_bb_derived(df, close_safe)
+        df = self._create_macd_derived(df, close_safe)
+        df = self._create_ma_derived(df, close_safe)
+        df = self._create_atr_derived(df, close_safe)
+        df = self._create_rsi_derived(df, close_safe)
+        df = self._create_stoch_derived(df)
+        df = self._create_adx_derived(df)
+        df = self._create_volume_derived(df, close_safe)
+        df = self._create_aroon_derived(df)
+        df = self._create_cycle_derived(df)
+        df = self._create_composite_derived(df, close_safe)
+
+        return df
+
+    def _create_bb_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create Bollinger Bands derived features."""
+        # Look for BBANDS columns (case-insensitive prefix matching)
+        upper_col = None
+        middle_col = None
+        lower_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'upperband' in col_lower:
+                upper_col = col
+            elif 'middleband' in col_lower:
+                middle_col = col
+            elif 'lowerband' in col_lower:
+                lower_col = col
+
+        if not all([upper_col, middle_col, lower_col]):
+            return df
+
+        upper = df[upper_col].values.astype(np.float64)
+        middle = df[middle_col].values.astype(np.float64)
+        lower = df[lower_col].values.astype(np.float64)
+
+        # Band width normalized by close (volatility measure)
+        bb_width = upper - lower
+        df['derived_bb_width_norm'] = bb_width / close
+
+        # Position within bands (-1 to +1, where 0 is middle)
+        band_half_width = np.where(bb_width == 0, self.EPSILON, bb_width / 2)
+        df['derived_bb_position'] = (close - middle) / band_half_width
+
+        # Distance from bands as percentage
+        df['derived_bb_upper_dist'] = (upper - close) / close
+        df['derived_bb_lower_dist'] = (close - lower) / close
+
+        # Squeeze indicator (low volatility)
+        middle_safe = np.where(middle == 0, self.EPSILON, middle)
+        df['derived_bb_squeeze'] = bb_width / middle_safe
+
+        # Band expansion rate (volatility change)
+        bb_width_norm = bb_width / close
+        df['derived_bb_expansion'] = pd.Series(bb_width_norm).diff().values
+
+        return df
+
+    def _create_macd_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create MACD derived features."""
+        # Look for MACD columns
+        macd_col = None
+        signal_col = None
+        hist_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'macdhist' in col_lower:
+                hist_col = col
+            elif 'macdsignal' in col_lower:
+                signal_col = col
+            elif 'macd' in col_lower and 'hist' not in col_lower and 'signal' not in col_lower:
+                macd_col = col
+
+        if not all([macd_col, signal_col, hist_col]):
+            return df
+
+        macd = df[macd_col].values.astype(np.float64)
+        signal = df[signal_col].values.astype(np.float64)
+        hist = df[hist_col].values.astype(np.float64)
+
+        # Histogram momentum (change in histogram)
+        df['derived_macd_hist_momentum'] = pd.Series(hist).diff().values
+
+        # Histogram acceleration
+        hist_momentum = pd.Series(hist).diff()
+        df['derived_macd_hist_accel'] = hist_momentum.diff().values
+
+        # Signal line distance normalized
+        df['derived_macd_signal_dist'] = (macd - signal) / close
+
+        # Zero line distance normalized
+        df['derived_macd_zero_dist'] = macd / close
+
+        # Convergence/divergence strength
+        df['derived_macd_strength'] = np.abs(hist) / close
+
+        return df
+
+    def _create_ma_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create moving average derived features."""
+        # Find all MA-related columns
+        ma_cols = {}
+        for col in df.columns:
+            col_lower = col.lower()
+            # Match SMA, EMA, DEMA, TEMA, KAMA, WMA, TRIMA, T3, MA patterns
+            for ma_type in ['sma', 'ema', 'dema', 'tema', 'kama', 'wma', 'trima', 't3']:
+                if ma_type in col_lower:
+                    ma_cols[col] = ma_type
+                    break
+
+        # Create features for each MA column found
+        for col, ma_type in ma_cols.items():
+            ma_values = df[col].values.astype(np.float64)
+            prefix = f'derived_{col.lower()}'
+
+            # Price distance from MA (normalized)
+            df[f'{prefix}_dist_norm'] = (close - ma_values) / close
+
+            # MA slope (trend direction and strength)
+            ma_series = pd.Series(ma_values)
+            ma_shifted = ma_series.shift(1)
+            ma_shifted_safe = np.where(ma_shifted == 0, self.EPSILON, ma_shifted)
+            df[f'{prefix}_slope'] = (ma_values - ma_shifted.values) / ma_shifted_safe
+
+            # MA curvature (trend acceleration)
+            slope = pd.Series(df[f'{prefix}_slope'].values)
+            df[f'{prefix}_curvature'] = slope.diff().values
+
+        # Check for fast/slow MA pairs (e.g., sma_fast, sma_slow or ema_fast, ema_slow)
+        for ma_type in ['sma', 'ema']:
+            fast_col = None
+            slow_col = None
+            for col in df.columns:
+                col_lower = col.lower()
+                if f'{ma_type}_fast' in col_lower:
+                    fast_col = col
+                elif f'{ma_type}_slow' in col_lower:
+                    slow_col = col
+
+            if fast_col and slow_col:
+                fast = df[fast_col].values.astype(np.float64)
+                slow = df[slow_col].values.astype(np.float64)
+
+                # MA spread (fast - slow) normalized
+                df[f'derived_{ma_type}_spread'] = (fast - slow) / close
+
+                # MA spread momentum
+                spread = pd.Series((fast - slow) / close)
+                df[f'derived_{ma_type}_spread_momentum'] = spread.diff().values
+
+        return df
+
+    def _create_atr_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create ATR/volatility derived features."""
+        # Look for ATR column
+        atr_col = None
+        natr_col = None
+        trange_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if col_lower.endswith('_natr') or col_lower == 'natr':
+                natr_col = col
+            elif col_lower.endswith('_atr') or col_lower == 'atr':
+                atr_col = col
+            elif 'trange' in col_lower and 'avg' not in col_lower:
+                trange_col = col
+
+        # ATR-based features
+        if atr_col:
+            atr = df[atr_col].values.astype(np.float64)
+            atr_safe = np.where(atr == 0, self.EPSILON, atr)
+
+            # Volatility ratio (current vs average)
+            atr_series = pd.Series(atr)
+            atr_mean = atr_series.rolling(20, min_periods=1).mean().values
+            atr_mean_safe = np.where(atr_mean == 0, self.EPSILON, atr_mean)
+            df['derived_atr_ratio'] = atr / atr_mean_safe
+
+            # Volatility expansion/contraction
+            atr_shifted = atr_series.shift(1).values
+            atr_shifted_safe = np.where(atr_shifted == 0, self.EPSILON, atr_shifted)
+            df['derived_atr_change'] = (atr - atr_shifted) / atr_shifted_safe
+
+            # Price range as multiple of ATR (if high/low available)
+            if self._has_columns(df, 'high', 'low'):
+                high = df['high'].values.astype(np.float64)
+                low = df['low'].values.astype(np.float64)
+                df['derived_price_range_atr'] = (high - low) / atr_safe
+
+            # Normalized volatility (ATR / close)
+            df['derived_volatility_norm'] = atr / close
+
+            # Volatility percentile (rolling rank)
+            atr_percentile = atr_series.rolling(50, min_periods=1).rank(pct=True).values
+            df['derived_atr_percentile'] = atr_percentile
+
+        # NATR-based features (already normalized)
+        if natr_col:
+            natr = df[natr_col].values.astype(np.float64)
+            natr_series = pd.Series(natr)
+
+            # NATR momentum
+            df['derived_natr_momentum'] = natr_series.diff().values
+
+            # NATR percentile
+            df['derived_natr_percentile'] = natr_series.rolling(50, min_periods=1).rank(pct=True).values
+
+        return df
+
+    def _create_rsi_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create RSI derived features."""
+        # Look for RSI column
+        rsi_col = None
+        for col in df.columns:
+            col_lower = col.lower()
+            if col_lower.endswith('_rsi') or col_lower == 'rsi':
+                rsi_col = col
+                break
+
+        if not rsi_col:
+            return df
+
+        rsi = df[rsi_col].values.astype(np.float64)
+        rsi_series = pd.Series(rsi)
+
+        # RSI momentum (rate of change)
+        df['derived_rsi_momentum'] = rsi_series.diff().values
+
+        # RSI acceleration
+        rsi_momentum = rsi_series.diff()
+        df['derived_rsi_accel'] = rsi_momentum.diff().values
+
+        # Distance from oversold (30) / overbought (70)
+        df['derived_rsi_oversold_dist'] = rsi - 30  # negative when oversold
+        df['derived_rsi_overbought_dist'] = 70 - rsi  # negative when overbought
+
+        # RSI divergence from price
+        rsi_pct_change = rsi_series.pct_change().values
+        close_pct_change = pd.Series(close).pct_change().values
+        df['derived_rsi_price_divergence'] = rsi_pct_change - close_pct_change
+
+        return df
+
+    def _create_stoch_derived(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create Stochastic derived features."""
+        # Look for slow stochastic columns first, then fast
+        slowk_col = None
+        slowd_col = None
+        fastk_col = None
+        fastd_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'slowk' in col_lower:
+                slowk_col = col
+            elif 'slowd' in col_lower:
+                slowd_col = col
+            elif 'fastk' in col_lower:
+                fastk_col = col
+            elif 'fastd' in col_lower:
+                fastd_col = col
+
+        # Prefer slow stochastic, fall back to fast
+        k_col = slowk_col or fastk_col
+        d_col = slowd_col or fastd_col
+
+        if not k_col or not d_col:
+            return df
+
+        k_values = df[k_col].values.astype(np.float64)
+        d_values = df[d_col].values.astype(np.float64)
+
+        # K-D crossover distance
+        df['derived_stoch_kd_diff'] = k_values - d_values
+
+        # K-D crossover momentum
+        kd_diff = pd.Series(k_values - d_values)
+        df['derived_stoch_kd_momentum'] = kd_diff.diff().values
+
+        # Combined stochastic strength
+        df['derived_stoch_strength'] = (k_values + d_values) / 2
+
+        # Stochastic momentum
+        k_series = pd.Series(k_values)
+        df['derived_stoch_k_momentum'] = k_series.diff().values
+
+        return df
+
+    def _create_adx_derived(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create ADX/directional derived features."""
+        # Look for ADX and DI columns
+        adx_col = None
+        plus_di_col = None
+        minus_di_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if col_lower.endswith('_adx') or col_lower == 'adx':
+                adx_col = col
+            elif 'plus_di' in col_lower:
+                plus_di_col = col
+            elif 'minus_di' in col_lower:
+                minus_di_col = col
+
+        if not adx_col:
+            return df
+
+        adx = df[adx_col].values.astype(np.float64)
+        adx_series = pd.Series(adx)
+
+        # Trend strength change
+        df['derived_adx_momentum'] = adx_series.diff().values
+
+        # If DI columns available, create directional features
+        if plus_di_col and minus_di_col:
+            plus_di = df[plus_di_col].values.astype(np.float64)
+            minus_di = df[minus_di_col].values.astype(np.float64)
+
+            # Trend strength with direction
+            df['derived_adx_directional'] = adx * np.sign(plus_di - minus_di)
+
+            # DI spread (trend direction clarity)
+            di_spread = plus_di - minus_di
+            df['derived_di_spread'] = di_spread
+
+            # DI spread momentum
+            df['derived_di_spread_momentum'] = pd.Series(di_spread).diff().values
+
+            # Combined directional strength
+            df['derived_di_strength'] = (plus_di + minus_di) / 2
+
+        return df
+
+    def _create_volume_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create volume-based derived features."""
+        # Look for OBV and AD columns
+        obv_col = None
+        obv_sma_col = None
+        ad_col = None
+        ad_sma_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if col_lower.endswith('_obv_sma') or 'obv_sma' in col_lower:
+                obv_sma_col = col
+            elif col_lower.endswith('_obv') or col_lower == 'obv':
+                obv_col = col
+            elif col_lower.endswith('_ad_sma') or 'ad_sma' in col_lower:
+                ad_sma_col = col
+            elif col_lower.endswith('_ad') or col_lower == 'ad':
+                ad_col = col
+
+        close_series = pd.Series(close)
+        close_pct_change = close_series.pct_change().values
+
+        # OBV-based features
+        if obv_col:
+            obv = df[obv_col].values.astype(np.float64)
+            obv_series = pd.Series(obv)
+
+            # OBV momentum
+            df['derived_obv_momentum'] = obv_series.diff().values
+
+            # OBV divergence from price
+            obv_pct_change = obv_series.pct_change().values
+            df['derived_obv_divergence'] = obv_pct_change - close_pct_change
+
+            # Volume-price trend alignment
+            obv_momentum = obv_series.diff().values
+            df['derived_volume_price_align'] = np.sign(obv_momentum) * np.sign(close_pct_change)
+
+            # OBV trend deviation (if obv_sma available)
+            if obv_sma_col:
+                obv_sma = df[obv_sma_col].values.astype(np.float64)
+                df['derived_obv_trend_deviation'] = obv - obv_sma
+
+        # A/D line features
+        if ad_col:
+            ad = df[ad_col].values.astype(np.float64)
+            ad_series = pd.Series(ad)
+
+            # A/D line divergence
+            ad_pct_change = ad_series.pct_change().values
+            df['derived_ad_divergence'] = ad_pct_change - close_pct_change
+
+        return df
+
+    def _create_aroon_derived(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create Aroon derived features."""
+        # Look for Aroon columns
+        aroonup_col = None
+        aroondown_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'aroonup' in col_lower:
+                aroonup_col = col
+            elif 'aroondown' in col_lower:
+                aroondown_col = col
+
+        if not aroonup_col or not aroondown_col:
+            return df
+
+        aroonup = df[aroonup_col].values.astype(np.float64)
+        aroondown = df[aroondown_col].values.astype(np.float64)
+
+        # Aroon spread
+        aroon_spread = aroonup - aroondown
+        df['derived_aroon_spread'] = aroon_spread
+
+        # Aroon trend strength
+        df['derived_aroon_strength'] = (aroonup + aroondown) / 2
+
+        # Aroon momentum
+        df['derived_aroon_momentum'] = pd.Series(aroon_spread).diff().values
+
+        return df
+
+    def _create_cycle_derived(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create Hilbert Transform cycle derived features."""
+        # Look for HT columns
+        ht_dcphase_col = None
+        inphase_col = None
+        quadrature_col = None
+        sine_col = None
+        leadsine_col = None
+
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'ht_dcphase' in col_lower:
+                ht_dcphase_col = col
+            elif 'inphase' in col_lower:
+                inphase_col = col
+            elif 'quadrature' in col_lower:
+                quadrature_col = col
+            elif 'leadsine' in col_lower:
+                leadsine_col = col
+            elif 'sine' in col_lower and 'lead' not in col_lower:
+                sine_col = col
+
+        # HT phase momentum
+        if ht_dcphase_col:
+            ht_dcphase = df[ht_dcphase_col].values.astype(np.float64)
+            df['derived_ht_phase_momentum'] = pd.Series(ht_dcphase).diff().values
+
+        # Phasor features
+        if inphase_col and quadrature_col:
+            inphase = df[inphase_col].values.astype(np.float64)
+            quadrature = df[quadrature_col].values.astype(np.float64)
+
+            # Phasor magnitude
+            df['derived_phasor_magnitude'] = np.sqrt(inphase**2 + quadrature**2)
+
+            # Phasor angle
+            df['derived_phasor_angle'] = np.arctan2(quadrature, inphase)
+
+        # Sine-leadsine spread
+        if sine_col and leadsine_col:
+            sine = df[sine_col].values.astype(np.float64)
+            leadsine = df[leadsine_col].values.astype(np.float64)
+            df['derived_sine_spread'] = sine - leadsine
+
+        return df
+
+    def _create_composite_derived(self, df: pd.DataFrame, close: np.ndarray) -> pd.DataFrame:
+        """Create cross-indicator composite features."""
+        close_series = pd.Series(close)
+
+        # Momentum consensus score (multiple oscillators)
+        # Check which oscillators are available
+        momentum_signals = []
+
+        # RSI > 50
+        for col in df.columns:
+            if col.lower().endswith('_rsi') or col.lower() == 'rsi':
+                rsi = df[col].values
+                momentum_signals.append((rsi > 50).astype(np.float64))
+                break
+
+        # MFI > 50
+        for col in df.columns:
+            if col.lower().endswith('_mfi') or col.lower() == 'mfi':
+                mfi = df[col].values
+                momentum_signals.append((mfi > 50).astype(np.float64))
+                break
+
+        # Stoch K > 50
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'slowk' in col_lower or 'fastk' in col_lower:
+                stoch_k = df[col].values
+                momentum_signals.append((stoch_k > 50).astype(np.float64))
+                break
+
+        # Williams %R > -50
+        for col in df.columns:
+            if col.lower().endswith('_willr') or col.lower() == 'willr':
+                willr = df[col].values
+                momentum_signals.append((willr > -50).astype(np.float64))
+                break
+
+        if len(momentum_signals) >= 2:
+            consensus = np.mean(momentum_signals, axis=0)
+            df['derived_momentum_consensus'] = consensus
+
+        # Trend-momentum alignment
+        # Find MA distance and RSI
+        ma_dist_col = None
+        rsi_col = None
+
+        for col in df.columns:
+            if col.startswith('derived_') and '_dist_norm' in col:
+                ma_dist_col = col
+                break
+
+        for col in df.columns:
+            if col.lower().endswith('_rsi') or col.lower() == 'rsi':
+                rsi_col = col
+                break
+
+        if ma_dist_col and rsi_col:
+            ma_dist = df[ma_dist_col].values
+            rsi = df[rsi_col].values
+            df['derived_trend_momentum_align'] = np.sign(ma_dist) * np.sign(rsi - 50)
+
+        # Volatility-adjusted momentum
+        rsi_momentum_col = 'derived_rsi_momentum' if 'derived_rsi_momentum' in df.columns else None
+        natr_col = None
+        for col in df.columns:
+            if col.lower().endswith('_natr') or col.lower() == 'natr':
+                natr_col = col
+                break
+
+        if rsi_momentum_col and natr_col:
+            rsi_momentum = df[rsi_momentum_col].values
+            natr = df[natr_col].values
+            natr_safe = np.where(natr == 0, self.EPSILON, natr)
+            df['derived_vol_adj_momentum'] = rsi_momentum / natr_safe
+
+        # Volume-confirmed trend
+        ma_slope_col = None
+        obv_momentum_col = 'derived_obv_momentum' if 'derived_obv_momentum' in df.columns else None
+
+        for col in df.columns:
+            if col.startswith('derived_') and '_slope' in col:
+                ma_slope_col = col
+                break
+
+        if ma_slope_col and obv_momentum_col:
+            ma_slope = df[ma_slope_col].values
+            obv_momentum = df[obv_momentum_col].values
+            df['derived_volume_trend_confirm'] = np.sign(ma_slope) * np.sign(obv_momentum)
+
+        return df
+
+    def _fit_derived_cluster(self, dfs: List[pd.DataFrame]) -> None:
+        """
+        Fit KMeans clustering on derived feature columns.
+
+        Parameters
+        ----------
+        dfs : List[pd.DataFrame]
+            List of DataFrames with derived_ columns
+        """
+        # Concatenate all DataFrames
+        combined = pd.concat(dfs, ignore_index=True)
+
+        # Get all derived feature columns (excluding cluster columns)
+        derived_cols = [c for c in combined.columns
+                        if c.startswith('derived_') and not c.startswith('derived_cluster_')]
+
+        if not derived_cols:
+            return
+
+        # Store columns used for clustering
+        self._derived_cluster_fit_columns = derived_cols
+
+        # Extract data and handle NaN
+        cluster_data = combined[derived_cols].values
+        cluster_data = np.nan_to_num(cluster_data, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # Standardize for clustering
+        self._derived_cluster_scaler = StandardScaler()
+        cluster_data_scaled = self._derived_cluster_scaler.fit_transform(cluster_data)
+
+        # Determine optimal k using elbow method
+        if self.derived_cluster_k is not None:
+            optimal_k = self.derived_cluster_k
+        else:
+            optimal_k = self._find_optimal_k(cluster_data_scaled, self.derived_cluster_k_range)
+
+        self._derived_cluster_k = optimal_k
+
+        # Fit KMeans
+        self._derived_cluster_model = KMeans(
+            n_clusters=optimal_k,
+            random_state=42,
+            n_init=10
+        )
+        self._derived_cluster_model.fit(cluster_data_scaled)
+
+        # Store one-hot column names
+        self._derived_cluster_columns = [
+            f'derived_cluster_{i}' for i in range(optimal_k)
+        ]
+
+    def _transform_derived_cluster(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Transform DataFrame by adding one-hot encoded derived cluster columns.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Input DataFrame with derived_ columns
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with derived_cluster_0, derived_cluster_1, ... columns
+        """
+        if self._derived_cluster_model is None:
+            return df
+
+        df = df.copy()
+
+        # Get derived columns used during fit
+        derived_cols = [c for c in self._derived_cluster_fit_columns if c in df.columns]
+
+        if not derived_cols:
+            return df
+
+        # Extract and preprocess data
+        cluster_data = df[derived_cols].values
+        cluster_data = np.nan_to_num(cluster_data, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # Scale using fitted scaler
+        cluster_data_scaled = self._derived_cluster_scaler.transform(cluster_data)
+
+        # Predict clusters
+        cluster_labels = self._derived_cluster_model.predict(cluster_data_scaled)
+
+        # One-hot encode clusters
+        for i in range(self._derived_cluster_k):
+            col_name = f'derived_cluster_{i}'
+            df[col_name] = (cluster_labels == i).astype(np.float32)
+
+        return df
+
     def _split_data(
         self,
         df: pd.DataFrame
@@ -894,7 +1641,7 @@ class VectorBTDataPreprocessor:
         """
         Get all cluster columns from DataFrame.
 
-        Returns columns matching: entry_cluster_*, exit_cluster_*, df_cluster_*
+        Returns columns matching: entry_cluster_*, exit_cluster_*, df_cluster_*, derived_cluster_*
 
         Parameters
         ----------
@@ -909,8 +1656,9 @@ class VectorBTDataPreprocessor:
         cluster_cols = []
         for col in df.columns:
             if (col.startswith('entry_cluster_') or
-                col.startswith('exit_cluster_')):
-                # col.startswith('df_cluster_')):
+                col.startswith('exit_cluster_') or
+                col.startswith('derived_cluster_') or
+                col.startswith('df_cluster_')):
                 cluster_cols.append(col)
         return sorted(cluster_cols)
 
@@ -968,7 +1716,7 @@ class VectorBTDataPreprocessor:
         target_distribution: np.ndarray,
         cluster_cols: List[str],
         target_size: int,
-        n_partitions: int = 168
+        n_partitions: Optional[int] = None
     ) -> pd.DataFrame:
         """
         Resample DataFrame to match target cluster distribution using partitioned sampling.
@@ -987,8 +1735,9 @@ class VectorBTDataPreprocessor:
             List of cluster column names
         target_size : int
             Total number of rows to sample across all partitions
-        n_partitions : int, default=168
-            Number of partitions to divide the data into (e.g., 168 = 24 hours * 7 days)
+        n_partitions : int, optional
+            Number of partitions to divide the data into.
+            Defaults to DEFAULT_RESAMPLE_PARTITIONS (168 = 24 hours * 7 days).
 
         Returns
         -------
@@ -997,6 +1746,10 @@ class VectorBTDataPreprocessor:
         """
         if len(df) == 0 or target_size == 0:
             return df.iloc[:0]  # Return empty DataFrame with same columns
+
+        # Use default if not specified
+        if n_partitions is None:
+            n_partitions = self.DEFAULT_RESAMPLE_PARTITIONS
 
         # Adjust n_partitions if larger than DataFrame length
         n_partitions = min(n_partitions, len(df))
@@ -1253,15 +2006,27 @@ class VectorBTDataPreprocessor:
         if self.enable_signal_clustering:
             cleaned_dfs = [self._transform_signal_clusters(df) for df in cleaned_dfs]
 
-        # Step 5: Fit DataFrame clustering (on all features)
+        # Step 5: Create derived features if enabled
+        if self.enable_derived_features:
+            cleaned_dfs = [self._create_derived_features(df) for df in cleaned_dfs]
+
+        # Step 6: Fit derived clustering if enabled
+        if self.enable_derived_clustering:
+            self._fit_derived_cluster(cleaned_dfs)
+
+        # Step 7: Apply derived clustering transform
+        if self.enable_derived_clustering:
+            cleaned_dfs = [self._transform_derived_cluster(df) for df in cleaned_dfs]
+
+        # Step 8: Fit DataFrame clustering (on all features)
         if self.enable_dataframe_clustering:
             self._fit_dataframe_cluster(cleaned_dfs)
 
-        # Step 6: Apply DataFrame clustering transform
+        # Step 9: Apply DataFrame clustering transform
         if self.enable_dataframe_clustering:
             cleaned_dfs = [self._transform_dataframe_cluster(df) for df in cleaned_dfs]
 
-        # Step 7: Apply normalize by close if enabled (after clustering)
+        # Step 10: Apply normalize by close if enabled (after clustering)
         if self.normalize_by_close:
             cleaned_dfs = [self._apply_normalize_by_close(df) for df in cleaned_dfs]
 
@@ -1288,6 +2053,12 @@ class VectorBTDataPreprocessor:
                 if col not in self.feature_columns:
                     self.feature_columns.append(col)
 
+        # Add derived cluster columns if enabled
+        if self.enable_derived_clustering:
+            for col in self._derived_cluster_columns:
+                if col not in self.feature_columns:
+                    self.feature_columns.append(col)
+
         # Identify columns to scale vs binary signal columns
         # Scale all non-binary columns (OHLCV + raw indicator values + time features)
         # Binary signals and cluster columns are not scaled
@@ -1300,8 +2071,11 @@ class VectorBTDataPreprocessor:
             # DataFrame cluster one-hot columns (not scaled - they are binary)
             elif col.startswith('df_cluster_'):
                 self._signal_indices.append(i)
+            # Derived cluster one-hot columns (not scaled - they are binary)
+            elif col.startswith('derived_cluster_'):
+                self._signal_indices.append(i)
             else:
-                # Scale continuous columns (OHLCV, raw indicators, time features, cluster aggregates)
+                # Scale continuous columns (OHLCV, raw indicators, time features, cluster aggregates, derived features)
                 self._ohlcv_indices.append(i)
 
         # Initialize scaler
@@ -1365,11 +2139,19 @@ class VectorBTDataPreprocessor:
         if self.enable_signal_clustering:
             df = self._transform_signal_clusters(df)
 
-        # Step 4: Apply DataFrame clustering transform
+        # Step 4: Create derived features if enabled
+        if self.enable_derived_features:
+            df = self._create_derived_features(df)
+
+        # Step 5: Apply derived clustering transform
+        if self.enable_derived_clustering:
+            df = self._transform_derived_cluster(df)
+
+        # Step 6: Apply DataFrame clustering transform
         if self.enable_dataframe_clustering:
             df = self._transform_dataframe_cluster(df)
 
-        # Step 5: Apply normalize by close if enabled (after clustering)
+        # Step 7: Apply normalize by close if enabled (after clustering)
         if self.normalize_by_close:
             df = self._apply_normalize_by_close(df)
 
@@ -1519,15 +2301,27 @@ class VectorBTDataPreprocessor:
         if self.enable_signal_clustering:
             cleaned_dfs = [self._transform_signal_clusters(df) for df in cleaned_dfs]
 
-        # Step 5: Fit DataFrame clustering (on all features)
+        # Step 5: Create derived features if enabled
+        if self.enable_derived_features:
+            cleaned_dfs = [self._create_derived_features(df) for df in cleaned_dfs]
+
+        # Step 6: Fit derived clustering if enabled
+        if self.enable_derived_clustering:
+            self._fit_derived_cluster(cleaned_dfs)
+
+        # Step 7: Apply derived clustering transform
+        if self.enable_derived_clustering:
+            cleaned_dfs = [self._transform_derived_cluster(df) for df in cleaned_dfs]
+
+        # Step 8: Fit DataFrame clustering (on all features)
         if self.enable_dataframe_clustering:
             self._fit_dataframe_cluster(cleaned_dfs)
 
-        # Step 6: Apply DataFrame clustering transform
+        # Step 9: Apply DataFrame clustering transform
         if self.enable_dataframe_clustering:
             cleaned_dfs = [self._transform_dataframe_cluster(df) for df in cleaned_dfs]
 
-        # Step 7: Apply normalize by close if enabled (after clustering)
+        # Step 10: Apply normalize by close if enabled (after clustering)
         if self.normalize_by_close:
             cleaned_dfs = [self._apply_normalize_by_close(df) for df in cleaned_dfs]
 
@@ -1554,6 +2348,12 @@ class VectorBTDataPreprocessor:
                 if col not in self.feature_columns:
                     self.feature_columns.append(col)
 
+        # Add derived cluster columns if enabled
+        if self.enable_derived_clustering:
+            for col in self._derived_cluster_columns:
+                if col not in self.feature_columns:
+                    self.feature_columns.append(col)
+
         # Identify columns to scale vs binary signal columns
         self._ohlcv_indices = []
         self._signal_indices = []
@@ -1561,6 +2361,8 @@ class VectorBTDataPreprocessor:
             if col.endswith('_entry') or col.endswith('_exit'):
                 self._signal_indices.append(i)
             elif col.startswith('df_cluster_'):
+                self._signal_indices.append(i)
+            elif col.startswith('derived_cluster_'):
                 self._signal_indices.append(i)
             else:
                 self._ohlcv_indices.append(i)
@@ -1816,7 +2618,14 @@ class VectorBTDataPreprocessor:
 
             # Encode targets
             df_target = split_df[target_column].fillna('hold')
-            targets = np.asarray(df_target.map(target_encoding), dtype=np.int64)
+            mapped_targets = df_target.map(target_encoding)
+
+            # Check for unmapped target values
+            if mapped_targets.isna().any():
+                unmapped = df_target[mapped_targets.isna()].unique()
+                raise ValueError(f"Unknown target values in {split_name} split: {unmapped}")
+
+            targets = np.asarray(mapped_targets, dtype=np.int64)
 
             # Shift targets: features at t predict target at t+shift
             if target_shift > 0:
@@ -1921,15 +2730,23 @@ class VectorBTDataPreprocessor:
         if self.enable_signal_clustering:
             df = self._transform_signal_clusters(df)
 
-        # Step 4: Apply DataFrame clustering transform
+        # Step 4: Create derived features if enabled
+        if self.enable_derived_features:
+            df = self._create_derived_features(df)
+
+        # Step 5: Apply derived clustering transform
+        if self.enable_derived_clustering:
+            df = self._transform_derived_cluster(df)
+
+        # Step 6: Apply DataFrame clustering transform
         if self.enable_dataframe_clustering:
             df = self._transform_dataframe_cluster(df)
 
-        # Step 5: Apply normalize by close if enabled (after clustering)
+        # Step 7: Apply normalize by close if enabled (after clustering)
         if self.normalize_by_close:
             df = self._apply_normalize_by_close(df)
 
-        # Step 6: Apply resampling if enabled
+        # Step 8: Apply resampling if enabled
         if apply_resampling and self.enable_resampling:
             cluster_cols = self._get_all_cluster_columns(df)
             if cluster_cols:
@@ -1975,6 +2792,11 @@ class VectorBTDataPreprocessor:
         ------
         RuntimeError
             If preprocessor is not fitted
+
+        Warning
+        -------
+        This method uses pickle for serialization. Only load preprocessors
+        from trusted sources, as pickle can execute arbitrary code.
         """
         if not self._is_fitted:
             raise RuntimeError("Cannot save unfitted preprocessor")
@@ -1994,6 +2816,7 @@ class VectorBTDataPreprocessor:
             # Feature engineering parameters
             'extract_time_features': self.extract_time_features,
             'enable_dataframe_clustering': self.enable_dataframe_clustering,
+            'df_cluster_columns': self.df_cluster_columns,
             'cluster_k_range': self.cluster_k_range,
             'cluster_k': self.cluster_k,
             'enable_signal_clustering': self.enable_signal_clustering,
@@ -2005,6 +2828,11 @@ class VectorBTDataPreprocessor:
             'train_ratio': self.train_ratio,
             'val_ratio': self.val_ratio,
             'resample_random_state': self.resample_random_state,
+            # Derived feature engineering parameters
+            'enable_derived_features': self.enable_derived_features,
+            'enable_derived_clustering': self.enable_derived_clustering,
+            'derived_cluster_k_range': self.derived_cluster_k_range,
+            'derived_cluster_k': self.derived_cluster_k,
             # Fitted state
             'scaler': self.scaler,
             'feature_columns': self.feature_columns,
@@ -2014,6 +2842,7 @@ class VectorBTDataPreprocessor:
             '_dataframe_cluster_model': self._dataframe_cluster_model,
             '_dataframe_cluster_k': self._dataframe_cluster_k,
             '_dataframe_cluster_columns': self._dataframe_cluster_columns,
+            '_df_cluster_fit_columns': self._df_cluster_fit_columns,
             # Signal clustering state
             '_entry_cluster_model': self._entry_cluster_model,
             '_exit_cluster_model': self._exit_cluster_model,
@@ -2021,6 +2850,12 @@ class VectorBTDataPreprocessor:
             '_exit_column_clusters': self._exit_column_clusters,
             '_entry_cluster_k': self._entry_cluster_k,
             '_exit_cluster_k': self._exit_cluster_k,
+            # Derived clustering state
+            '_derived_cluster_model': self._derived_cluster_model,
+            '_derived_cluster_scaler': self._derived_cluster_scaler,
+            '_derived_cluster_k': self._derived_cluster_k,
+            '_derived_cluster_columns': self._derived_cluster_columns,
+            '_derived_cluster_fit_columns': self._derived_cluster_fit_columns,
         }
 
         with open(path, 'wb') as f:
@@ -2040,6 +2875,11 @@ class VectorBTDataPreprocessor:
         -------
         VectorBTDataPreprocessor
             Loaded and fitted preprocessor
+
+        Warning
+        -------
+        This method uses pickle for deserialization. Only load preprocessors
+        from trusted sources, as pickle can execute arbitrary code.
         """
         with open(path, 'rb') as f:
             state = pickle.load(f)
@@ -2062,6 +2902,7 @@ class VectorBTDataPreprocessor:
             # Feature engineering parameters
             extract_time_features=state.get('extract_time_features', False),
             enable_dataframe_clustering=state.get('enable_dataframe_clustering', False),
+            df_cluster_columns=state.get('df_cluster_columns', 'indicators'),
             cluster_k_range=state.get('cluster_k_range', (2, 10)),
             cluster_k=state.get('cluster_k', None),
             enable_signal_clustering=state.get('enable_signal_clustering', False),
@@ -2073,6 +2914,11 @@ class VectorBTDataPreprocessor:
             train_ratio=state.get('train_ratio', 0.6),
             val_ratio=state.get('val_ratio', 0.2),
             resample_random_state=state.get('resample_random_state', 42),
+            # Derived feature engineering parameters
+            enable_derived_features=state.get('enable_derived_features', False),
+            enable_derived_clustering=state.get('enable_derived_clustering', False),
+            derived_cluster_k_range=state.get('derived_cluster_k_range', (2, 10)),
+            derived_cluster_k=state.get('derived_cluster_k', None),
         )
         # Fitted state
         preprocessor.scaler = state['scaler']
@@ -2085,6 +2931,7 @@ class VectorBTDataPreprocessor:
         preprocessor._dataframe_cluster_model = state.get('_dataframe_cluster_model', None)
         preprocessor._dataframe_cluster_k = state.get('_dataframe_cluster_k', 0)
         preprocessor._dataframe_cluster_columns = state.get('_dataframe_cluster_columns', [])
+        preprocessor._df_cluster_fit_columns = state.get('_df_cluster_fit_columns', [])
 
         # Signal clustering state
         preprocessor._entry_cluster_model = state.get('_entry_cluster_model', None)
@@ -2094,51 +2941,70 @@ class VectorBTDataPreprocessor:
         preprocessor._entry_cluster_k = state.get('_entry_cluster_k', 0)
         preprocessor._exit_cluster_k = state.get('_exit_cluster_k', 0)
 
+        # Derived clustering state
+        preprocessor._derived_cluster_model = state.get('_derived_cluster_model', None)
+        preprocessor._derived_cluster_scaler = state.get('_derived_cluster_scaler', None)
+        preprocessor._derived_cluster_k = state.get('_derived_cluster_k', 0)
+        preprocessor._derived_cluster_columns = state.get('_derived_cluster_columns', [])
+        preprocessor._derived_cluster_fit_columns = state.get('_derived_cluster_fit_columns', [])
+
         return preprocessor
 
     def __repr__(self) -> str:
+        base_info = (
+            f"sequence_length={self.sequence_length}, "
+            f"target_shift={self.target_shift}, "
+            f"stride={self.stride}, "
+            f"remove_raw_indicators={self.remove_raw_indicators}, "
+            f"normalize_by_close={self.normalize_by_close}, "
+            f"scaler_type='{self.scaler_type}'"
+        )
+
         if self._is_fitted:
-            parts = [
-                f"VectorBTDataPreprocessor(",
-                f"sequence_length={self.sequence_length}, ",
-                f"target_shift={self.target_shift}, ",
-                f"stride={self.stride}, ",
-                f"remove_raw_indicators={self.remove_raw_indicators}, ",
-                f"normalize_by_close={self.normalize_by_close}, ",
-                f"n_features={len(self.feature_columns)}, ",
-                f"n_scaled={len(self._ohlcv_indices)}, ",
-                f"n_binary={len(self._signal_indices)}, ",
-                f"scaler_type='{self.scaler_type}'",
-            ]
-            # Add feature engineering info
+            fitted_info = (
+                f"n_features={len(self.feature_columns)}, "
+                f"n_scaled={len(self._ohlcv_indices)}, "
+                f"n_binary={len(self._signal_indices)}, "
+            )
+            extras = []
             if self.extract_time_features:
-                parts.append(", time_features=True")
+                extras.append("time_features=True")
             if self.enable_dataframe_clustering:
-                parts.append(f", df_clusters={self._dataframe_cluster_k}")
+                extras.append(f"df_clusters={self._dataframe_cluster_k}")
             if self.enable_signal_clustering:
-                parts.append(f", entry_clusters={self._entry_cluster_k}")
-                parts.append(f", exit_clusters={self._exit_cluster_k}")
+                extras.append(f"entry_clusters={self._entry_cluster_k}")
+                extras.append(f"exit_clusters={self._exit_cluster_k}")
+            if self.enable_derived_features:
+                # Count derived feature columns (excluding cluster columns)
+                n_derived = len([c for c in self.feature_columns
+                                 if c.startswith('derived_') and not c.startswith('derived_cluster_')])
+                extras.append(f"derived_features={n_derived}")
+            if self.enable_derived_clustering:
+                extras.append(f"derived_clusters={self._derived_cluster_k}")
             if self.enable_resampling:
-                parts.append(f", resampling=({self.train_ratio:.0%}/{self.val_ratio:.0%}/{1-self.train_ratio-self.val_ratio:.0%})")
-            parts.append(")")
-            return "".join(parts)
+                test_ratio = 1 - self.train_ratio - self.val_ratio
+                extras.append(
+                    f"resampling=({self.train_ratio:.0%}/{self.val_ratio:.0%}/{test_ratio:.0%})"
+                )
+            extras_str = ", ".join(extras)
+            if extras_str:
+                extras_str = ", " + extras_str
+            return f"VectorBTDataPreprocessor({fitted_info}{base_info}{extras_str})"
         else:
-            parts = [
-                f"VectorBTDataPreprocessor(",
-                f"sequence_length={self.sequence_length}, ",
-                f"target_shift={self.target_shift}, ",
-                f"stride={self.stride}, ",
-                f"remove_raw_indicators={self.remove_raw_indicators}, ",
-                f"normalize_by_close={self.normalize_by_close}, ",
-                f"scaler_type='{self.scaler_type}'",
-            ]
+            extras = []
             if self.extract_time_features:
-                parts.append(", extract_time_features=True")
+                extras.append("extract_time_features=True")
             if self.enable_dataframe_clustering:
-                parts.append(", enable_dataframe_clustering=True")
+                extras.append("enable_dataframe_clustering=True")
             if self.enable_signal_clustering:
-                parts.append(", enable_signal_clustering=True")
+                extras.append("enable_signal_clustering=True")
+            if self.enable_derived_features:
+                extras.append("enable_derived_features=True")
+            if self.enable_derived_clustering:
+                extras.append("enable_derived_clustering=True")
             if self.enable_resampling:
-                parts.append(", enable_resampling=True")
-            parts.append(", status=unfitted)")
-            return "".join(parts)
+                extras.append("enable_resampling=True")
+            extras_str = ", ".join(extras)
+            if extras_str:
+                extras_str = ", " + extras_str
+            return f"VectorBTDataPreprocessor({base_info}{extras_str}, status=unfitted)"

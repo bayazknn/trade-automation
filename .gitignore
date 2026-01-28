@@ -33,3 +33,4 @@ notebooks/mlruns/
 mlartifacts/
 *.db
 *.pt
+mlflow.db
