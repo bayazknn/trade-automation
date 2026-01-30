@@ -76,6 +76,9 @@ class TrainingConfig:
     # Device
     device: str = 'auto'  # 'cuda', 'cpu', or 'auto'
 
+    # Data loading
+    shuffle_every_epoch: bool = False  # Shuffle training data at the start of each epoch
+
     # Logging
     log_interval: int = 10  # Log every N batches
     verbose: bool = True
@@ -498,7 +501,7 @@ class Trainer:
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
-            shuffle=False,
+            shuffle=self.config.shuffle_every_epoch,
             collate_fn=SignalDataset.collate_fn,
             drop_last=False
         )
@@ -750,7 +753,7 @@ class Trainer:
         new_train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
-            shuffle=False,
+            shuffle=self.config.shuffle_every_epoch,
             collate_fn=SignalDataset.collate_fn,
             drop_last=False
         )
