@@ -1,0 +1,918 @@
+{
+  "RSI": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 26.08312407321443,
+      "exit_constant": 66.28392644930466
+    },
+    "score": 1.3465436853565302,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 1.3465436853565302,
+      "num_trades": 6,
+      "win_rate": 0.8333333333333334,
+      "sharpe_ratio": 1.5750889266117987,
+      "max_drawdown": -0.25668662674650744
+    }
+  },
+  "MACD": {
+    "best_params": {
+      "fastperiod": 16,
+      "slowperiod": 16,
+      "signalperiod": 15
+    },
+    "score": 0.0,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "sharpe_ratio": Infinity,
+      "max_drawdown": 0.0
+    }
+  },
+  "STOCH": {
+    "best_params": {
+      "fastk_period": 5,
+      "slowk_period": 1,
+      "slowd_period": 3,
+      "entry_constant": 14.144249373389274,
+      "exit_constant": 88.35140966414046
+    },
+    "score": 0.7526138354752294,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.7526138354752294,
+      "num_trades": 422,
+      "win_rate": 0.6327014218009479,
+      "sharpe_ratio": 1.0384385575379276,
+      "max_drawdown": -0.49289953546416254
+    }
+  },
+  "STOCHRSI": {
+    "best_params": {
+      "timeperiod": 9,
+      "fastk_period": 10,
+      "fastd_period": 3,
+      "entry_constant": 10.008490971986658,
+      "exit_constant": 87.32744774972052
+    },
+    "score": -0.36642842606939907,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": -0.36642842606939907,
+      "num_trades": 471,
+      "win_rate": 0.5987261146496815,
+      "sharpe_ratio": -0.23316234614412804,
+      "max_drawdown": -0.6812232779091374
+    }
+  },
+  "CCI": {
+    "best_params": {
+      "timeperiod": 6,
+      "entry_constant": -190.02034466635038,
+      "exit_constant": 164.62776800989454
+    },
+    "score": 0.7670685731124304,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.7670685731124304,
+      "num_trades": 58,
+      "win_rate": 0.603448275862069,
+      "sharpe_ratio": 1.3419371899063044,
+      "max_drawdown": -0.3689245670858713
+    }
+  },
+  "MFI": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 19.174398186421822,
+      "exit_constant": 73.60521395681116
+    },
+    "score": 1.9141975189462952,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 1.9141975189462952,
+      "num_trades": 17,
+      "win_rate": 0.7647058823529411,
+      "sharpe_ratio": 1.7164084595446158,
+      "max_drawdown": -0.4115044247787615
+    }
+  },
+  "WILLR": {
+    "best_params": {
+      "timeperiod": 5,
+      "entry_constant": -85.72245807082187,
+      "exit_constant": -11.653240859973085
+    },
+    "score": 0.7526138354752294,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.7526138354752294,
+      "num_trades": 422,
+      "win_rate": 0.6327014218009479,
+      "sharpe_ratio": 1.0384385575379276,
+      "max_drawdown": -0.49289953546416254
+    }
+  },
+  "CMO": {
+    "best_params": {
+      "timeperiod": 22,
+      "entry_constant": -64.57903838007174,
+      "exit_constant": 44.66102146277845
+    },
+    "score": 0.9036679173177911,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.9036679173177911,
+      "num_trades": 3,
+      "win_rate": 1.0,
+      "sharpe_ratio": 1.3110297146558063,
+      "max_drawdown": -0.2566866267465069
+    }
+  },
+  "ADX": {
+    "best_params": {
+      "timeperiod": 24,
+      "entry_constant": 39.64130537432198,
+      "exit_constant": 22.258970761229104
+    },
+    "score": 1.1519080662323244,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 1.1519080662323244,
+      "num_trades": 18,
+      "win_rate": 0.7222222222222222,
+      "sharpe_ratio": 2.0407350793082375,
+      "max_drawdown": -0.1527648001029528
+    }
+  },
+  "MOM": {
+    "best_params": {
+      "timeperiod": 18
+    },
+    "score": -0.6292717948776226,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.6292717948776226,
+      "num_trades": 458,
+      "win_rate": 0.31877729257641924,
+      "sharpe_ratio": -0.8608502903762462,
+      "max_drawdown": -0.76574268936125
+    }
+  },
+  "ROC": {
+    "best_params": {
+      "timeperiod": 18
+    },
+    "score": -0.6292717948776226,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.6292717948776226,
+      "num_trades": 458,
+      "win_rate": 0.31877729257641924,
+      "sharpe_ratio": -0.8608502903762462,
+      "max_drawdown": -0.76574268936125
+    }
+  },
+  "TRIX": {
+    "best_params": {
+      "timeperiod": 22
+    },
+    "score": -0.40472486259978313,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.40472486259978313,
+      "num_trades": 70,
+      "win_rate": 0.2,
+      "sharpe_ratio": -0.3061277562108434,
+      "max_drawdown": -0.5744147886578486
+    }
+  },
+  "ULTOSC": {
+    "best_params": {
+      "timeperiod1": 14,
+      "timeperiod2": 9,
+      "timeperiod3": 44,
+      "entry_constant": 26.95957105102606,
+      "exit_constant": 70.44125183497366
+    },
+    "score": 0.9178549879726279,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.9178549879726279,
+      "num_trades": 9,
+      "win_rate": 0.7777777777777778,
+      "sharpe_ratio": 1.4825031385410068,
+      "max_drawdown": -0.26180257510729665
+    }
+  },
+  "APO": {
+    "best_params": {
+      "fastperiod": 12,
+      "slowperiod": 23
+    },
+    "score": 0.04419025126154523,
+    "type": "grid",
+    "n_trials": 416,
+    "fitness": {
+      "total_return": 0.04419025126154523,
+      "num_trades": 201,
+      "win_rate": 0.3781094527363184,
+      "sharpe_ratio": 0.42486432891547254,
+      "max_drawdown": -0.638505663726213
+    }
+  },
+  "PPO": {
+    "best_params": {
+      "fastperiod": 12,
+      "slowperiod": 23
+    },
+    "score": 0.04419025126154523,
+    "type": "grid",
+    "n_trials": 416,
+    "fitness": {
+      "total_return": 0.04419025126154523,
+      "num_trades": 201,
+      "win_rate": 0.3781094527363184,
+      "sharpe_ratio": 0.42486432891547254,
+      "max_drawdown": -0.638505663726213
+    }
+  },
+  "BOP": {
+    "best_params": {},
+    "score": -0.9942686335918167,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.9942686335918167,
+      "num_trades": 2268,
+      "win_rate": 0.2962962962962963,
+      "sharpe_ratio": -5.696062475373935,
+      "max_drawdown": -0.994869432941598
+    }
+  },
+  "AROON": {
+    "best_params": {
+      "timeperiod": 19
+    },
+    "score": -0.4622035500444996,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.4622035500444996,
+      "num_trades": 233,
+      "win_rate": 0.33905579399141633,
+      "sharpe_ratio": -0.382450261143813,
+      "max_drawdown": -0.6622258847719035
+    }
+  },
+  "AROONOSC": {
+    "best_params": {
+      "timeperiod": 19
+    },
+    "score": -0.4622035500444996,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.4622035500444996,
+      "num_trades": 233,
+      "win_rate": 0.33905579399141633,
+      "sharpe_ratio": -0.382450261143813,
+      "max_drawdown": -0.6622258847719035
+    }
+  },
+  "ADXR": {
+    "best_params": {
+      "timeperiod": 20,
+      "entry_constant": 35.55322613759315,
+      "exit_constant": 24.404215491676712
+    },
+    "score": 1.8290528219090356,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 1.8290528219090356,
+      "num_trades": 25,
+      "win_rate": 0.8,
+      "sharpe_ratio": 2.542172310765125,
+      "max_drawdown": -0.15463099331935393
+    }
+  },
+  "DX": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 38.554797377161464,
+      "exit_constant": 17.796922103981704
+    },
+    "score": 0.5409339193666187,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.5409339193666187,
+      "num_trades": 67,
+      "win_rate": 0.5671641791044776,
+      "sharpe_ratio": 1.0002333448180085,
+      "max_drawdown": -0.34150223887527453
+    }
+  },
+  "MACDEXT": {
+    "best_params": {
+      "fastperiod": 20,
+      "slowperiod": 37,
+      "signalperiod": 15,
+      "fastmatype": 8,
+      "slowmatype": 5,
+      "signalmatype": 3
+    },
+    "score": 0.028607982962569594,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.028607982962569594,
+      "num_trades": 228,
+      "win_rate": 0.43859649122807015,
+      "sharpe_ratio": 0.40497319914849655,
+      "max_drawdown": -0.4849685369497829
+    }
+  },
+  "MACDFIX": {
+    "best_params": {
+      "signalperiod": 12
+    },
+    "score": -0.7212439096781462,
+    "type": "grid",
+    "n_trials": 11,
+    "fitness": {
+      "total_return": -0.7212439096781462,
+      "num_trades": 316,
+      "win_rate": 0.31645569620253167,
+      "sharpe_ratio": -1.3880225275241729,
+      "max_drawdown": -0.7877280865031248
+    }
+  },
+  "MINUS_DI": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 20.080941613452215,
+      "exit_constant": 11.783772982291888
+    },
+    "score": 0.06751497378933351,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.06751497378933351,
+      "num_trades": 14,
+      "win_rate": 0.5714285714285714,
+      "sharpe_ratio": 0.35499358590615776,
+      "max_drawdown": -0.37555718921385106
+    }
+  },
+  "MINUS_DM": {
+    "best_params": {
+      "timeperiod": 29
+    },
+    "score": -0.9872794537222699,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.9872794537222699,
+      "num_trades": 1746,
+      "win_rate": 0.3087056128293242,
+      "sharpe_ratio": -4.121858942047906,
+      "max_drawdown": -0.9880139709102692
+    }
+  },
+  "PLUS_DI": {
+    "best_params": {
+      "timeperiod": 13,
+      "entry_constant": 38.07941483157047,
+      "exit_constant": 11.31237215021945
+    },
+    "score": 0.4366403479399695,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.4366403479399695,
+      "num_trades": 25,
+      "win_rate": 0.4,
+      "sharpe_ratio": 0.8220964476887935,
+      "max_drawdown": -0.3966173836658794
+    }
+  },
+  "PLUS_DM": {
+    "best_params": {
+      "timeperiod": 17
+    },
+    "score": -0.9798408993022606,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.9798408993022606,
+      "num_trades": 1757,
+      "win_rate": 0.344336937962436,
+      "sharpe_ratio": -5.179089533527394,
+      "max_drawdown": -0.9802941597901057
+    }
+  },
+  "ROCP": {
+    "best_params": {
+      "timeperiod": 18
+    },
+    "score": -0.6292717948776226,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.6292717948776226,
+      "num_trades": 458,
+      "win_rate": 0.31877729257641924,
+      "sharpe_ratio": -0.8608502903762462,
+      "max_drawdown": -0.76574268936125
+    }
+  },
+  "ROCR": {
+    "best_params": {
+      "timeperiod": 30,
+      "entry_constant": 1.0,
+      "exit_constant": 0.95
+    },
+    "score": -0.5147943529005972,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.5147943529005972,
+      "num_trades": 87,
+      "win_rate": 0.3103448275862069,
+      "sharpe_ratio": -0.38689019904774063,
+      "max_drawdown": -0.6930199566813708
+    }
+  },
+  "ROCR100": {
+    "best_params": {
+      "timeperiod": 10,
+      "entry_constant": 104.28966267694736,
+      "exit_constant": 97.15836471792844
+    },
+    "score": 0.9568803932228654,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.9568803932228654,
+      "num_trades": 87,
+      "win_rate": 0.45977011494252873,
+      "sharpe_ratio": 1.2285310853564029,
+      "max_drawdown": -0.42466573097652194
+    }
+  },
+  "STOCHF": {
+    "best_params": {
+      "fastk_period": 5,
+      "fastd_period": 4,
+      "entry_constant": 14.186770404281855,
+      "exit_constant": 88.35054065135766
+    },
+    "score": 0.7526138354752294,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.7526138354752294,
+      "num_trades": 422,
+      "win_rate": 0.6327014218009479,
+      "sharpe_ratio": 1.0384385575379276,
+      "max_drawdown": -0.49289953546416254
+    }
+  },
+  "SMA": {
+    "best_params": {
+      "fast_period": 12,
+      "slow_period": 23
+    },
+    "score": 0.04419025126154523,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.04419025126154523,
+      "num_trades": 201,
+      "win_rate": 0.3781094527363184,
+      "sharpe_ratio": 0.42486432891547254,
+      "max_drawdown": -0.638505663726213
+    }
+  },
+  "EMA": {
+    "best_params": {
+      "fast_period": 24,
+      "slow_period": 24
+    },
+    "score": 0.0,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "sharpe_ratio": Infinity,
+      "max_drawdown": 0.0
+    }
+  },
+  "DEMA": {
+    "best_params": {
+      "timeperiod": 84
+    },
+    "score": -0.727698539704144,
+    "type": "grid",
+    "n_trials": 96,
+    "fitness": {
+      "total_return": -0.727698539704144,
+      "num_trades": 396,
+      "win_rate": 0.20707070707070707,
+      "sharpe_ratio": -1.2334230397661161,
+      "max_drawdown": -0.8351766743273085
+    }
+  },
+  "TEMA": {
+    "best_params": {
+      "timeperiod": 98
+    },
+    "score": -0.8286280516324953,
+    "type": "grid",
+    "n_trials": 96,
+    "fitness": {
+      "total_return": -0.8286280516324953,
+      "num_trades": 451,
+      "win_rate": 0.20620842572062084,
+      "sharpe_ratio": -1.859877248389595,
+      "max_drawdown": -0.8626354254628658
+    }
+  },
+  "KAMA": {
+    "best_params": {
+      "timeperiod": 25
+    },
+    "score": -0.7903719825206753,
+    "type": "grid",
+    "n_trials": 26,
+    "fitness": {
+      "total_return": -0.7903719825206753,
+      "num_trades": 456,
+      "win_rate": 0.17543859649122806,
+      "sharpe_ratio": -1.5326066108843404,
+      "max_drawdown": -0.8465736630770135
+    }
+  },
+  "WMA": {
+    "best_params": {
+      "timeperiod": 91
+    },
+    "score": -0.6692670463931701,
+    "type": "grid",
+    "n_trials": 96,
+    "fitness": {
+      "total_return": -0.6692670463931701,
+      "num_trades": 328,
+      "win_rate": 0.14329268292682926,
+      "sharpe_ratio": -1.0397813632652833,
+      "max_drawdown": -0.7727203490914875
+    }
+  },
+  "TRIMA": {
+    "best_params": {
+      "timeperiod": 98
+    },
+    "score": -0.6641184025344512,
+    "type": "grid",
+    "n_trials": 96,
+    "fitness": {
+      "total_return": -0.6641184025344512,
+      "num_trades": 214,
+      "win_rate": 0.11214953271028037,
+      "sharpe_ratio": -1.0239250001682523,
+      "max_drawdown": -0.7627749794731051
+    }
+  },
+  "T3": {
+    "best_params": {
+      "timeperiod": 22,
+      "vfactor": 0.0
+    },
+    "score": -0.6816106138871131,
+    "type": "grid",
+    "n_trials": 46,
+    "fitness": {
+      "total_return": -0.6816106138871131,
+      "num_trades": 299,
+      "win_rate": 0.14381270903010032,
+      "sharpe_ratio": -1.096507904830369,
+      "max_drawdown": -0.7885003212311581
+    }
+  },
+  "SAR": {
+    "best_params": {
+      "acceleration": 0.01,
+      "maximum": 0.1
+    },
+    "score": -0.5397772080150652,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.5397772080150652,
+      "num_trades": 247,
+      "win_rate": 0.38461538461538464,
+      "sharpe_ratio": -0.5595221271101696,
+      "max_drawdown": -0.733738246085387
+    }
+  },
+  "BBANDS": {
+    "best_params": {
+      "timeperiod": 49,
+      "nbdevup": 1.0,
+      "nbdevdn": 3.0,
+      "entry_factor": 1.0,
+      "exit_factor": 0.95
+    },
+    "score": 0.6216397030728601,
+    "type": "grid",
+    "n_trials": 369,
+    "fitness": {
+      "total_return": 0.6216397030728601,
+      "num_trades": 38,
+      "win_rate": 0.7631578947368421,
+      "sharpe_ratio": 1.2821522150838183,
+      "max_drawdown": -0.3420772096343283
+    }
+  },
+  "HT_TRENDLINE": {
+    "best_params": {},
+    "score": -0.8069284711988647,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.8069284711988647,
+      "num_trades": 495,
+      "win_rate": 0.21818181818181817,
+      "sharpe_ratio": -1.6613828104658945,
+      "max_drawdown": -0.8477225432540247
+    }
+  },
+  "MA": {
+    "best_params": {
+      "timeperiod": 95,
+      "matype": 8
+    },
+    "score": -0.4445027891262521,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": -0.4445027891262521,
+      "num_trades": 160,
+      "win_rate": 0.09375,
+      "sharpe_ratio": -0.42777476871227466,
+      "max_drawdown": -0.6114330196038891
+    }
+  },
+  "MAMA": {
+    "best_params": {
+      "fastlimit": 0.1,
+      "slowlimit": 0.01
+    },
+    "score": -0.4613789152310723,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.4613789152310723,
+      "num_trades": 38,
+      "win_rate": 0.21052631578947367,
+      "sharpe_ratio": -0.49827545199805123,
+      "max_drawdown": -0.5445191393303114
+    }
+  },
+  "MIDPOINT": {
+    "best_params": {
+      "timeperiod": 31
+    },
+    "score": -0.7351323498999054,
+    "type": "grid",
+    "n_trials": 46,
+    "fitness": {
+      "total_return": -0.7351323498999054,
+      "num_trades": 395,
+      "win_rate": 0.20506329113924052,
+      "sharpe_ratio": -1.3093072561296146,
+      "max_drawdown": -0.809301417189452
+    }
+  },
+  "MIDPRICE": {
+    "best_params": {
+      "timeperiod": 31
+    },
+    "score": -0.6954623506278297,
+    "type": "grid",
+    "n_trials": 46,
+    "fitness": {
+      "total_return": -0.6954623506278297,
+      "num_trades": 398,
+      "win_rate": 0.2185929648241206,
+      "sharpe_ratio": -1.1188972989004826,
+      "max_drawdown": -0.7985686748773646
+    }
+  },
+  "SAREXT": {
+    "best_params": {
+      "startvalue": 0.0,
+      "offsetonreverse": 0.0,
+      "accelerationinitlong": 0.01,
+      "accelerationlong": 0.01,
+      "accelerationmaxlong": 0.1,
+      "accelerationinitshort": 0.01,
+      "accelerationshort": 0.01,
+      "accelerationmaxshort": 0.1
+    },
+    "score": 0.0,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": 0.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "sharpe_ratio": Infinity,
+      "max_drawdown": 0.0
+    }
+  },
+  "OBV": {
+    "best_params": {
+      "sma_period": 49
+    },
+    "score": -0.3802032470515719,
+    "type": "grid",
+    "n_trials": 46,
+    "fitness": {
+      "total_return": -0.3802032470515719,
+      "num_trades": 293,
+      "win_rate": 0.23890784982935154,
+      "sharpe_ratio": -0.26401645880042574,
+      "max_drawdown": -0.6652758680690474
+    }
+  },
+  "AD": {
+    "best_params": {
+      "sma_period": 27
+    },
+    "score": -0.750393757188874,
+    "type": "grid",
+    "n_trials": 46,
+    "fitness": {
+      "total_return": -0.750393757188874,
+      "num_trades": 433,
+      "win_rate": 0.2540415704387991,
+      "sharpe_ratio": -1.4334629302023005,
+      "max_drawdown": -0.813761164090961
+    }
+  },
+  "ADOSC": {
+    "best_params": {
+      "fastperiod": 9,
+      "slowperiod": 9
+    },
+    "score": 0.0,
+    "type": "grid",
+    "n_trials": 144,
+    "fitness": {
+      "total_return": 0.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "sharpe_ratio": Infinity,
+      "max_drawdown": 0.0
+    }
+  },
+  "ATR": {
+    "best_params": {
+      "timeperiod": 25,
+      "stop_loss_multiplier": 3.5
+    },
+    "score": -0.2869248370647452,
+    "type": "grid",
+    "n_trials": 66,
+    "fitness": {
+      "total_return": -0.2869248370647452,
+      "num_trades": 37,
+      "win_rate": 0.35135135135135137,
+      "sharpe_ratio": -0.05978704303686376,
+      "max_drawdown": -0.5434897133684631
+    }
+  },
+  "NATR": {
+    "best_params": {
+      "timeperiod": 20,
+      "entry_constant": 5.0
+    },
+    "score": 0.3848779743684665,
+    "type": "grid",
+    "n_trials": 110,
+    "fitness": {
+      "total_return": 0.3848779743684665,
+      "num_trades": 2,
+      "win_rate": 1.0,
+      "sharpe_ratio": 1.5214163590596255,
+      "max_drawdown": -0.11621292157659491
+    }
+  },
+  "TRANGE": {
+    "best_params": {
+      "entry_multiplier": 2.0,
+      "exit_multiplier": 0.3
+    },
+    "score": -0.6499292591155194,
+    "type": "grid",
+    "n_trials": 3,
+    "fitness": {
+      "total_return": -0.6499292591155194,
+      "num_trades": 28,
+      "win_rate": 0.39285714285714285,
+      "sharpe_ratio": -0.42357221498267505,
+      "max_drawdown": -0.7550950131121621
+    }
+  },
+  "HT_DCPERIOD": {
+    "best_params": {
+      "entry_constant": 13.78322949915361,
+      "exit_constant": 27.11046055051596
+    },
+    "score": 0.1701856924978135,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.1701856924978135,
+      "num_trades": 10,
+      "win_rate": 0.6,
+      "sharpe_ratio": 0.7688223563022266,
+      "max_drawdown": -0.11739118648629199
+    }
+  },
+  "HT_DCPHASE": {
+    "best_params": {
+      "entry_constant": -43.296099209162165,
+      "exit_constant": 36.985326781007345
+    },
+    "score": 0.19277076601779597,
+    "type": "tpe",
+    "n_trials": 1000,
+    "fitness": {
+      "total_return": 0.19277076601779597,
+      "num_trades": 29,
+      "win_rate": 0.6551724137931034,
+      "sharpe_ratio": 0.9341044774701452,
+      "max_drawdown": -0.0766707242599195
+    }
+  },
+  "HT_PHASOR": {
+    "best_params": {},
+    "score": -0.9245221828887356,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.9245221828887356,
+      "num_trades": 1017,
+      "win_rate": 0.4582104228121927,
+      "sharpe_ratio": -3.0255436449509747,
+      "max_drawdown": -0.9412345369311311
+    }
+  },
+  "HT_SINE": {
+    "best_params": {},
+    "score": -0.4709687908525638,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.4709687908525638,
+      "num_trades": 271,
+      "win_rate": 0.35424354243542433,
+      "sharpe_ratio": -0.39400998855549746,
+      "max_drawdown": -0.6964371260453379
+    }
+  },
+  "HT_TRENDMODE": {
+    "best_params": {},
+    "score": -0.866353073898287,
+    "type": "grid",
+    "n_trials": 1,
+    "fitness": {
+      "total_return": -0.866353073898287,
+      "num_trades": 537,
+      "win_rate": 0.4227188081936685,
+      "sharpe_ratio": -1.5729747120906294,
+      "max_drawdown": -0.8775460547664108
+    }
+  }
+}
